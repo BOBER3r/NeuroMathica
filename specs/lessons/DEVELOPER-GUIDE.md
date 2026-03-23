@@ -23,46 +23,44 @@ tests/e2e/lessons/
 └── ...
 ```
 
-### Component Pattern
+### Component Pattern (DR-8: Atomic Architecture)
+
+All lessons MUST use `LessonShell` for stage orchestration and shared tokens
+for colors/animations. See Constitution DR-8.
+
 ```typescript
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
-// ─── Constants ───────────────────────────────────────
-const STAGES = ["hook","spatial","discovery","symbol","realWorld","practice","reflection"] as const;
-type Stage = typeof STAGES[number];
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const COLORS = { /* lesson-specific palette */ };
+// ─── Lesson-specific semantic colors (aliases to shared tokens) ──
+const THEME = {
+  primary: colors.accent.emerald,   // e.g. for positive integers
+  secondary: colors.functional.info, // e.g. for negative integers
+} as const;
 
 // ─── Main Component ─────────────────────────────────
 export function XxxLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGES[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
-      {/* Progress bar */}
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} initial={{opacity:0,x:40}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-40}} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {/* ... */}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="XX-X.X Topic Name" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onContinue={advance} />;
+          case "spatial":    return <SpatialStage onContinue={advance} />;
+          case "discovery":  return <DiscoveryStage onContinue={advance} />;
+          case "symbol":     return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld":  return <RealWorldStage onContinue={advance} />;
+          case "practice":   return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }
 
@@ -71,6 +69,27 @@ function HookStage({ onContinue }: { onContinue: () => void }) { ... }
 function SpatialStage({ onContinue }: { onContinue: () => void }) { ... }
 // etc.
 ```
+
+### Shared Tokens (MUST use — no local duplicates)
+
+| Token | Import | Usage |
+|-------|--------|-------|
+| Colors | `import { colors } from "@/lib/tokens/colors"` | `colors.accent.emerald`, `colors.bg.primary`, etc. |
+| Springs | `import { springs } from "@/lib/tokens/motion"` | `springs.default`, `springs.bouncy`, etc. |
+| Slide variants | `import { slideVariants } from "@/lib/tokens/motion"` | For AnimatePresence transitions |
+| Stage constants | `import { NLS_STAGES } from "@/lib/tokens/stages"` | Stage identifiers and type |
+
+### Shared Molecules (MUST import — no local redefinitions)
+
+| Component | Import | Notes |
+|-----------|--------|-------|
+| `ContinueButton` | `@/components/lessons/ui` | Standard advance button with fade-in |
+| `CompareToggle` | `@/components/lessons/ui` | Toggle for compare mode in interactive stages |
+| `InteractionDots` | `@/components/lessons/ui` | Progress dots for interaction tracking |
+| `MCQuestion` | `@/components/lessons/ui` | Multiple-choice question component |
+| `PracticeShell` | `@/components/lessons/ui` | Practice problem sequencer |
+| `ReflectionInput` | `@/components/lessons/ui` | Textarea with char counter for reflections |
+| `StageContainer` | `@/components/lessons/ui` | Centered container with max-width presets |
 
 ---
 

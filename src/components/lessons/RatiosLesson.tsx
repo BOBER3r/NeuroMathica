@@ -1,4 +1,10 @@
 "use client";
+
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 import { VideoHook } from "@/components/lessons/VideoHook";
 
 import {
@@ -7,34 +13,13 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
-import { cn } from "@/lib/utils/cn";
 
 /* ═══════════════════════════════════════════════════════════════════════
    TYPES
    ═══════════════════════════════════════════════════════════════════════ */
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
 
 interface PracticeOption {
   id: string;
@@ -59,38 +44,53 @@ interface PracticeProblem {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   CONSTANTS
+   SPRING ALIASES
    ═══════════════════════════════════════════════════════════════════════ */
 
-const INDIGO = "#818cf8";
-const VIOLET = "#a78bfa";
-const EMERALD = "#34d399";
-const RED = "#f87171";
-const AMBER = "#fbbf24";
-const BLUE = "#60a5fa";
-const ORANGE = "#fb923c";
-const PINK = "#f472b6";
-const PURPLE = "#c084fc";
+const SNAP_SPRING = springs.default;
+const POP_SPRING = springs.pop;
+const GENTLE_SPRING = springs.gentle;
 
-const UNSHADED = "#334155";
-const BORDER = "#64748b";
-const SURFACE = "#1e293b";
-const BG = "#0f172a";
-const TEXT = "#e2e8f0";
-const TEXT_SEC = "#94a3b8";
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-const SPRING_GENTLE = {
-  type: "spring" as const,
-  damping: 25,
-  stiffness: 200,
-};
 const EASE = {
   type: "tween" as const,
   duration: 0.3,
   ease: "easeInOut" as const,
 };
+
+/* ═══════════════════════════════════════════════════════════════════════
+   COLOR ALIASES  (shared tokens + lesson-specific overrides in THEME)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/** Lesson-specific colours that have no shared-token equivalent. */
+const THEME = {
+  orange: "#fb923c",
+  pink: "#f472b6",
+  purple: "#c084fc",
+  red: "#f87171",
+  textPrimary: "#e2e8f0", // slate-200 — slightly different from tokens.text.primary
+} as const;
+
+const C = {
+  indigo: colors.accent.indigo,
+  violet: colors.accent.violet,
+  emerald: colors.accent.emerald,
+  amber: colors.accent.amber,
+  blue: colors.domain.numbers,
+  orange: THEME.orange,
+  pink: THEME.pink,
+  purple: THEME.purple,
+  red: THEME.red,
+  textPrimary: THEME.textPrimary,
+  textSecondary: colors.text.secondary,
+  textMuted: colors.text.muted,
+  surface: colors.bg.secondary,
+  surfaceDeep: colors.bg.primary,
+  border: colors.bg.surface,
+} as const;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════════════════ */
 
 const MIN_INTERACTIONS = 10;
 const MAX_TOKENS = 12;
@@ -293,76 +293,6 @@ function clamp(v: number, lo: number, hi: number): number {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SHARED SUB-COMPONENTS
-   ═══════════════════════════════════════════════════════════════════════ */
-
-function ContinueButton({
-  onClick,
-  disabled = false,
-  children = "Continue" as ReactNode,
-  progress,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-  progress?: number;
-}) {
-  return (
-    <motion.button
-      className="relative inline-flex items-center justify-center gap-2 rounded-xl font-medium px-6 py-3 text-base select-none"
-      style={{
-        minHeight: 48,
-        minWidth: 48,
-        background: disabled ? `${INDIGO}66` : INDIGO,
-        color: "#fff",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onClick={disabled ? undefined : onClick}
-      whileHover={disabled ? undefined : { scale: 1.04 }}
-      whileTap={disabled ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", damping: 15, stiffness: 400 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: disabled ? 0.5 : 1, y: 0 }}
-      aria-label={typeof children === "string" ? children : "Continue"}
-      aria-disabled={disabled}
-    >
-      {progress !== undefined && progress < 1 && (
-        <svg
-          className="absolute -top-1 -right-1"
-          width={24}
-          height={24}
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={UNSHADED}
-            strokeWidth={2}
-          />
-          <motion.circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={INDIGO}
-            strokeWidth={2}
-            strokeDasharray={62.83}
-            strokeLinecap="round"
-            transform="rotate(-90 12 12)"
-            animate={{ strokeDashoffset: 62.83 * (1 - progress) }}
-            transition={SPRING_GENTLE}
-          />
-        </svg>
-      )}
-      {children}
-    </motion.button>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
    STAGE 1: HOOK — "Who's MORE viral?"
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -421,12 +351,12 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   const lpsUnit = 40;
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-4 p-4">
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
       {/* Title */}
       {phase >= 0 && (
         <motion.h2
           className="text-2xl font-bold text-center"
-          style={{ color: TEXT }}
+          style={{ color: C.textPrimary }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -437,20 +367,20 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Creator comparison area */}
       {phase >= 1 && phase < 7 && (
-        <div className="flex gap-8 items-end justify-center">
+        <div className="flex items-end justify-center gap-8">
           {/* Creator A */}
           <motion.div
             className="flex flex-col items-center gap-2"
             initial={{ opacity: 0, x: -80 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={SPRING}
+            transition={SNAP_SPRING}
           >
             <svg width={48} height={48} viewBox="0 0 48 48">
               <circle
                 cx={24}
                 cy={24}
                 r={22}
-                fill={INDIGO}
+                fill={C.indigo}
                 stroke="#6366f1"
                 strokeWidth={2}
               />
@@ -465,31 +395,31 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 A
               </text>
             </svg>
-            <span className="text-xs font-medium" style={{ color: TEXT }}>
+            <span className="text-xs font-medium" style={{ color: C.textPrimary }}>
               Creator A
             </span>
 
             {phase >= 2 && (
               <div
-                className="flex gap-2 items-end"
+                className="flex items-end gap-2"
                 style={{ height: maxBarH + 20 }}
               >
                 <div className="flex flex-col items-center gap-1">
                   <motion.div
                     className="rounded-t"
-                    style={{ width: barW / 2 - 2, background: PINK }}
+                    style={{ width: barW / 2 - 2, background: C.pink }}
                     initial={{ height: 0 }}
                     animate={{ height: likesA }}
                     transition={{ duration: 1, ease: "easeOut" }}
                   />
-                  <span className="text-[10px]" style={{ color: TEXT_SEC }}>
+                  <span className="text-[10px]" style={{ color: C.textSecondary }}>
                     2.4M likes
                   </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <motion.div
                     className="rounded-t"
-                    style={{ width: barW / 2 - 2, background: BLUE }}
+                    style={{ width: barW / 2 - 2, background: C.blue }}
                     initial={{ height: 0 }}
                     animate={{ height: sharesA }}
                     transition={{
@@ -498,7 +428,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                       delay: 0.3,
                     }}
                   />
-                  <span className="text-[10px]" style={{ color: TEXT_SEC }}>
+                  <span className="text-[10px]" style={{ color: C.textSecondary }}>
                     800K shares
                   </span>
                 </div>
@@ -512,14 +442,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               className="flex flex-col items-center gap-2"
               initial={{ opacity: 0, x: 80 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={SPRING}
+              transition={SNAP_SPRING}
             >
               <svg width={48} height={48} viewBox="0 0 48 48">
                 <circle
                   cx={24}
                   cy={24}
                   r={22}
-                  fill={VIOLET}
+                  fill={C.violet}
                   stroke="#8b5cf6"
                   strokeWidth={2}
                 />
@@ -534,31 +464,31 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   B
                 </text>
               </svg>
-              <span className="text-xs font-medium" style={{ color: TEXT }}>
+              <span className="text-xs font-medium" style={{ color: C.textPrimary }}>
                 Creator B
               </span>
 
               {phase >= 5 && (
                 <div
-                  className="flex gap-2 items-end"
+                  className="flex items-end gap-2"
                   style={{ height: maxBarH + 20 }}
                 >
                   <div className="flex flex-col items-center gap-1">
                     <motion.div
                       className="rounded-t"
-                      style={{ width: barW / 2 - 2, background: PINK }}
+                      style={{ width: barW / 2 - 2, background: C.pink }}
                       initial={{ height: 0 }}
                       animate={{ height: likesB }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
-                    <span className="text-[10px]" style={{ color: TEXT_SEC }}>
+                    <span className="text-[10px]" style={{ color: C.textSecondary }}>
                       500K likes
                     </span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <motion.div
                       className="rounded-t"
-                      style={{ width: barW / 2 - 2, background: BLUE }}
+                      style={{ width: barW / 2 - 2, background: C.blue }}
                       initial={{ height: 0 }}
                       animate={{ height: sharesB }}
                       transition={{
@@ -567,7 +497,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                         delay: 0.3,
                       }}
                     />
-                    <span className="text-[10px]" style={{ color: TEXT_SEC }}>
+                    <span className="text-[10px]" style={{ color: C.textSecondary }}>
                       200K shares
                     </span>
                   </div>
@@ -583,8 +513,8 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 6 && phase < 7 && (
           <motion.p
             key="nar1"
-            className="text-sm text-center max-w-xs"
-            style={{ color: TEXT_SEC }}
+            className="max-w-xs text-center text-sm"
+            style={{ color: C.textSecondary }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -600,36 +530,36 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={SPRING}
+            transition={SNAP_SPRING}
           >
-            <p className="text-xs text-center" style={{ color: TEXT_SEC }}>
+            <p className="text-center text-xs" style={{ color: C.textSecondary }}>
               Likes per share:
             </p>
-            <div className="flex gap-6 items-center">
+            <div className="flex items-center gap-6">
               <div className="flex flex-col items-center gap-1">
-                <span className="text-xs" style={{ color: TEXT_SEC }}>
+                <span className="text-xs" style={{ color: C.textSecondary }}>
                   A
                 </span>
                 <motion.span
                   className="text-xl font-bold tabular-nums"
-                  style={{ color: INDIGO }}
+                  style={{ color: C.indigo }}
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
-                  transition={SPRING}
+                  transition={SNAP_SPRING}
                 >
                   3 : 1
                 </motion.span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-xs" style={{ color: TEXT_SEC }}>
+                <span className="text-xs" style={{ color: C.textSecondary }}>
                   B
                 </span>
                 <motion.span
                   className="text-xl font-bold tabular-nums"
-                  style={{ color: VIOLET }}
+                  style={{ color: C.violet }}
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
-                  transition={{ ...SPRING, delay: 0.3 }}
+                  transition={{ ...SNAP_SPRING, delay: 0.3 }}
                 >
                   2.5 : 1
                 </motion.span>
@@ -641,14 +571,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 9 && phase < 10 && (
           <motion.p
             key="nar2"
-            className="text-sm text-center max-w-xs"
-            style={{ color: TEXT }}
+            className="max-w-xs text-center text-sm"
+            style={{ color: C.textPrimary }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             Per share, A gets only slightly more. The raw numbers were{" "}
-            <span style={{ color: RED, fontWeight: 700 }}>misleading</span>!
+            <span style={{ color: C.red, fontWeight: 700 }}>misleading</span>!
           </motion.p>
         )}
 
@@ -659,14 +589,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={SPRING}
+            transition={SNAP_SPRING}
           >
             <svg width={48} height={48} viewBox="0 0 48 48">
               <circle
                 cx={24}
                 cy={24}
                 r={22}
-                fill={EMERALD}
+                fill={C.emerald}
                 stroke="#059669"
                 strokeWidth={2}
               />
@@ -681,15 +611,15 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 C
               </text>
             </svg>
-            <span className="text-xs" style={{ color: TEXT }}>
+            <span className="text-xs" style={{ color: C.textPrimary }}>
               Creator C: 1M likes, 250K shares
             </span>
             <motion.span
               className="text-xl font-bold tabular-nums"
-              style={{ color: EMERALD }}
+              style={{ color: C.emerald }}
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              transition={SPRING}
+              transition={SNAP_SPRING}
             >
               4 : 1
             </motion.span>
@@ -699,68 +629,68 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 11 && phase < 13 && (
           <motion.div
             key="compareBars"
-            className="flex flex-col gap-2 w-full max-w-xs"
+            className="flex w-full max-w-xs flex-col gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs w-8" style={{ color: TEXT_SEC }}>
+              <span className="w-8 text-xs" style={{ color: C.textSecondary }}>
                 A
               </span>
               <motion.div
                 className="h-6 rounded"
-                style={{ background: INDIGO }}
+                style={{ background: C.indigo }}
                 initial={{ width: 0 }}
                 animate={{ width: 3 * lpsUnit }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
               />
               <span
                 className="text-xs tabular-nums"
-                style={{ color: TEXT_SEC }}
+                style={{ color: C.textSecondary }}
               >
                 3
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs w-8" style={{ color: TEXT_SEC }}>
+              <span className="w-8 text-xs" style={{ color: C.textSecondary }}>
                 B
               </span>
               <motion.div
                 className="h-6 rounded"
-                style={{ background: VIOLET }}
+                style={{ background: C.violet }}
                 initial={{ width: 0 }}
                 animate={{ width: 2.5 * lpsUnit }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
               />
               <span
                 className="text-xs tabular-nums"
-                style={{ color: TEXT_SEC }}
+                style={{ color: C.textSecondary }}
               >
                 2.5
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs w-8" style={{ color: TEXT_SEC }}>
+              <span className="w-8 text-xs" style={{ color: C.textSecondary }}>
                 C
               </span>
               <motion.div
                 className="h-6 rounded"
-                style={{ background: EMERALD }}
+                style={{ background: C.emerald }}
                 initial={{ width: 0 }}
                 animate={{ width: 4 * lpsUnit }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
               />
               <span
                 className="text-xs tabular-nums"
-                style={{ color: TEXT_SEC }}
+                style={{ color: C.textSecondary }}
               >
                 4
               </span>
             </div>
             <p
-              className="text-xs text-center mt-1"
-              style={{ color: TEXT_SEC }}
+              className="mt-1 text-center text-xs"
+              style={{ color: C.textSecondary }}
             >
               likes per share
             </p>
@@ -770,14 +700,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 12 && phase < 13 && (
           <motion.p
             key="nar3"
-            className="text-sm text-center max-w-xs font-semibold"
-            style={{ color: TEXT }}
+            className="max-w-xs text-center text-sm font-semibold"
+            style={{ color: C.textPrimary }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             Creator C is the MOST viral per share.{" "}
-            <span style={{ color: AMBER, fontWeight: 700 }}>RATIO</span>{" "}
+            <span style={{ color: C.amber, fontWeight: 700 }}>RATIO</span>{" "}
             reveals what raw numbers hide.
           </motion.p>
         )}
@@ -785,8 +715,8 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 13 && (
           <motion.p
             key="nar4"
-            className="text-sm text-center max-w-xs"
-            style={{ color: TEXT }}
+            className="max-w-xs text-center text-sm"
+            style={{ color: C.textPrimary }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -798,9 +728,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       {canSkip && (
-        <div className="pt-4">
-          <ContinueButton onClick={onComplete}>Continue</ContinueButton>
-        </div>
+        <ContinueButton onClick={onComplete}>Continue</ContinueButton>
       )}
     </div>
   );
@@ -827,8 +755,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
   const topVal = swapped ? orangeCount : blueCount;
   const botVal = swapped ? blueCount : orangeCount;
-  const topColor = swapped ? ORANGE : BLUE;
-  const botColor = swapped ? BLUE : ORANGE;
+  const topColor = swapped ? C.orange : C.blue;
+  const botColor = swapped ? C.blue : C.orange;
   const topLabel = swapped ? "Orange" : "Blue";
   const botLabel = swapped ? "Blue" : "Orange";
 
@@ -936,23 +864,23 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const progress = Math.min(interactions / MIN_INTERACTIONS, 1);
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-4 p-4 overflow-y-auto">
-      <p className="text-sm text-center max-w-sm" style={{ color: TEXT_SEC }}>
+    <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto p-4">
+      <p className="max-w-sm text-center text-sm" style={{ color: C.textSecondary }}>
         Make a group of blue circles and orange circles. Watch how the double
         number line tracks their relationship.
       </p>
 
       {/* ── Grouping workspace ──────────────────────────── */}
       <div
-        className="w-full max-w-md rounded-xl p-4 flex flex-col gap-3"
-        style={{ background: SURFACE, border: `1px solid ${UNSHADED}` }}
+        className="flex w-full max-w-md flex-col gap-3 rounded-xl p-4"
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
         {/* Blue row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium w-12" style={{ color: BLUE }}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="w-12 text-xs font-medium" style={{ color: C.blue }}>
             Blue:
           </span>
-          <div className="flex gap-1 flex-wrap items-center">
+          <div className="flex flex-wrap items-center gap-1">
             {Array.from({ length: blueCount }, (_, i) => (
               <motion.div
                 key={`blue-${i}`}
@@ -960,24 +888,24 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 style={{
                   width: 28,
                   height: 28,
-                  background: BLUE,
+                  background: C.blue,
                   border: "1.5px solid #3b82f6",
                 }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                transition={SPRING_POP}
+                transition={POP_SPRING}
               />
             ))}
           </div>
-          <div className="flex gap-1 ml-auto">
+          <div className="ml-auto flex gap-1">
             <motion.button
               className="flex items-center justify-center rounded-lg font-bold select-none"
               style={{
                 minWidth: 44,
                 minHeight: 44,
-                background: UNSHADED,
-                color: TEXT,
+                background: C.border,
+                color: C.textPrimary,
                 opacity: blueCount >= MAX_TOKENS ? 0.3 : 1,
               }}
               onClick={handleAddBlue}
@@ -992,8 +920,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               style={{
                 minWidth: 44,
                 minHeight: 44,
-                background: UNSHADED,
-                color: TEXT,
+                background: C.border,
+                color: C.textPrimary,
                 opacity: blueCount <= 0 ? 0.3 : 1,
               }}
               onClick={handleRemoveBlue}
@@ -1007,14 +935,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         </div>
 
         {/* Orange row */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <span
-            className="text-xs font-medium w-12"
-            style={{ color: ORANGE }}
+            className="w-12 text-xs font-medium"
+            style={{ color: C.orange }}
           >
             Orange:
           </span>
-          <div className="flex gap-1 flex-wrap items-center">
+          <div className="flex flex-wrap items-center gap-1">
             {Array.from({ length: orangeCount }, (_, i) => (
               <motion.div
                 key={`orange-${i}`}
@@ -1022,24 +950,24 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 style={{
                   width: 28,
                   height: 28,
-                  background: ORANGE,
+                  background: C.orange,
                   border: "1.5px solid #f97316",
                 }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                transition={SPRING_POP}
+                transition={POP_SPRING}
               />
             ))}
           </div>
-          <div className="flex gap-1 ml-auto">
+          <div className="ml-auto flex gap-1">
             <motion.button
               className="flex items-center justify-center rounded-lg font-bold select-none"
               style={{
                 minWidth: 44,
                 minHeight: 44,
-                background: UNSHADED,
-                color: TEXT,
+                background: C.border,
+                color: C.textPrimary,
                 opacity: orangeCount >= MAX_TOKENS ? 0.3 : 1,
               }}
               onClick={handleAddOrange}
@@ -1056,8 +984,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               style={{
                 minWidth: 44,
                 minHeight: 44,
-                background: UNSHADED,
-                color: TEXT,
+                background: C.border,
+                color: C.textPrimary,
                 opacity: orangeCount <= 0 ? 0.3 : 1,
               }}
               onClick={handleRemoveOrange}
@@ -1084,7 +1012,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             aria-label={`Current ratio: ${topVal} to ${botVal}`}
           >
             <span style={{ color: topColor }}>{topVal}</span>
-            <span style={{ color: AMBER }}>{" : "}</span>
+            <span style={{ color: C.amber }}>{" : "}</span>
             <span style={{ color: botColor }}>{botVal}</span>
           </motion.div>
         </AnimatePresence>
@@ -1093,7 +1021,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       {/* ── Double Number Line ──────────────────────────── */}
       <div
         className="w-full max-w-md rounded-xl p-3"
-        style={{ background: SURFACE, border: `1px solid ${UNSHADED}` }}
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
         <svg
           ref={svgRef}
@@ -1189,7 +1117,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   y1={48}
                   x2={tx}
                   y2={92}
-                  stroke={AMBER}
+                  stroke={C.amber}
                   strokeWidth={1}
                   strokeDasharray="4 4"
                   opacity={0.2}
@@ -1223,15 +1151,15 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               width={3}
               height={90}
               rx={1.5}
-              fill={AMBER}
+              fill={C.amber}
               opacity={0.8}
-              transition={SPRING}
+              transition={SNAP_SPRING}
             />
             <text
               x={markerX}
               y={72}
               textAnchor={"middle" as const}
-              fill={AMBER}
+              fill={C.amber}
               fontSize={11}
               fontWeight={700}
             >
@@ -1245,8 +1173,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <AnimatePresence>
         {annotation && (
           <motion.p
-            className="text-xs text-center max-w-xs"
-            style={{ color: AMBER }}
+            className="max-w-xs text-center text-xs"
+            style={{ color: C.amber }}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -1258,13 +1186,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       {/* Action buttons */}
-      <div className="flex gap-3 flex-wrap justify-center">
+      <div className="flex flex-wrap justify-center gap-3">
         <motion.button
-          className="px-4 py-2 rounded-lg text-sm font-medium border select-none"
+          className="rounded-lg border px-4 py-2 text-sm font-medium select-none"
           style={{
             minHeight: 44,
-            borderColor: INDIGO,
-            color: INDIGO,
+            borderColor: C.indigo,
+            color: C.indigo,
             background: "transparent",
           }}
           onClick={handleToggleTable}
@@ -1274,11 +1202,11 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           {showTable ? "Hide Ratio Table" : "Show Ratio Table"}
         </motion.button>
         <motion.button
-          className="px-4 py-2 rounded-lg text-sm font-medium border select-none"
+          className="rounded-lg border px-4 py-2 text-sm font-medium select-none"
           style={{
             minHeight: 44,
-            borderColor: INDIGO,
-            color: INDIGO,
+            borderColor: C.indigo,
+            color: C.indigo,
             background: "transparent",
           }}
           onClick={handleSwap}
@@ -1297,7 +1225,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            transition={SPRING}
+            transition={SNAP_SPRING}
           >
             <table
               className="w-full text-sm tabular-nums"
@@ -1307,9 +1235,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               <tbody>
                 <tr>
                   <td
-                    className="px-2 py-2 font-medium sticky left-0"
+                    className="sticky left-0 px-2 py-2 font-medium"
                     style={{
-                      background: SURFACE,
+                      background: C.surface,
                       color: topColor,
                       minHeight: 44,
                     }}
@@ -1319,18 +1247,18 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   {Array.from({ length: MAX_GROUPS + 1 }, (_, k) => (
                     <motion.td
                       key={`tA-${k}`}
-                      className="px-2 py-2 text-center cursor-pointer"
+                      className="cursor-pointer px-2 py-2 text-center"
                       style={{
-                        color: TEXT,
+                        color: C.textPrimary,
                         background:
-                          k === markerPos ? `${AMBER}22` : "transparent",
+                          k === markerPos ? `${C.amber}22` : "transparent",
                         borderLeft:
                           k === markerPos
-                            ? `2px solid ${AMBER}`
+                            ? `2px solid ${C.amber}`
                             : "1px solid transparent",
                         borderRight:
                           k === markerPos
-                            ? `2px solid ${AMBER}`
+                            ? `2px solid ${C.amber}`
                             : "1px solid transparent",
                         minHeight: 44,
                       }}
@@ -1340,7 +1268,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                       aria-label={`${topLabel} value: ${topVal * k}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: k * 0.05, ...SPRING_GENTLE }}
+                      transition={{ delay: k * 0.05, ...GENTLE_SPRING }}
                     >
                       {topVal * k}
                     </motion.td>
@@ -1348,9 +1276,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 </tr>
                 <tr>
                   <td
-                    className="px-2 py-2 font-medium sticky left-0"
+                    className="sticky left-0 px-2 py-2 font-medium"
                     style={{
-                      background: SURFACE,
+                      background: C.surface,
                       color: botColor,
                       minHeight: 44,
                     }}
@@ -1360,18 +1288,18 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   {Array.from({ length: MAX_GROUPS + 1 }, (_, k) => (
                     <motion.td
                       key={`tB-${k}`}
-                      className="px-2 py-2 text-center cursor-pointer"
+                      className="cursor-pointer px-2 py-2 text-center"
                       style={{
-                        color: TEXT,
+                        color: C.textPrimary,
                         background:
-                          k === markerPos ? `${AMBER}22` : "transparent",
+                          k === markerPos ? `${C.amber}22` : "transparent",
                         borderLeft:
                           k === markerPos
-                            ? `2px solid ${AMBER}`
+                            ? `2px solid ${C.amber}`
                             : "1px solid transparent",
                         borderRight:
                           k === markerPos
-                            ? `2px solid ${AMBER}`
+                            ? `2px solid ${C.amber}`
                             : "1px solid transparent",
                         minHeight: 44,
                       }}
@@ -1381,7 +1309,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                       aria-label={`${botLabel} value: ${botVal * k}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: k * 0.05, ...SPRING_GENTLE }}
+                      transition={{ delay: k * 0.05, ...GENTLE_SPRING }}
                     >
                       {botVal * k}
                     </motion.td>
@@ -1394,15 +1322,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       {/* Continue button with progress ring */}
-      <div className="pt-4">
-        <ContinueButton
-          onClick={onComplete}
-          disabled={interactions < MIN_INTERACTIONS}
-          progress={progress}
-        >
-          Continue to Discovery
-        </ContinueButton>
-      </div>
+      <ContinueButton
+        onClick={onComplete}
+        disabled={interactions < MIN_INTERACTIONS}
+      >
+        Continue to Discovery
+      </ContinueButton>
     </div>
   );
 }
@@ -1477,8 +1402,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   }, [isLast, onComplete]);
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-5 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold" style={{ color: TEXT }}>
+    <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
+      <h2 className="text-lg font-semibold" style={{ color: C.textPrimary }}>
         Guided Discovery
       </h2>
 
@@ -1486,10 +1411,10 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         {prompts.map((_, i) => (
           <div
             key={i}
-            className="w-2.5 h-2.5 rounded-full"
+            className="h-2.5 w-2.5 rounded-full"
             style={{
               background:
-                i < prompt ? EMERALD : i === prompt ? INDIGO : UNSHADED,
+                i < prompt ? C.emerald : i === prompt ? C.indigo : C.border,
             }}
           />
         ))}
@@ -1498,18 +1423,18 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={prompt}
-          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
-          style={{ background: SURFACE, border: `1px solid ${UNSHADED}` }}
+          className="flex w-full max-w-md flex-col gap-4 rounded-xl p-5"
+          style={{ background: C.surface, border: `1px solid ${C.border}` }}
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
           transition={EASE}
         >
-          <h3 className="text-base font-bold" style={{ color: AMBER }}>
+          <h3 className="text-base font-bold" style={{ color: C.amber }}>
             {currentPrompt.title}
           </h3>
 
-          <p className="text-sm leading-relaxed" style={{ color: TEXT }}>
+          <p className="text-sm leading-relaxed" style={{ color: C.textPrimary }}>
             {currentPrompt.text}
           </p>
 
@@ -1517,19 +1442,19 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             <motion.div
               className="rounded-lg p-3 text-sm leading-relaxed"
               style={{
-                background: `${BG}cc`,
-                borderLeft: `3px solid ${EMERALD}`,
-                color: TEXT,
+                background: `${C.surfaceDeep}cc`,
+                borderLeft: `3px solid ${C.emerald}`,
+                color: C.textPrimary,
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={SPRING_GENTLE}
+              transition={GENTLE_SPRING}
             >
               {currentPrompt.insight}
             </motion.div>
           )}
 
-          <div className="flex gap-3 justify-center pt-2">
+          <div className="flex justify-center gap-3 pt-2">
             {!showHint && (
               <ContinueButton onClick={() => setShowHint(true)}>
                 Show me
@@ -1572,16 +1497,16 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-5 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold" style={{ color: TEXT }}>
+    <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
+      <h2 className="text-lg font-semibold" style={{ color: C.textPrimary }}>
         Symbol Bridge
       </h2>
 
       <div
-        className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5"
-        style={{ background: SURFACE, border: `1px solid ${UNSHADED}` }}
+        className="flex w-full max-w-md flex-col gap-5 rounded-xl p-5"
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
       >
-        <p className="text-sm text-center" style={{ color: TEXT_SEC }}>
+        <p className="text-center text-sm" style={{ color: C.textSecondary }}>
           Three ways to write the same ratio (blue = 3, orange = 5):
         </p>
 
@@ -1591,17 +1516,17 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             className="text-center text-2xl font-bold"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_GENTLE}
+            transition={GENTLE_SPRING}
           >
-            <span style={{ color: BLUE }}>3</span>
+            <span style={{ color: C.blue }}>3</span>
             <motion.span
-              style={{ color: AMBER }}
+              style={{ color: C.amber }}
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 0.4, delay: 0.5 }}
             >
               {" : "}
             </motion.span>
-            <span style={{ color: ORANGE }}>5</span>
+            <span style={{ color: C.orange }}>5</span>
           </motion.div>
         )}
 
@@ -1611,11 +1536,11 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             className="text-center text-2xl font-bold"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_GENTLE}
+            transition={GENTLE_SPRING}
           >
-            <span style={{ color: BLUE }}>3</span>
-            <span style={{ color: TEXT }}>{" to "}</span>
-            <span style={{ color: ORANGE }}>5</span>
+            <span style={{ color: C.blue }}>3</span>
+            <span style={{ color: C.textPrimary }}>{" to "}</span>
+            <span style={{ color: C.orange }}>5</span>
           </motion.div>
         )}
 
@@ -1625,17 +1550,17 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             className="text-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_GENTLE}
+            transition={GENTLE_SPRING}
           >
             <div className="inline-flex flex-col items-center gap-0">
-              <span className="text-xl font-bold" style={{ color: BLUE }}>
+              <span className="text-xl font-bold" style={{ color: C.blue }}>
                 3
               </span>
               <div
-                className="w-8 h-0.5"
-                style={{ background: TEXT_SEC }}
+                className="h-0.5 w-8"
+                style={{ background: C.textSecondary }}
               />
-              <span className="text-xl font-bold" style={{ color: ORANGE }}>
+              <span className="text-xl font-bold" style={{ color: C.orange }}>
                 5
               </span>
             </div>
@@ -1645,68 +1570,68 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
         {/* Step 4: Distinction */}
         {step >= 3 && (
           <motion.div
-            className="flex gap-3 items-center justify-center text-sm"
+            className="flex items-center justify-center gap-3 text-sm"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_GENTLE}
+            transition={GENTLE_SPRING}
           >
             <div
               className="rounded-lg p-3 text-center"
-              style={{ background: BG, flex: 1 }}
+              style={{ background: C.surfaceDeep, flex: 1 }}
             >
-              <p className="font-bold" style={{ color: BLUE }}>
+              <p className="font-bold" style={{ color: C.blue }}>
                 Ratio 3:5
               </p>
-              <p className="text-xs mt-1" style={{ color: TEXT_SEC }}>
+              <p className="mt-1 text-xs" style={{ color: C.textSecondary }}>
                 Compares two groups
               </p>
-              <div className="flex gap-2 justify-center mt-2">
+              <div className="mt-2 flex justify-center gap-2">
                 <div className="flex gap-0.5">
                   {[0, 1, 2].map((i) => (
                     <div
                       key={`rb-${i}`}
-                      className="w-3 h-3 rounded-full"
-                      style={{ background: BLUE }}
+                      className="h-3 w-3 rounded-full"
+                      style={{ background: C.blue }}
                     />
                   ))}
                 </div>
-                <span style={{ color: BORDER }}>|</span>
+                <span style={{ color: C.textMuted }}>|</span>
                 <div className="flex gap-0.5">
                   {[0, 1, 2, 3, 4].map((i) => (
                     <div
                       key={`ro-${i}`}
-                      className="w-3 h-3 rounded-full"
-                      style={{ background: ORANGE }}
+                      className="h-3 w-3 rounded-full"
+                      style={{ background: C.orange }}
                     />
                   ))}
                 </div>
               </div>
             </div>
 
-            <span className="text-xl font-bold" style={{ color: RED }}>
+            <span className="text-xl font-bold" style={{ color: C.red }}>
               {"\u2260"}
             </span>
 
             <div
               className="rounded-lg p-3 text-center"
-              style={{ background: BG, flex: 1 }}
+              style={{ background: C.surfaceDeep, flex: 1 }}
             >
-              <p className="font-bold" style={{ color: EMERALD }}>
+              <p className="font-bold" style={{ color: C.emerald }}>
                 Fraction 3/8
               </p>
-              <p className="text-xs mt-1" style={{ color: TEXT_SEC }}>
+              <p className="mt-1 text-xs" style={{ color: C.textSecondary }}>
                 Part of a whole
               </p>
-              <div className="flex justify-center mt-2">
+              <div className="mt-2 flex justify-center">
                 <div className="flex">
                   {Array.from({ length: 8 }, (_, i) => (
                     <div
                       key={`fb-${i}`}
-                      className="w-3 h-3"
+                      className="h-3 w-3"
                       style={{
-                        background: i < 3 ? BLUE : `${ORANGE}44`,
+                        background: i < 3 ? C.blue : `${C.orange}44`,
                         borderRight:
-                          i < 7 ? `1px solid ${BORDER}` : "none",
+                          i < 7 ? `1px solid ${C.textMuted}` : "none",
                       }}
                     />
                   ))}
@@ -1722,34 +1647,34 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             className="text-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={SPRING_GENTLE}
+            transition={GENTLE_SPRING}
           >
-            <p className="text-sm mb-2" style={{ color: TEXT_SEC }}>
+            <p className="mb-2 text-sm" style={{ color: C.textSecondary }}>
               Equivalent ratios:
             </p>
-            <div className="flex gap-3 justify-center items-center text-lg font-bold tabular-nums">
+            <div className="flex items-center justify-center gap-3 text-lg font-bold tabular-nums">
               <span>
-                <span style={{ color: BLUE }}>3</span>
-                <span style={{ color: AMBER }}>:</span>
-                <span style={{ color: ORANGE }}>5</span>
+                <span style={{ color: C.blue }}>3</span>
+                <span style={{ color: C.amber }}>:</span>
+                <span style={{ color: C.orange }}>5</span>
               </span>
-              <span style={{ color: TEXT_SEC }}>=</span>
+              <span style={{ color: C.textSecondary }}>=</span>
               <span>
-                <span style={{ color: BLUE }}>6</span>
-                <span style={{ color: AMBER }}>:</span>
-                <span style={{ color: ORANGE }}>10</span>
+                <span style={{ color: C.blue }}>6</span>
+                <span style={{ color: C.amber }}>:</span>
+                <span style={{ color: C.orange }}>10</span>
               </span>
-              <span style={{ color: TEXT_SEC }}>=</span>
+              <span style={{ color: C.textSecondary }}>=</span>
               <span>
-                <span style={{ color: BLUE }}>9</span>
-                <span style={{ color: AMBER }}>:</span>
-                <span style={{ color: ORANGE }}>15</span>
+                <span style={{ color: C.blue }}>9</span>
+                <span style={{ color: C.amber }}>:</span>
+                <span style={{ color: C.orange }}>15</span>
               </span>
             </div>
-            <div className="flex gap-3 justify-center mt-1 text-xs">
-              <span style={{ color: EMERALD }}>{"  "}</span>
-              <span style={{ color: EMERALD }}>{"\u00D72"}</span>
-              <span style={{ color: EMERALD }}>{"\u00D73"}</span>
+            <div className="mt-1 flex justify-center gap-3 text-xs">
+              <span style={{ color: C.emerald }}>{"  "}</span>
+              <span style={{ color: C.emerald }}>{"\u00D72"}</span>
+              <span style={{ color: C.emerald }}>{"\u00D73"}</span>
             </div>
           </motion.div>
         )}
@@ -1760,32 +1685,32 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
         <motion.div
           className="w-full max-w-md rounded-xl p-5 text-sm"
           style={{
-            background: SURFACE,
-            border: `1px solid ${UNSHADED}`,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
           }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, ...SPRING_GENTLE }}
+          transition={{ delay: 1, ...GENTLE_SPRING }}
         >
-          <p className="font-bold mb-2" style={{ color: TEXT }}>
+          <p className="mb-2 font-bold" style={{ color: C.textPrimary }}>
             Three ways to write the same ratio:
           </p>
-          <p className="tabular-nums mb-3" style={{ color: TEXT_SEC }}>
+          <p className="mb-3 tabular-nums" style={{ color: C.textSecondary }}>
             {"  "}3 : 5{"    "}&quot;3 to 5&quot;{"    "}3/5
           </p>
-          <p className="font-bold mb-1" style={{ color: TEXT }}>
+          <p className="mb-1 font-bold" style={{ color: C.textPrimary }}>
             Equivalent ratios:
           </p>
-          <p className="tabular-nums mb-3" style={{ color: TEXT_SEC }}>
+          <p className="mb-3 tabular-nums" style={{ color: C.textSecondary }}>
             3:5 = 6:10 = 9:15 = 12:20 = ...
           </p>
-          <p className="text-xs" style={{ color: TEXT_SEC }}>
+          <p className="text-xs" style={{ color: C.textSecondary }}>
             (multiply BOTH parts by the same number)
           </p>
-          <p className="mt-3 font-semibold" style={{ color: AMBER }}>
+          <p className="mt-3 font-semibold" style={{ color: C.amber }}>
             {"Ratio \u2260 Fraction of the whole"}
           </p>
-          <p className="text-xs" style={{ color: TEXT_SEC }}>
+          <p className="text-xs" style={{ color: C.textSecondary }}>
             3:5 means &quot;3 compared to 5&quot; &mdash; NOT &quot;3 out of 5
             total&quot;
           </p>
@@ -1793,9 +1718,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
       )}
 
       {step >= 4 && (
-        <div className="pt-2">
-          <ContinueButton onClick={onComplete}>Continue</ContinueButton>
-        </div>
+        <ContinueButton onClick={onComplete}>Continue</ContinueButton>
       )}
     </div>
   );
@@ -1853,18 +1776,18 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   );
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-5 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold" style={{ color: TEXT }}>
+    <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
+      <h2 className="text-lg font-semibold" style={{ color: C.textPrimary }}>
         Real-World Ratios
       </h2>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={card}
-          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
+          className="flex w-full max-w-md flex-col gap-4 rounded-xl p-5"
           style={{
-            background: SURFACE,
-            border: `1px solid ${UNSHADED}`,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
             touchAction: "pan-y",
           }}
           initial={{ opacity: 0, x: 60 }}
@@ -1875,32 +1798,32 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold"
-              style={{ background: `${INDIGO}33`, color: INDIGO }}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold"
+              style={{ background: `${C.indigo}33`, color: C.indigo }}
             >
               {currentCard.icon}
             </div>
-            <h3 className="text-base font-bold" style={{ color: TEXT }}>
+            <h3 className="text-base font-bold" style={{ color: C.textPrimary }}>
               {currentCard.title}
             </h3>
           </div>
 
           <p
             className="text-sm leading-relaxed"
-            style={{ color: TEXT_SEC, lineHeight: 1.6 }}
+            style={{ color: C.textSecondary, lineHeight: 1.6 }}
           >
             {currentCard.body}
           </p>
 
           <div
             className="rounded-lg p-3 text-center text-lg font-bold tabular-nums"
-            style={{ background: BG, border: `1px solid ${AMBER}` }}
+            style={{ background: C.surfaceDeep, border: `1px solid ${C.amber}` }}
           >
             {currentCard.ratio.map((part, i) => (
               <span
                 key={i}
                 style={{
-                  color: part === "=" ? AMBER : i === 0 ? BLUE : ORANGE,
+                  color: part === "=" ? C.amber : i === 0 ? C.blue : C.orange,
                 }}
               >
                 {part}{" "}
@@ -1917,8 +1840,8 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           style={{
             minWidth: 44,
             minHeight: 44,
-            background: card > 0 ? UNSHADED : "transparent",
-            color: card > 0 ? TEXT : BORDER,
+            background: card > 0 ? C.border : "transparent",
+            color: card > 0 ? C.textPrimary : C.textMuted,
           }}
           onClick={() => card > 0 && setCard(card - 1)}
           whileTap={card > 0 ? { scale: 0.95 } : undefined}
@@ -1932,8 +1855,8 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           {scenarios.map((_, i) => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full"
-              style={{ background: i === card ? INDIGO : UNSHADED }}
+              className="h-2 w-2 rounded-full"
+              style={{ background: i === card ? C.indigo : C.border }}
             />
           ))}
         </div>
@@ -1943,8 +1866,8 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           style={{
             minWidth: 44,
             minHeight: 44,
-            background: card < cardCount - 1 ? UNSHADED : "transparent",
-            color: card < cardCount - 1 ? TEXT : BORDER,
+            background: card < cardCount - 1 ? C.border : "transparent",
+            color: card < cardCount - 1 ? C.textPrimary : C.textMuted,
           }}
           onClick={() => card < cardCount - 1 && setCard(card + 1)}
           whileTap={card < cardCount - 1 ? { scale: 0.95 } : undefined}
@@ -1955,9 +1878,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         </motion.button>
       </div>
 
-      <div className="pt-2">
-        <ContinueButton onClick={onComplete}>Continue</ContinueButton>
-      </div>
+      <ContinueButton onClick={onComplete}>Continue</ContinueButton>
     </div>
   );
 }
@@ -2073,26 +1994,26 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   }, [prob, choice, multiSelect, numericAnswer, tableInputs]);
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-5 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold" style={{ color: TEXT }}>
+    <div className="flex flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
+      <h2 className="text-lg font-semibold" style={{ color: C.textPrimary }}>
         Practice
       </h2>
 
       {/* Progress dots */}
-      <div className="flex gap-1.5 flex-wrap justify-center">
+      <div className="flex flex-wrap justify-center gap-1.5">
         {PROBLEMS.map((_, i) => (
           <div
             key={i}
-            className="w-2.5 h-2.5 rounded-full"
+            className="h-2.5 w-2.5 rounded-full"
             style={{
               background:
                 i < results.length
                   ? (results[i] ?? false)
-                    ? EMERALD
-                    : RED
+                    ? C.emerald
+                    : C.red
                   : i === pi
-                    ? INDIGO
-                    : UNSHADED,
+                    ? C.indigo
+                    : C.border,
             }}
           />
         ))}
@@ -2100,15 +2021,15 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Layer badge */}
       <span
-        className="text-xs px-2 py-1 rounded-full"
+        className="rounded-full px-2 py-1 text-xs"
         style={{
-          background: UNSHADED,
+          background: C.border,
           color:
             prob.layer === "recall"
-              ? BLUE
+              ? C.blue
               : prob.layer === "procedure"
-                ? AMBER
-                : PURPLE,
+                ? C.amber
+                : C.purple,
         }}
       >
         {prob.layer === "recall"
@@ -2121,17 +2042,17 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={pi}
-          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
+          className="flex w-full max-w-md flex-col gap-4 rounded-xl p-5"
           style={{
-            background: SURFACE,
-            border: `1px solid ${UNSHADED}`,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
           }}
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
-          transition={SPRING_GENTLE}
+          transition={GENTLE_SPRING}
         >
-          <p className="text-base leading-relaxed" style={{ color: TEXT }}>
+          <p className="text-base leading-relaxed" style={{ color: C.textPrimary }}>
             {prob.stem}
           </p>
 
@@ -2152,24 +2073,24 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   return (
                     <motion.button
                       key={o.id}
-                      className="text-left px-4 py-3 rounded-lg text-sm border transition-colors flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-lg border px-4 py-3 text-left text-sm transition-colors"
                       style={{
                         minHeight: 44,
                         background: showCorrect
-                          ? `${EMERALD}22`
+                          ? `${C.emerald}22`
                           : showWrong
-                            ? `${RED}22`
+                            ? `${C.red}22`
                             : isSelected
-                              ? `${INDIGO}22`
+                              ? `${C.indigo}22`
                               : "transparent",
                         borderColor: showCorrect
-                          ? EMERALD
+                          ? C.emerald
                           : showWrong
-                            ? RED
+                            ? C.red
                             : isSelected
-                              ? INDIGO
-                              : UNSHADED,
-                        color: TEXT,
+                              ? C.indigo
+                              : C.border,
+                        color: C.textPrimary,
                         cursor: submitted ? "default" : "pointer",
                       }}
                       onClick={() => {
@@ -2189,11 +2110,11 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                     >
                       {isMulti && (
                         <div
-                          className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center"
+                          className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
                           style={{
-                            borderColor: isSelected ? INDIGO : BORDER,
+                            borderColor: isSelected ? C.indigo : C.textMuted,
                             background: isSelected
-                              ? INDIGO
+                              ? C.indigo
                               : "transparent",
                           }}
                         >
@@ -2206,8 +2127,8 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                       )}
                       <span>
                         <span
-                          className="font-semibold mr-2"
-                          style={{ color: TEXT_SEC }}
+                          className="mr-2 font-semibold"
+                          style={{ color: C.textSecondary }}
                         >
                           {o.id.toUpperCase()}.
                         </span>
@@ -2216,13 +2137,13 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                       {showCorrect && (
                         <span
                           className="ml-auto"
-                          style={{ color: EMERALD }}
+                          style={{ color: C.emerald }}
                         >
                           {"\u2713"}
                         </span>
                       )}
                       {showWrong && (
-                        <span className="ml-auto" style={{ color: RED }}>
+                        <span className="ml-auto" style={{ color: C.red }}>
                           {"\u2717"}
                         </span>
                       )}
@@ -2234,16 +2155,16 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
           {/* ── Numeric input ──────────────────────────── */}
           {prob.type === "numeric-input" && (
-            <div className="flex gap-2 items-center justify-center">
+            <div className="flex items-center justify-center gap-2">
               <input
                 type="number"
                 inputMode="numeric"
-                className="w-20 text-center px-3 py-2 rounded-lg text-lg font-bold focus:outline-none"
+                className="w-20 rounded-lg px-3 py-2 text-center text-lg font-bold focus:outline-none"
                 style={{
                   minHeight: 48,
-                  background: BG,
-                  border: `1px solid ${submitted ? (ok ? EMERALD : RED) : BORDER}`,
-                  color: TEXT,
+                  background: C.surfaceDeep,
+                  border: `1px solid ${submitted ? (ok ? C.emerald : C.red) : C.textMuted}`,
+                  color: C.textPrimary,
                 }}
                 value={numericAnswer}
                 onChange={(e) => setNumericAnswer(e.target.value)}
@@ -2261,7 +2182,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   <tr>
                     <th
                       className="px-2 py-2 text-left"
-                      style={{ color: TEXT_SEC }}
+                      style={{ color: C.textSecondary }}
                     >
                       {" "}
                     </th>
@@ -2269,7 +2190,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                       <th
                         key={i}
                         className="px-2 py-2 text-center"
-                        style={{ color: TEXT_SEC }}
+                        style={{ color: C.textSecondary }}
                       >
                         {i + 1}
                       </th>
@@ -2280,7 +2201,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   <tr>
                     <td
                       className="px-2 py-2 font-medium"
-                      style={{ color: BLUE }}
+                      style={{ color: C.blue }}
                     >
                       {prob.tableData.headerA}
                     </td>
@@ -2309,12 +2230,12 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                             <input
                               type="number"
                               inputMode="numeric"
-                              className="w-14 text-center px-1 py-1 rounded text-sm font-bold focus:outline-none"
+                              className="w-14 rounded px-1 py-1 text-center text-sm font-bold focus:outline-none"
                               style={{
                                 minHeight: 44,
-                                background: BG,
-                                border: `1px solid ${isCorrectCell ? EMERALD : isWrongCell ? RED : BORDER}`,
-                                color: TEXT,
+                                background: C.surfaceDeep,
+                                border: `1px solid ${isCorrectCell ? C.emerald : isWrongCell ? C.red : C.textMuted}`,
+                                color: C.textPrimary,
                               }}
                               value={inputVal}
                               onChange={(e) =>
@@ -2327,7 +2248,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                               aria-label={`${prob.tableData!.headerA} row ${i + 1}`}
                             />
                           ) : (
-                            <span style={{ color: TEXT }}>
+                            <span style={{ color: C.textPrimary }}>
                               {row.a}
                             </span>
                           )}
@@ -2338,7 +2259,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   <tr>
                     <td
                       className="px-2 py-2 font-medium"
-                      style={{ color: ORANGE }}
+                      style={{ color: C.orange }}
                     >
                       {prob.tableData.headerB}
                     </td>
@@ -2367,12 +2288,12 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                             <input
                               type="number"
                               inputMode="numeric"
-                              className="w-14 text-center px-1 py-1 rounded text-sm font-bold focus:outline-none"
+                              className="w-14 rounded px-1 py-1 text-center text-sm font-bold focus:outline-none"
                               style={{
                                 minHeight: 44,
-                                background: BG,
-                                border: `1px solid ${isCorrectCell ? EMERALD : isWrongCell ? RED : BORDER}`,
-                                color: TEXT,
+                                background: C.surfaceDeep,
+                                border: `1px solid ${isCorrectCell ? C.emerald : isWrongCell ? C.red : C.textMuted}`,
+                                color: C.textPrimary,
                               }}
                               value={inputVal}
                               onChange={(e) =>
@@ -2385,7 +2306,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                               aria-label={`${prob.tableData!.headerB} row ${i + 1}`}
                             />
                           ) : (
-                            <span style={{ color: TEXT }}>
+                            <span style={{ color: C.textPrimary }}>
                               {row.b}
                             </span>
                           )}
@@ -2403,9 +2324,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <motion.div
               className="rounded-lg p-3 text-sm leading-relaxed"
               style={{
-                background: `${BG}cc`,
-                borderLeft: `3px solid ${ok ? EMERALD : AMBER}`,
-                color: TEXT,
+                background: `${C.surfaceDeep}cc`,
+                borderLeft: `3px solid ${ok ? C.emerald : C.amber}`,
+                color: C.textPrimary,
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2478,33 +2399,33 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   }, [score, skipped]);
 
   return (
-    <div className="flex flex-col items-center flex-1 gap-6 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold" style={{ color: TEXT }}>
+    <div className="flex flex-1 flex-col items-center gap-6 overflow-y-auto p-4">
+      <h2 className="text-lg font-semibold" style={{ color: C.textPrimary }}>
         Reflection
       </h2>
 
       <div
-        className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
+        className="flex w-full max-w-md flex-col gap-4 rounded-xl p-5"
         style={{
-          background: SURFACE,
-          border: `1px solid ${UNSHADED}`,
+          background: C.surface,
+          border: `1px solid ${C.border}`,
         }}
       >
         <p
           className="text-base font-medium leading-relaxed"
-          style={{ color: TEXT }}
+          style={{ color: C.textPrimary }}
         >
           Explain in your own words: what is the difference between a ratio
           and a fraction? Why does order matter in a ratio?
         </p>
 
         <textarea
-          className="w-full p-3 rounded-lg text-sm resize-y focus:outline-none"
+          className="w-full resize-y rounded-lg p-3 text-sm focus:outline-none"
           style={{
             minHeight: 120,
-            background: BG,
-            border: `1px solid ${submitted ? INDIGO : BORDER}`,
-            color: TEXT,
+            background: C.surfaceDeep,
+            border: `1px solid ${submitted ? C.indigo : C.textMuted}`,
+            color: C.textPrimary,
           }}
           placeholder="Think about the blue and orange circles... a ratio compares ___ while a fraction tells you ___. Order matters because..."
           value={text}
@@ -2513,11 +2434,11 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           aria-label="Reflection text"
         />
 
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <p
             className="text-xs tabular-nums"
             style={{
-              color: text.length >= minChars ? EMERALD : TEXT_SEC,
+              color: text.length >= minChars ? C.emerald : C.textSecondary,
             }}
           >
             {text.length}/{minChars} minimum
@@ -2527,7 +2448,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               className="text-xs underline"
               style={{
                 minHeight: 44,
-                color: TEXT_SEC,
+                color: C.textSecondary,
                 opacity: 0.6,
               }}
               onClick={handleSkip}
@@ -2565,8 +2486,8 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                   >
                     <path
                       d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                      fill={i < score ? AMBER : UNSHADED}
-                      stroke={i < score ? AMBER : BORDER}
+                      fill={i < score ? C.amber : C.border}
+                      stroke={i < score ? C.amber : C.textMuted}
                       strokeWidth={1}
                     />
                   </motion.svg>
@@ -2577,9 +2498,9 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <div
               className="rounded-lg p-3 text-sm leading-relaxed"
               style={{
-                background: `${BG}cc`,
-                borderLeft: `3px solid ${EMERALD}`,
-                color: TEXT,
+                background: `${C.surfaceDeep}cc`,
+                borderLeft: `3px solid ${C.emerald}`,
+                color: C.textPrimary,
               }}
             >
               {feedback}
@@ -2588,10 +2509,10 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             {!skipped && (
               <motion.p
                 className="text-center text-lg font-bold"
-                style={{ color: AMBER }}
+                style={{ color: C.amber }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, ...SPRING }}
+                transition={{ delay: 0.8, ...SNAP_SPRING }}
               >
                 +{score * 16} XP
               </motion.p>
@@ -2616,101 +2537,20 @@ export function RatiosLesson({
 }: {
   onComplete?: () => void;
 }) {
-  const [si, setSi] = useState(0);
-  const stage = STAGES[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    if (si >= STAGES.length - 1) {
-      onComplete?.();
-      return;
-    }
-    setSi((i) => i + 1);
-  }, [si, onComplete]);
-
-  const stageView = useMemo((): ReactNode => {
-    switch (stage) {
-      case "hook":
-        return <HookStage onComplete={advance} />;
-      case "spatial":
-        return <SpatialStage onComplete={advance} />;
-      case "discovery":
-        return <DiscoveryStage onComplete={advance} />;
-      case "symbol":
-        return <SymbolBridgeStage onComplete={advance} />;
-      case "realWorld":
-        return <RealWorldStage onComplete={advance} />;
-      case "practice":
-        return <PracticeStage onComplete={advance} />;
-      case "reflection":
-        return <ReflectionStage onComplete={advance} />;
-      default:
-        return null;
-    }
-  }, [stage, advance]);
-
   return (
-    <div
-      className={cn("flex min-h-screen flex-col")}
-      style={{ background: BG }}
-    >
-      {/* Progress nav */}
-      <nav
-        className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3"
-        style={{ background: SURFACE }}
-        aria-label="Lesson progress"
-      >
-        <span
-          className="text-sm font-medium tabular-nums"
-          style={{ color: TEXT_SEC }}
-        >
-          {si + 1}/{STAGES.length}
-        </span>
-        <div
-          className="flex-1 h-1.5 rounded-full overflow-hidden"
-          style={{ background: UNSHADED }}
-        >
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: INDIGO }}
-            animate={{
-              width: `${((si + 1) / STAGES.length) * 100}%`,
-            }}
-            transition={SPRING_GENTLE}
-          />
-        </div>
-
-        <div className="flex gap-1.5">
-          {STAGES.map((s, i) => (
-            <div
-              key={s}
-              className="w-2 h-2 rounded-full"
-              style={{
-                background:
-                  i < si ? EMERALD : i === si ? INDIGO : UNSHADED,
-              }}
-              aria-label={`Stage ${i + 1}: ${s === "realWorld" ? "real world" : s}${i === si ? " (current)" : ""}`}
-            />
-          ))}
-        </div>
-
-        <span className="text-xs capitalize" style={{ color: TEXT_SEC }}>
-          {stage === "realWorld" ? "real world" : stage}
-        </span>
-      </nav>
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={SPRING_GENTLE}
-        >
-          {stageView}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="RP-1.1 Ratios" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

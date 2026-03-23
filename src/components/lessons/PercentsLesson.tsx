@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useState,
@@ -17,91 +23,50 @@ import {
 import { useDrag } from "@use-gesture/react";
 
 /* ------------------------------------------------------------------ */
-/*  Constants                                                          */
+/*  Shared token aliases                                               */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const TEXT_SEC = "#e2e8f0";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const ELEVATED = "#334155";
-const PRIMARY = "#8b5cf6";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
-const WARNING = "#fbbf24";
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.secondary;
+const BORDER = colors.bg.elevated;
+const ELEVATED = colors.bg.surface;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+const WARNING = colors.functional.warning;
 
-const EMERALD = "#34d399";
-const INDIGO = "#818cf8";
-const AMBER = "#f59e0b";
-const PURPLE = "#a78bfa";
-const ROSE = "#fb7185";
+const EMERALD = colors.accent.emerald;
+const INDIGO = colors.accent.indigo;
+const PURPLE = colors.accent.violet;
+const ROSE = colors.accent.rose;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
+/* ------------------------------------------------------------------ */
+/*  Lesson-specific theme (values not in shared palette)               */
+/* ------------------------------------------------------------------ */
 
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
+const THEME = {
+  /** Original primary — deeper violet than colors.accent.violet */
+  primary: "#8b5cf6",
+  /** Amber accent — warmer than colors.accent.amber */
+  amber: "#f59e0b",
+  /** Light text secondary — brighter than the muted token */
+  textSec: "#e2e8f0",
+} as const;
 
 /* ------------------------------------------------------------------ */
 /*  Shared sub-components                                              */
 /* ------------------------------------------------------------------ */
 
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  delay = 0,
-  color = PRIMARY,
-}: {
-  onClick: () => void;
-  label?: string;
-  delay?: number;
-  color?: string;
-}) {
+/** Stage content wrapper — replaces the old StageWrapper now that LessonShell handles transitions. */
+function StageContent({ children }: { children: ReactNode }) {
   return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]"
-      style={{ background: color, minHeight: 48 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-function StageWrapper({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex min-h-dvh flex-col items-center justify-center px-4 py-8"
-      style={{ background: BG }}
-    >
+    <div className="flex min-h-[calc(100dvh-56px)] flex-col items-center justify-center bg-nm-bg-primary px-4 py-8">
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -257,7 +222,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
   const fillY = 206;
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div
         className="relative flex w-full max-w-2xl flex-col items-center justify-center gap-6"
         style={{ minHeight: "70vh" }}
@@ -440,7 +405,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
         says 45 out of 100. Both have the same amount of battery charge. Per cent
         means per hundred.
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -579,7 +544,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
   }, [percentValue]);
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
         {/* Triple Readout Bar */}
         <motion.div
@@ -610,7 +575,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
           </span>
           <span
             className="font-mono font-bold tabular-nums"
-            style={{ color: AMBER, fontSize: "clamp(28px, 7vw, 48px)" }}
+            style={{ color: THEME.amber, fontSize: "clamp(28px, 7vw, 48px)" }}
           >
             {decimalValue}
           </span>
@@ -618,8 +583,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
 
         {/* Model Toggle */}
         <div
-          className="flex rounded-xl p-1"
-          style={{ background: BG, border: `1px solid ${ELEVATED}` }}
+          className="flex rounded-xl border border-nm-bg-surface bg-nm-bg-primary p-1"
           role="tablist"
           aria-label="Spatial model selection"
         >
@@ -831,7 +795,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                 width: 28,
                 height: 28,
                 background: INDIGO,
-                border: `2px solid ${TEXT_SEC}`,
+                border: `2px solid ${THEME.textSec}`,
                 boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
                 left: `calc(${percentValue}% - 14px)`,
                 touchAction: "none",
@@ -883,9 +847,12 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
         </div>
 
         {!canContinue && (
-          <p className="text-xs" style={{ color: MUTED }}>
-            Interact with the grid ({interactionCount}/10) to continue
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <InteractionDots count={Math.min(interactionCount, 10)} total={10} activeColor={INDIGO} />
+            <p className="text-xs" style={{ color: MUTED }}>
+              Interact with the grid to continue
+            </p>
+          </div>
         )}
       </div>
 
@@ -894,7 +861,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
         {shadedCount} cells shaded. {percentValue} percent. {fractionNum} out of
         100. {decimalValue}.
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -921,7 +888,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         <AnimatePresence mode="wait">
           {/* -- Prompt 1: Triple Identity -- */}
@@ -960,7 +927,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.8 }}
                   className="font-mono text-2xl font-bold tabular-nums"
-                  style={{ color: AMBER }}
+                  style={{ color: THEME.amber }}
                 >
                   = 0.45
                 </motion.span>
@@ -975,7 +942,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               >
                 <p
                   className="text-center text-base leading-relaxed"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: THEME.textSec }}
                 >
                   45 cells out of 100 = 45 per hundred = 45%. The percent sign
                   (%) is just shorthand for{" "}
@@ -1078,7 +1045,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     <span style={{ color: TEXT }}>=</span>
                     <span
                       className="font-mono text-xl font-bold tabular-nums"
-                      style={{ color: AMBER }}
+                      style={{ color: THEME.amber }}
                     >
                       0.75
                     </span>
@@ -1096,7 +1063,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     >
                       75/100
                     </span>
-                    <span className="font-mono text-sm" style={{ color: AMBER }}>
+                    <span className="font-mono text-sm" style={{ color: THEME.amber }}>
                       {"\u00F7"}25 {"\u2192"}
                     </span>
                     <span
@@ -1109,7 +1076,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
 
                   <p
                     className="text-center text-sm leading-relaxed"
-                    style={{ color: TEXT_SEC }}
+                    style={{ color: THEME.textSec }}
                   >
                     75% = 75/100 = 3/4 = 0.75. Every percent can simplify to a
                     simpler fraction too!
@@ -1163,7 +1130,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                         width: 18,
                         height: 18,
                         borderRadius: 2,
-                        background: i < 2 ? `${AMBER}cc` : "transparent",
+                        background: i < 2 ? `${THEME.amber}cc` : "transparent",
                         border: `1px dashed ${INDIGO}60`,
                       }}
                     />
@@ -1179,7 +1146,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               >
                 <span
                   className="font-mono text-2xl font-bold"
-                  style={{ color: AMBER }}
+                  style={{ color: THEME.amber }}
                 >
                   120%
                 </span>
@@ -1193,7 +1160,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <span style={{ color: TEXT }}>=</span>
                 <span
                   className="font-mono text-xl font-bold tabular-nums"
-                  style={{ color: AMBER }}
+                  style={{ color: THEME.amber }}
                 >
                   1.20
                 </span>
@@ -1208,10 +1175,10 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               >
                 <p
                   className="text-center text-sm leading-relaxed"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: THEME.textSec }}
                 >
                   Percent CAN go above 100. 120% = 1.20 ={" "}
-                  <strong style={{ color: AMBER }}>MORE</strong> than 1 whole.
+                  <strong style={{ color: THEME.amber }}>MORE</strong> than 1 whole.
                   200% would mean 2 wholes. There is no ceiling!
                 </p>
               </motion.div>
@@ -1219,7 +1186,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               <ContinueButton
                 onClick={() => setPrompt(4)}
                 label="Mind blown!"
-                color={AMBER}
+                color={THEME.amber}
                 delay={3}
               />
             </motion.div>
@@ -1321,13 +1288,13 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                   >
                     <p
                       className="text-center text-sm leading-relaxed"
-                      style={{ color: TEXT_SEC }}
+                      style={{ color: THEME.textSec }}
                     >
                       50% of 80 means HALF of 80. Half of 80 is 40.{" "}
                       <strong
                         style={{
-                          color: AMBER,
-                          background: `${AMBER}20`,
+                          color: THEME.amber,
+                          background: `${THEME.amber}20`,
                           padding: "2px 6px",
                           borderRadius: 4,
                         }}
@@ -1431,12 +1398,12 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               >
                 <p
                   className="text-sm font-medium leading-relaxed"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: THEME.textSec }}
                 >
                   <strong style={{ color: TEXT }}>Key Insight:</strong> To find
                   X% of a number, convert the percent to a decimal (divide by
                   100) and multiply.{" "}
-                  <span className="font-mono font-bold" style={{ color: AMBER }}>
+                  <span className="font-mono font-bold" style={{ color: THEME.amber }}>
                     25% of 60 = 0.25 {"\u00D7"} 60 = 15
                   </span>
                 </p>
@@ -1447,7 +1414,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
           )}
         </AnimatePresence>
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -1475,7 +1442,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   }, [reduced]);
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         {/* Reference grid */}
         <MiniGrid shadedCount={45} size={160} label="45% shaded" />
@@ -1520,7 +1487,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               >
                 45/100
               </span>
-              <span className="font-mono text-sm" style={{ color: AMBER }}>
+              <span className="font-mono text-sm" style={{ color: THEME.amber }}>
                 {"\u00F7"}5 {"\u2192"}
               </span>
               <span
@@ -1550,7 +1517,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               </span>
               <span
                 className="font-mono text-2xl font-bold tabular-nums"
-                style={{ color: AMBER }}
+                style={{ color: THEME.amber }}
               >
                 0.45
               </span>
@@ -1569,9 +1536,9 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                 className="text-center font-mono text-xl font-bold"
                 style={{ color: TEXT }}
               >
-                <span style={{ color: AMBER }}>x</span>% ={" "}
-                <span style={{ color: AMBER }}>x</span>/100 ={" "}
-                <span style={{ color: AMBER }}>x</span> {"\u00F7"} 100
+                <span style={{ color: THEME.amber }}>x</span>% ={" "}
+                <span style={{ color: THEME.amber }}>x</span>/100 ={" "}
+                <span style={{ color: THEME.amber }}>x</span> {"\u00F7"} 100
               </p>
             </motion.div>
           )}
@@ -1599,7 +1566,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                   <br />
                   <span
                     className="font-mono tabular-nums"
-                    style={{ color: AMBER }}
+                    style={{ color: THEME.amber }}
                   >
                     = 0.50 {"\u00D7"} 80
                   </span>
@@ -1623,15 +1590,15 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               >
                 <p
                   className="text-sm font-medium leading-relaxed"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: THEME.textSec }}
                 >
                   <strong style={{ color: TEXT }}>The Percent Triple:</strong>{" "}
-                  <span className="font-mono" style={{ color: AMBER }}>
+                  <span className="font-mono" style={{ color: THEME.amber }}>
                     x% = x/100 = x {"\u00F7"} 100
                   </span>
                   <br />
                   <strong style={{ color: TEXT }}>Percent OF:</strong>{" "}
-                  <span className="font-mono" style={{ color: AMBER }}>
+                  <span className="font-mono" style={{ color: THEME.amber }}>
                     x% of n = (x/100) {"\u00D7"} n
                   </span>
                 </p>
@@ -1642,7 +1609,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
 
         {step >= 5 && <ContinueButton onClick={onContinue} delay={2} />}
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -1670,7 +1637,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
       {
         icon: "\uD83C\uDFC0",
         title: "SPORTS",
-        color: AMBER,
+        color: THEME.amber,
         text: "Free-throw shooting: 80%. Made 80 out of every 100 attempts.",
         math: "80% = 80/100 = 4/5",
       },
@@ -1686,7 +1653,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   );
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-xl flex-col items-center gap-3">
         {cards.map((card, i) => (
           <motion.section
@@ -1712,12 +1679,12 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
               >
                 {card.title}
               </span>
-              <p className="text-sm leading-relaxed" style={{ color: TEXT_SEC }}>
+              <p className="text-sm leading-relaxed" style={{ color: THEME.textSec }}>
                 {card.text}
               </p>
               <p
                 className="font-mono text-sm font-bold"
-                style={{ color: AMBER }}
+                style={{ color: THEME.amber }}
               >
                 {card.math}
               </p>
@@ -1727,7 +1694,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
 
         <ContinueButton onClick={onContinue} delay={0} />
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -1829,7 +1796,7 @@ function GridShadingProblem({
         <button
           onClick={handleCheck}
           className="rounded-xl px-6 py-3 text-base font-semibold text-white active:scale-[0.97]"
-          style={{ background: PRIMARY, minHeight: 48 }}
+          style={{ background: THEME.primary, minHeight: 48 }}
         >
           Check
         </button>
@@ -1990,7 +1957,7 @@ function OrderingProblem({
           <button
             onClick={handleCheck}
             className="rounded-xl px-6 py-3 text-base font-semibold text-white active:scale-[0.97]"
-            style={{ background: PRIMARY, minHeight: 48 }}
+            style={{ background: THEME.primary, minHeight: 48 }}
           >
             Check
           </button>
@@ -2177,7 +2144,7 @@ function TripleMatchingProblem({
         <div className="flex flex-col gap-2">
           <span
             className="text-center text-xs font-semibold uppercase"
-            style={{ color: AMBER }}
+            style={{ color: THEME.amber }}
           >
             Decimal
           </span>
@@ -2193,7 +2160,7 @@ function TripleMatchingProblem({
                   minWidth: 80,
                   minHeight: 44,
                   background: ELEVATED,
-                  color: isUsed ? MUTED : AMBER,
+                  color: isUsed ? MUTED : THEME.amber,
                   opacity: isUsed ? 0.5 : 1,
                   border: "2px solid transparent",
                 }}
@@ -2224,7 +2191,7 @@ function TripleMatchingProblem({
         <button
           onClick={handleCheck}
           className="rounded-xl px-6 py-3 text-base font-semibold text-white active:scale-[0.97]"
-          style={{ background: PRIMARY, minHeight: 48 }}
+          style={{ background: THEME.primary, minHeight: 48 }}
         >
           Check
         </button>
@@ -2581,7 +2548,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                 y={20}
                 width={80}
                 height={40}
-                fill={AMBER}
+                fill={THEME.amber}
                 rx={4}
                 opacity={0.6}
               />
@@ -2599,11 +2566,11 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                 y1={60}
                 x2={260}
                 y2={60}
-                stroke={TEXT_SEC}
+                stroke={THEME.textSec}
                 strokeWidth={1}
                 strokeDasharray="4 3"
               />
-              <text x={270} y={64} fill={TEXT_SEC} fontSize={10}>
+              <text x={270} y={64} fill={THEME.textSec} fontSize={10}>
                 100%
               </text>
             </svg>
@@ -2670,7 +2637,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
   }, [correct, currentProblem, problems.length]);
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-xl flex-col items-center gap-4">
         {/* Progress dots */}
         <div className="flex items-center gap-1.5">
@@ -2687,10 +2654,10 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                       ? SUCCESS
                       : ERROR
                     : i === currentProblem
-                      ? PRIMARY
+                      ? THEME.primary
                       : ELEVATED,
                 border:
-                  i === currentProblem ? `2px solid ${PRIMARY}` : "none",
+                  i === currentProblem ? `2px solid ${THEME.primary}` : "none",
               }}
             />
           ))}
@@ -2713,7 +2680,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
               </span>
               <span
                 className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: `${PRIMARY}20`, color: PURPLE }}
+                style={{ background: `${THEME.primary}20`, color: PURPLE }}
               >
                 {problem.layer}
               </span>
@@ -2739,7 +2706,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
               <button
                 onClick={handleCheck}
                 className="mx-auto mt-2 rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-                style={{ background: PRIMARY, minHeight: 48 }}
+                style={{ background: THEME.primary, minHeight: 48 }}
               >
                 Check
               </button>
@@ -2766,7 +2733,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                   <button
                     onClick={isLastProblem ? onContinue : handleNext}
                     className="mt-2 rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-                    style={{ background: PRIMARY, minHeight: 48 }}
+                    style={{ background: THEME.primary, minHeight: 48 }}
                   >
                     {isLastProblem ? "Continue" : "Next \u2192"}
                   </button>
@@ -2789,7 +2756,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           </motion.div>
         </AnimatePresence>
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -2826,11 +2793,10 @@ function NumericInputProblem({
           value={answer ?? ""}
           onChange={(e) => !checked && setAnswer(e.target.value)}
           disabled={checked}
-          className="rounded-xl text-center font-mono text-2xl font-bold tabular-nums"
+          className="rounded-xl bg-nm-bg-primary text-center font-mono text-2xl font-bold tabular-nums"
           style={{
             width: 120,
             height: 56,
-            background: BG,
             color: TEXT,
             border: `2px solid ${checked ? (correct ? SUCCESS : ERROR) : BORDER}`,
             borderRadius: 12,
@@ -2841,7 +2807,7 @@ function NumericInputProblem({
           <button
             onClick={onCheck}
             className="rounded-xl px-6 py-3 text-base font-semibold text-white active:scale-[0.97]"
-            style={{ background: PRIMARY, minHeight: 48 }}
+            style={{ background: THEME.primary, minHeight: 48 }}
           >
             Check
           </button>
@@ -2871,7 +2837,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const showCompletion = submitted || skipped;
 
   return (
-    <StageWrapper>
+    <StageContent>
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         {!showCompletion && (
           <motion.div
@@ -2884,7 +2850,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               className="text-xs font-semibold uppercase tracking-wider"
               style={{
                 color: PURPLE,
-                background: `${PRIMARY}15`,
+                background: `${THEME.primary}15`,
                 padding: "4px 10px",
                 borderRadius: 12,
                 alignSelf: "flex-start",
@@ -2920,11 +2886,9 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="I would explain that..."
-                className="w-full resize-none rounded-xl p-4 text-base leading-relaxed"
+                className="w-full resize-none rounded-xl border border-nm-bg-elevated bg-nm-bg-primary p-4 text-base leading-relaxed"
                 style={{
-                  background: BG,
-                  color: TEXT_SEC,
-                  border: `1px solid ${BORDER}`,
+                  color: THEME.textSec,
                   minHeight: 120,
                   maxHeight: 240,
                 }}
@@ -2943,7 +2907,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               disabled={!canSubmit}
               className="w-full rounded-xl py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
               style={{
-                background: PRIMARY,
+                background: THEME.primary,
                 minHeight: 52,
                 opacity: canSubmit ? 1 : 0.4,
                 pointerEvents: canSubmit ? "auto" : "none",
@@ -2999,7 +2963,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                   </p>
                   <p
                     className="text-center text-sm italic"
-                    style={{ color: TEXT_SEC }}
+                    style={{ color: THEME.textSec }}
                   >
                     Percent means per hundred. &quot;Of&quot; means multiply.
                   </p>
@@ -3022,7 +2986,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           </motion.div>
         )}
       </div>
-    </StageWrapper>
+    </StageContent>
   );
 }
 
@@ -3035,63 +2999,20 @@ export function PercentsLesson({
 }: {
   onComplete?: () => void;
 }) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const currentStage = STAGES[stageIndex];
-
-  const advance = useCallback(() => {
-    if (stageIndex < STAGES.length - 1) {
-      setStageIndex((i) => i + 1);
-    }
-  }, [stageIndex]);
-
-  const handleComplete = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
   return (
-    <div className="relative min-h-dvh" style={{ background: BG }}>
-      {/* Stage progress bar */}
-      <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-1.5 bg-black/30 py-2 backdrop-blur-sm">
-        {STAGES.map((s, i) => (
-          <div
-            key={s}
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: i <= stageIndex ? 32 : 16,
-              background:
-                i < stageIndex
-                  ? SUCCESS
-                  : i === stageIndex
-                    ? PRIMARY
-                    : ELEVATED,
-            }}
-          />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {currentStage === "hook" && (
-          <HookStage key="hook" onContinue={advance} />
-        )}
-        {currentStage === "spatial" && (
-          <SpatialStage key="spatial" onContinue={advance} />
-        )}
-        {currentStage === "discovery" && (
-          <DiscoveryStage key="discovery" onContinue={advance} />
-        )}
-        {currentStage === "symbol" && (
-          <SymbolBridgeStage key="symbol" onContinue={advance} />
-        )}
-        {currentStage === "realWorld" && (
-          <RealWorldStage key="realWorld" onContinue={advance} />
-        )}
-        {currentStage === "practice" && (
-          <PracticeStage key="practice" onContinue={advance} />
-        )}
-        {currentStage === "reflection" && (
-          <ReflectionStage key="reflection" onComplete={handleComplete} />
-        )}
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-2.3 Percents" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /**
  * SP-5.6 Scatter Plots — Grade 8
@@ -24,34 +29,39 @@ import { VideoHook } from "@/components/lessons/VideoHook";
 
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
-const POS_COLOR = "#34d399";
-const NEG_COLOR = "#f472b6";
-const NEUTRAL_COLOR = "#60a5fa";
-const DOT_COLOR = "#a78bfa";
-const OUTLIER_COLOR = "#fbbf24";
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
+/* ── Lesson-specific semantic colors ── */
+const THEME = {
+  posColor: colors.accent.emerald,
+  negColor: "#f472b6",
+  neutralColor: colors.functional.info,
+  dotColor: colors.accent.violet,
+  outlierColor: colors.accent.amber,
+} as const;
 
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.secondary;
+const BORDER = colors.bg.elevated;
+const PRIMARY = colors.accent.indigo;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (<div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>{Array.from({ length: total }, (_, i) => (<div key={i} className="h-2 w-2 rounded-full transition-all duration-300" style={{ background: i <= current ? PRIMARY : BORDER, transform: i === current ? "scale(1.4)" : "scale(1)" }} />))}</div>);
-}
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay, duration: 0.5, ease: "easeOut" }} onClick={onClick} className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]" style={{ background: PRIMARY, minHeight: 48 }} aria-label={label}>{label}</motion.button>);
-}
+const SPRING = springs.default;
+
 function StageWrapper({ children }: { children: ReactNode }) {
-  return (<motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4, ease: "easeInOut" }} className="flex min-h-dvh flex-col items-center justify-center px-4 py-12" style={{ background: BG }}>{children}</motion.div>);
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12"
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 /* ---- Hook ---- */
@@ -85,8 +95,8 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
           <text x={14} y={h / 2} textAnchor={"middle" as const} fill={MUTED} fontSize={12} transform={`rotate(-90, 14, ${h / 2})`}>Test Score</text>
           {[1, 2, 3, 4, 5, 6].map((t) => (<text key={`xt${t}`} x={toSvgX(t)} y={h - margin + 16} textAnchor={"middle" as const} fill={MUTED} fontSize={10}>{t}</text>))}
           {[50, 60, 70, 80, 90].map((t) => (<text key={`yt${t}`} x={margin - 10} y={toSvgY(t) + 4} textAnchor={"end" as const} fill={MUTED} fontSize={10}>{t}</text>))}
-          {phase >= 1 && data.map((d, i) => (<motion.circle key={i} cx={toSvgX(d.x)} cy={toSvgY(d.y)} r={6} fill={DOT_COLOR} initial={{ opacity: 0, cy: margin }} animate={{ opacity: 1, cy: toSvgY(d.y) }} transition={{ delay: i * 0.12, ...SPRING }} />))}
-          {phase >= 2 && (<motion.line x1={toSvgX(0.5)} y1={toSvgY(52)} x2={toSvgX(7)} y2={toSvgY(95)} stroke={POS_COLOR} strokeWidth={2} strokeDasharray="8 4" initial={{ opacity: 0 }} animate={{ opacity: 0.7 }} transition={{ duration: 0.6 }} />)}
+          {phase >= 1 && data.map((d, i) => (<motion.circle key={i} cx={toSvgX(d.x)} cy={toSvgY(d.y)} r={6} fill={THEME.dotColor} initial={{ opacity: 0, cy: margin }} animate={{ opacity: 1, cy: toSvgY(d.y) }} transition={{ delay: i * 0.12, ...SPRING }} />))}
+          {phase >= 2 && (<motion.line x1={toSvgX(0.5)} y1={toSvgY(52)} x2={toSvgX(7)} y2={toSvgY(95)} stroke={THEME.posColor} strokeWidth={2} strokeDasharray="8 4" initial={{ opacity: 0 }} animate={{ opacity: 0.7 }} transition={{ duration: 0.6 }} />)}
         </svg>
         {phase >= 2 && (<motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2 text-center text-sm" style={{ color: MUTED }}>The dots trend upward: more hours studied correlates with higher scores!</motion.p>)}
         {phase >= 3 && <ContinueButton onClick={onContinue} delay={0.3} />}
@@ -137,7 +147,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
     return "weak/none";
   }, [points]);
 
-  const corrColor = correlation === "positive" ? POS_COLOR : correlation === "negative" ? NEG_COLOR : NEUTRAL_COLOR;
+  const corrColor = correlation === "positive" ? THEME.posColor : correlation === "negative" ? THEME.negColor : THEME.neutralColor;
 
   return (
     <StageWrapper>
@@ -148,7 +158,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
           {Array.from({ length: 11 }, (_, i) => (<g key={i}><line x1={toSvgX(i)} y1={margin} x2={toSvgX(i)} y2={h - margin} stroke={BORDER} strokeWidth={0.3} /><line x1={margin} y1={toSvgY(i)} x2={w - margin} y2={toSvgY(i)} stroke={BORDER} strokeWidth={0.3} />{i % 2 === 0 && (<><text x={toSvgX(i)} y={h - margin + 14} textAnchor={"middle" as const} fill={MUTED} fontSize={10}>{i}</text><text x={margin - 10} y={toSvgY(i) + 4} textAnchor={"end" as const} fill={MUTED} fontSize={10}>{i}</text></>)}</g>))}
           <line x1={margin} y1={h - margin} x2={w - margin} y2={h - margin} stroke={MUTED} strokeWidth={1.5} />
           <line x1={margin} y1={margin} x2={margin} y2={h - margin} stroke={MUTED} strokeWidth={1.5} />
-          {points.map((p, i) => (<motion.circle key={i} cx={toSvgX(p.x)} cy={toSvgY(p.y)} r={6} fill={DOT_COLOR} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING} />))}
+          {points.map((p, i) => (<motion.circle key={i} cx={toSvgX(p.x)} cy={toSvgY(p.y)} r={6} fill={THEME.dotColor} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING} />))}
         </svg>
         <div className="flex gap-3">
           <div className="rounded-xl px-4 py-2 text-center" style={{ background: SURFACE }}>
@@ -181,12 +191,12 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
         <div className="flex gap-2">{prompts.map((_, i) => (<div key={i} className="h-2 w-6 rounded-full" style={{ background: i <= promptIdx ? PRIMARY : BORDER }} />))}</div>
         <AnimatePresence mode="wait"><motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl p-6 text-center" style={{ background: SURFACE }}><p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: TEXT }}>{current.text}</p></motion.div></AnimatePresence>
         <svg viewBox="0 0 360 100" className="w-full max-w-sm" aria-label="Three types of correlation">
-          {[{ x: 15, y: 80 }, { x: 30, y: 65 }, { x: 50, y: 50 }, { x: 70, y: 35 }, { x: 90, y: 20 }].map((d, i) => (<circle key={`p${i}`} cx={d.x} cy={d.y} r={4} fill={POS_COLOR} />))}
-          <text x={55} y={95} textAnchor={"middle" as const} fill={POS_COLOR} fontSize={10} fontWeight="bold">Positive</text>
-          {[{ x: 140, y: 20 }, { x: 155, y: 35 }, { x: 175, y: 50 }, { x: 195, y: 65 }, { x: 215, y: 80 }].map((d, i) => (<circle key={`n${i}`} cx={d.x} cy={d.y} r={4} fill={NEG_COLOR} />))}
-          <text x={175} y={95} textAnchor={"middle" as const} fill={NEG_COLOR} fontSize={10} fontWeight="bold">Negative</text>
-          {[{ x: 270, y: 40 }, { x: 290, y: 70 }, { x: 310, y: 25 }, { x: 330, y: 60 }, { x: 350, y: 45 }].map((d, i) => (<circle key={`o${i}`} cx={d.x} cy={d.y} r={4} fill={NEUTRAL_COLOR} />))}
-          <text x={310} y={95} textAnchor={"middle" as const} fill={NEUTRAL_COLOR} fontSize={10} fontWeight="bold">None</text>
+          {[{ x: 15, y: 80 }, { x: 30, y: 65 }, { x: 50, y: 50 }, { x: 70, y: 35 }, { x: 90, y: 20 }].map((d, i) => (<circle key={`p${i}`} cx={d.x} cy={d.y} r={4} fill={THEME.posColor} />))}
+          <text x={55} y={95} textAnchor={"middle" as const} fill={THEME.posColor} fontSize={10} fontWeight="bold">Positive</text>
+          {[{ x: 140, y: 20 }, { x: 155, y: 35 }, { x: 175, y: 50 }, { x: 195, y: 65 }, { x: 215, y: 80 }].map((d, i) => (<circle key={`n${i}`} cx={d.x} cy={d.y} r={4} fill={THEME.negColor} />))}
+          <text x={175} y={95} textAnchor={"middle" as const} fill={THEME.negColor} fontSize={10} fontWeight="bold">Negative</text>
+          {[{ x: 270, y: 40 }, { x: 290, y: 70 }, { x: 310, y: 25 }, { x: 330, y: 60 }, { x: 350, y: 45 }].map((d, i) => (<circle key={`o${i}`} cx={d.x} cy={d.y} r={4} fill={THEME.neutralColor} />))}
+          <text x={310} y={95} textAnchor={"middle" as const} fill={THEME.neutralColor} fontSize={10} fontWeight="bold">None</text>
         </svg>
         <motion.button whileTap={{ scale: 0.95 }} onClick={handleAck} className="rounded-xl px-8 py-3 text-base font-semibold text-white" style={{ background: PRIMARY, minHeight: 48, minWidth: 160 }} aria-label={current.button}>{current.button}</motion.button>
       </div>
@@ -199,9 +209,9 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   const [step, setStep] = useState(0);
   useEffect(() => { const t = [setTimeout(() => setStep(1), 1200), setTimeout(() => setStep(2), 2400), setTimeout(() => setStep(3), 3800)]; return () => t.forEach(clearTimeout); }, []);
   const items = [
-    { text: "Positive correlation: as x increases, y increases", color: POS_COLOR },
-    { text: "Negative correlation: as x increases, y decreases", color: NEG_COLOR },
-    { text: "No correlation: x and y have no clear pattern", color: NEUTRAL_COLOR },
+    { text: "Positive correlation: as x increases, y increases", color: THEME.posColor },
+    { text: "Negative correlation: as x increases, y decreases", color: THEME.negColor },
+    { text: "No correlation: x and y have no clear pattern", color: THEME.neutralColor },
   ];
   return (
     <StageWrapper>
@@ -210,7 +220,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
         <div className="flex flex-col gap-4">
           {items.map((item, i) => i <= step ? (<motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl px-6 py-4 text-center" style={{ background: SURFACE }}><p className="text-[clamp(14px,3.5vw,18px)] font-bold" style={{ color: item.color }}>{item.text}</p></motion.div>) : null)}
         </div>
-        {step >= 3 && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-6 py-4 text-center" style={{ borderColor: PRIMARY, background: `${PRIMARY}15` }}><p className="text-sm font-bold" style={{ color: OUTLIER_COLOR }}>Outlier = a data point far from the overall trend</p><p className="mt-1 text-xs" style={{ color: MUTED }}>Correlation {"\u2260"} causation! Two things can be correlated without one causing the other.</p></motion.div>)}
+        {step >= 3 && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-6 py-4 text-center" style={{ borderColor: PRIMARY, background: `${PRIMARY}15` }}><p className="text-sm font-bold" style={{ color: THEME.outlierColor }}>Outlier = a data point far from the overall trend</p><p className="mt-1 text-xs" style={{ color: MUTED }}>Correlation {"\u2260"} causation! Two things can be correlated without one causing the other.</p></motion.div>)}
         {step >= 3 && <ContinueButton onClick={onContinue} delay={0.5} />}
       </div>
     </StageWrapper>
@@ -307,23 +317,20 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
 
 /* ---- Main ---- */
 export function ScatterPlotsLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-  const advance = useCallback(() => { const next = STAGES[stageIdx + 1]; if (next) { setStage(next); } else { onComplete?.(); } }, [stageIdx, onComplete]);
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="SP-5.6 Scatter Plots" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onContinue={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

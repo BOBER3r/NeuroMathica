@@ -1,7 +1,13 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -12,167 +18,63 @@ interface InequalitiesLessonProps {
   onComplete?: () => void;
 }
 
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SPRING & ANIMATION CONFIGS
+// SHARED TOKEN ALIASES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.surface;
+const BORDER_LIGHT = colors.bg.elevated;
+const PRIMARY = colors.accent.violet;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
-  solution: "#22d3ee",
-  solutionFill: "#22d3ee33",
+const THEME = {
+  solution: colors.accent.cyan,
+  solutionFill: colors.accent.cyan + "33",
   boundary: "#f59e0b",
   boundaryFill: "#f59e0b33",
   flip: "#f87171",
   flipFill: "#f8717133",
-  variable: "#a78bfa",
-  variableFill: "#a78bfa33",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  success: "#34d399",
-  successFill: "#34d39933",
-  error: "#f87171",
-  errorFill: "#f8717133",
-  primary: "#8b5cf6",
-  primaryHover: "#7c3aed",
-  border: "#334155",
-  borderLight: "#475569",
+  variable: colors.accent.violet,
+  variableFill: colors.accent.violet + "33",
+  successFill: colors.functional.success + "33",
+  errorFill: colors.functional.error + "33",
+  textLight: "#e2e8f0",
 } as const;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SHARED SMALL COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileHover={disabled ? {} : { backgroundColor: C.primaryHover }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function InequalitiesLesson({ onComplete }: InequalitiesLessonProps) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGE_ORDER.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGE_ORDER[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ backgroundColor: C.bgPrimary }}>
-      <StageProgressDots currentIndex={stageIdx} total={STAGE_ORDER.length} />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={FADE}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && <HookStage onComplete={advance} />}
-          {stage === "spatial" && <SpatialStage onComplete={advance} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advance} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advance} />}
-          {stage === "practice" && <PracticeStage onComplete={advance} />}
-          {stage === "reflection" && <ReflectionStage onComplete={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="AL-4.1 Inequalities" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }
 
@@ -218,19 +120,19 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.div key="eq" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p
                 className="mb-4 text-center font-mono"
-                style={{ fontSize: "clamp(24px, 6vw, 40px)", fontWeight: 700, color: C.variable }}
+                style={{ fontSize: "clamp(24px, 6vw, 40px)", fontWeight: 700, color: THEME.variable }}
               >
                 x = 3
               </p>
               <svg viewBox={`0 0 ${NL_W} 160`} className="mx-auto w-full" style={{ maxWidth: 500 }}>
-                <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={C.borderLight} strokeWidth={2} />
+                <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={BORDER_LIGHT} strokeWidth={2} />
                 {Array.from({ length: NL_MAX - NL_MIN + 1 }, (_, i) => {
                   const v = NL_MIN + i;
                   const x = valToX(v);
                   return (
                     <g key={v}>
-                      <line x1={x} y1={NL_Y - 6} x2={x} y2={NL_Y + 6} stroke={C.borderLight} strokeWidth={2} />
-                      <text x={x} y={NL_Y + 22} textAnchor={"middle" as const} fill={C.textMuted} fontSize={12}>{v}</text>
+                      <line x1={x} y1={NL_Y - 6} x2={x} y2={NL_Y + 6} stroke={BORDER_LIGHT} strokeWidth={2} />
+                      <text x={x} y={NL_Y + 22} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={12}>{v}</text>
                     </g>
                   );
                 })}
@@ -238,7 +140,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   cx={valToX(3)}
                   cy={NL_Y}
                   r={8}
-                  fill={C.variable}
+                  fill={THEME.variable}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={SPRING_POP}
@@ -254,19 +156,19 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.div key="ineq" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p
                 className="mb-4 text-center font-mono"
-                style={{ fontSize: "clamp(24px, 6vw, 40px)", fontWeight: 700, color: C.solution }}
+                style={{ fontSize: "clamp(24px, 6vw, 40px)", fontWeight: 700, color: THEME.solution }}
               >
                 {phase >= 4 ? "x < 3" : "x > 3"}
               </p>
               <svg viewBox={`0 0 ${NL_W} 160`} className="mx-auto w-full" style={{ maxWidth: 500 }}>
-                <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={C.borderLight} strokeWidth={2} />
+                <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={BORDER_LIGHT} strokeWidth={2} />
                 {Array.from({ length: NL_MAX - NL_MIN + 1 }, (_, i) => {
                   const v = NL_MIN + i;
                   const x = valToX(v);
                   return (
                     <g key={v}>
-                      <line x1={x} y1={NL_Y - 6} x2={x} y2={NL_Y + 6} stroke={C.borderLight} strokeWidth={2} />
-                      <text x={x} y={NL_Y + 22} textAnchor={"middle" as const} fill={C.textMuted} fontSize={12}>{v}</text>
+                      <line x1={x} y1={NL_Y - 6} x2={x} y2={NL_Y + 6} stroke={BORDER_LIGHT} strokeWidth={2} />
+                      <text x={x} y={NL_Y + 22} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={12}>{v}</text>
                     </g>
                   );
                 })}
@@ -276,14 +178,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   y1={NL_Y}
                   x2={phase >= 4 ? NL_ML : NL_W - NL_MR}
                   y2={NL_Y}
-                  stroke={C.solution}
+                  stroke={THEME.solution}
                   strokeWidth={4}
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   transition={{ duration: 0.8 }}
                 />
                 {/* Open circle at boundary */}
-                <circle cx={valToX(3)} cy={NL_Y} r={7} fill={C.bgPrimary} stroke={C.boundary} strokeWidth={3} />
+                <circle cx={valToX(3)} cy={NL_Y} r={7} fill={BG} stroke={THEME.boundary} strokeWidth={3} />
               </svg>
             </motion.div>
           )}
@@ -298,7 +200,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               className="mt-4 text-center"
-              style={{ color: C.textSecondary, fontSize: "clamp(16px, 4vw, 22px)" }}
+              style={{ color: THEME.textLight, fontSize: "clamp(16px, 4vw, 22px)" }}
             >
               Not one answer {"\u2014"} infinitely many!
             </motion.p>
@@ -313,7 +215,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-8 text-center"
-              style={{ color: C.textSecondary, fontSize: "clamp(18px, 4.5vw, 26px)" }}
+              style={{ color: THEME.textLight, fontSize: "clamp(18px, 4.5vw, 26px)" }}
             >
               Welcome to inequalities.
             </motion.p>
@@ -321,9 +223,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         </AnimatePresence>
 
         {phase >= 6 && (
-          <div className="flex justify-center">
-            <ContinueButton onClick={onComplete} />
-          </div>
+          <ContinueButton onClick={onComplete} />
         )}
       </div>
     </div>
@@ -399,20 +299,19 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     >
       {/* Inequality display */}
       <div
-        className="mb-4 w-full rounded-2xl p-5 text-center"
-        style={{ backgroundColor: C.bgSurface }}
+        className="mb-4 w-full rounded-2xl bg-nm-bg-secondary p-5 text-center"
       >
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: C.textMuted }}>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: TEXT_SEC }}>
           Solve the inequality
         </p>
         <p
           className="font-mono"
-          style={{ fontSize: "clamp(22px, 5.5vw, 36px)", fontWeight: 700, color: C.textPrimary, fontVariantNumeric: "tabular-nums" }}
+          style={{ fontSize: "clamp(22px, 5.5vw, 36px)", fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}
         >
           {problem.inequality}
         </p>
         {problem.flip && (
-          <p className="mt-1 text-xs font-semibold" style={{ color: C.flip }}>
+          <p className="mt-1 text-xs font-semibold" style={{ color: THEME.flip }}>
             Watch out {"\u2014"} negative coefficient!
           </p>
         )}
@@ -426,14 +325,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           className="mb-4 w-full"
         >
           <svg viewBox={`0 0 ${NL_W} 100`} className="mx-auto w-full" style={{ maxWidth: 480 }} aria-label={`Number line showing ${problem.answer}`}>
-            <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={C.borderLight} strokeWidth={2} />
+            <line x1={NL_ML} y1={NL_Y} x2={NL_W - NL_MR} y2={NL_Y} stroke={BORDER_LIGHT} strokeWidth={2} />
             {Array.from({ length: rangeMax - rangeMin + 1 }, (_, i) => {
               const v = rangeMin + i;
               const x = valToX(v);
               return (
                 <g key={v}>
-                  <line x1={x} y1={NL_Y - 5} x2={x} y2={NL_Y + 5} stroke={C.borderLight} strokeWidth={1.5} />
-                  <text x={x} y={NL_Y + 18} textAnchor={"middle" as const} fill={C.textMuted} fontSize={10}>{v}</text>
+                  <line x1={x} y1={NL_Y - 5} x2={x} y2={NL_Y + 5} stroke={BORDER_LIGHT} strokeWidth={1.5} />
+                  <text x={x} y={NL_Y + 18} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={10}>{v}</text>
                 </g>
               );
             })}
@@ -443,7 +342,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               y1={NL_Y}
               x2={problem.direction === "right" ? NL_W - NL_MR : NL_ML}
               y2={NL_Y}
-              stroke={C.solution}
+              stroke={THEME.solution}
               strokeWidth={5}
               strokeLinecap="round"
               initial={{ pathLength: 0 }}
@@ -455,8 +354,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               cx={valToX(problem.boundaryValue)}
               cy={NL_Y}
               r={6}
-              fill={problem.closed ? C.boundary : C.bgPrimary}
-              stroke={C.boundary}
+              fill={problem.closed ? THEME.boundary : BG}
+              stroke={THEME.boundary}
               strokeWidth={2.5}
             />
           </svg>
@@ -468,14 +367,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {problem.options.map((opt) => {
           const isCorrect = opt === problem.answer;
           const isSelected = opt === selected;
-          let bg: string = C.bgSurface;
-          let borderColor: string = C.borderLight;
+          let bg: string = SURFACE;
+          let borderColor: string = BORDER_LIGHT;
           if (showFeedback && isSelected) {
-            bg = isCorrect ? C.successFill : C.errorFill;
-            borderColor = isCorrect ? C.success : C.error;
+            bg = isCorrect ? THEME.successFill : THEME.errorFill;
+            borderColor = isCorrect ? SUCCESS : ERROR;
           } else if (showFeedback && isCorrect) {
-            bg = C.successFill;
-            borderColor = C.success;
+            bg = THEME.successFill;
+            borderColor = SUCCESS;
           }
           return (
             <motion.button
@@ -483,7 +382,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               onClick={() => handleSelect(opt)}
               disabled={showFeedback}
               className="min-h-[48px] rounded-xl px-4 py-3 font-mono text-base font-semibold transition-colors disabled:cursor-not-allowed"
-              style={{ backgroundColor: bg, border: `2px solid ${borderColor}`, color: C.textPrimary }}
+              style={{ backgroundColor: bg, border: `2px solid ${borderColor}`, color: TEXT }}
               whileTap={showFeedback ? {} : { scale: 0.95 }}
               aria-label={`Answer: ${opt}`}
             >
@@ -502,8 +401,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             exit={{ opacity: 0 }}
             className="mb-4 w-full rounded-lg px-4 py-3 text-center text-sm font-semibold"
             style={{
-              backgroundColor: selected === problem.answer ? C.successFill : C.errorFill,
-              color: selected === problem.answer ? C.success : C.error,
+              backgroundColor: selected === problem.answer ? THEME.successFill : THEME.errorFill,
+              color: selected === problem.answer ? SUCCESS : ERROR,
             }}
           >
             {selected === problem.answer
@@ -519,7 +418,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold"
-          style={{ backgroundColor: C.bgSurface, border: `2px solid ${C.borderLight}`, color: C.textSecondary }}
+          style={{ backgroundColor: SURFACE, border: `2px solid ${BORDER_LIGHT}`, color: THEME.textLight }}
           whileTap={{ scale: 0.95 }}
         >
           {"Next \u2192"}
@@ -527,20 +426,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       )}
 
       {/* Progress */}
-      <div className="mt-4 flex items-center gap-1 justify-center">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div
-            key={i}
-            className="rounded-full transition-colors duration-200"
-            style={{ width: 6, height: 6, backgroundColor: i < interactions ? C.primary : C.border }}
-          />
-        ))}
+      <div className="mt-4">
+        <InteractionDots count={interactions} total={6} activeColor={PRIMARY} />
       </div>
 
       {canContinue && (
-        <div className="mt-4 flex justify-center">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} />
       )}
     </div>
   );
@@ -597,24 +488,18 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
-        <div className="mb-4 flex items-center gap-1 justify-center">
-          {DISCOVERY_PROMPTS.map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full"
-              style={{ width: 8, height: 8, backgroundColor: i <= promptIdx ? C.primary : C.border }}
-            />
-          ))}
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
+        <div className="mb-4">
+          <InteractionDots count={promptIdx + 1} total={DISCOVERY_PROMPTS.length} activeColor={PRIMARY} />
         </div>
 
         <motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}>
-          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: TEXT }}>
             {prompt.text}
           </p>
           <p
-            className="mb-6 rounded-lg px-4 py-3 font-mono text-sm"
-            style={{ backgroundColor: C.bgPrimary, color: C.textSecondary }}
+            className="mb-6 rounded-lg bg-nm-bg-primary px-4 py-3 font-mono text-sm"
+            style={{ color: THEME.textLight }}
           >
             {prompt.detail}
           </p>
@@ -624,7 +509,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <motion.button
             onClick={handleAck}
             className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-base font-semibold text-white"
-            style={{ backgroundColor: C.primary }}
+            style={{ backgroundColor: PRIMARY }}
             whileTap={{ scale: 0.95 }}
           >
             {prompt.button}
@@ -664,10 +549,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: "#7c3aed20", color: C.variable }}
+          style={{ backgroundColor: PRIMARY + "20", color: THEME.variable }}
         >
           Symbol Bridge
         </span>
@@ -684,21 +569,21 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 transition={SPRING}
                 className="flex items-center gap-3 rounded-lg px-4 py-3"
                 style={{
-                  backgroundColor: isFlip ? C.flipFill : C.bgPrimary,
-                  border: `1px solid ${isFlip ? C.flip : C.border}`,
+                  backgroundColor: isFlip ? THEME.flipFill : BG,
+                  border: `1px solid ${isFlip ? THEME.flip : BORDER}`,
                 }}
               >
                 <span
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                  style={{ backgroundColor: isFlip ? C.flip : C.primary, color: "#fff" }}
+                  style={{ backgroundColor: isFlip ? THEME.flip : PRIMARY, color: "#fff" }}
                 >
                   {i + 1}
                 </span>
                 <div>
-                  <p className="font-mono text-sm font-semibold" style={{ color: isFlip ? C.flip : C.solution }}>
+                  <p className="font-mono text-sm font-semibold" style={{ color: isFlip ? THEME.flip : THEME.solution }}>
                     {step.notation}
                   </p>
-                  <p className="text-xs" style={{ color: C.textMuted }}>
+                  <p className="text-xs" style={{ color: TEXT_SEC }}>
                     {step.description}
                   </p>
                 </div>
@@ -709,12 +594,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 
         {allRevealed && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6">
-            <p className="mb-4 text-center text-sm font-semibold" style={{ color: C.textSecondary }}>
+            <p className="mb-4 text-center text-sm font-semibold" style={{ color: THEME.textLight }}>
               Solve like equations. Flip the sign when multiplying/dividing by negative.
             </p>
-            <div className="flex justify-center">
-              <ContinueButton onClick={onComplete} />
-            </div>
+            <ContinueButton onClick={onComplete} />
           </motion.div>
         )}
       </div>
@@ -739,7 +622,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <span className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: C.textMuted }}>
+      <span className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: TEXT_SEC }}>
         Real World Connections
       </span>
 
@@ -751,16 +634,16 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...SPRING, delay: i * 0.15 }}
             className="rounded-xl p-4"
-            style={{ backgroundColor: C.bgSurface, border: `1px solid ${C.border}` }}
+            style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
           >
             <p className="mb-1 text-lg">{card.icon}</p>
-            <p className="mb-1 text-sm font-semibold" style={{ color: C.textPrimary }}>
+            <p className="mb-1 text-sm font-semibold" style={{ color: TEXT }}>
               {card.title}
             </p>
-            <p className="mb-2 text-xs" style={{ color: C.textSecondary }}>
+            <p className="mb-2 text-xs" style={{ color: THEME.textLight }}>
               {card.example}
             </p>
-            <p className="font-mono text-xs" style={{ color: C.solution }}>
+            <p className="font-mono text-xs" style={{ color: THEME.solution }}>
               {card.math}
             </p>
           </motion.div>
@@ -833,17 +716,17 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-4 flex items-center justify-between">
-          <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase" style={{ backgroundColor: C.primary + "30", color: C.primary }}>
+          <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase" style={{ backgroundColor: PRIMARY + "30", color: PRIMARY }}>
             {problem.layer}
           </span>
-          <span className="text-xs font-semibold" style={{ color: C.textMuted }}>
+          <span className="text-xs font-semibold" style={{ color: TEXT_SEC }}>
             {idx + 1}/{PRACTICE_PROBLEMS.length}
           </span>
         </div>
 
-        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: TEXT }}>
           {problem.prompt}
         </p>
 
@@ -851,14 +734,14 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           {problem.options.map((opt) => {
             const optCorrect = opt === problem.answer;
             const optSelected = opt === selected;
-            let bg: string = C.bgPrimary;
-            let border: string = C.border;
+            let bg: string = BG;
+            let border: string = BORDER;
             if (showFeedback && optSelected) {
-              bg = optCorrect ? C.successFill : C.errorFill;
-              border = optCorrect ? C.success : C.error;
+              bg = optCorrect ? THEME.successFill : THEME.errorFill;
+              border = optCorrect ? SUCCESS : ERROR;
             } else if (showFeedback && optCorrect) {
-              bg = C.successFill;
-              border = C.success;
+              bg = THEME.successFill;
+              border = SUCCESS;
             }
             return (
               <motion.button
@@ -866,7 +749,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                 onClick={() => handleSelect(opt)}
                 disabled={showFeedback}
                 className="min-h-[44px] w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed"
-                style={{ backgroundColor: bg, border: `2px solid ${border}`, color: C.textPrimary }}
+                style={{ backgroundColor: bg, border: `2px solid ${border}`, color: TEXT }}
                 whileTap={showFeedback ? {} : { scale: 0.98 }}
               >
                 {opt}
@@ -883,12 +766,12 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               exit={{ opacity: 0 }}
               className="mb-4 rounded-lg px-4 py-3 text-sm"
               style={{
-                backgroundColor: isCorrect ? C.successFill : C.errorFill,
-                color: isCorrect ? C.success : C.error,
+                backgroundColor: isCorrect ? THEME.successFill : THEME.errorFill,
+                color: isCorrect ? SUCCESS : ERROR,
               }}
             >
               <p className="mb-1 font-semibold">{isCorrect ? "Correct!" : `Incorrect. Answer: ${problem.answer}`}</p>
-              <p style={{ color: C.textSecondary }}>{problem.feedback}</p>
+              <p style={{ color: THEME.textLight }}>{problem.feedback}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -900,7 +783,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white"
-              style={{ backgroundColor: C.primary }}
+              style={{ backgroundColor: PRIMARY }}
               whileTap={{ scale: 0.95 }}
             >
               {isLast ? "Complete" : "Next \u2192"}
@@ -929,30 +812,30 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: "#7c3aed20", color: C.primary }}
+          style={{ backgroundColor: PRIMARY + "20", color: PRIMARY }}
         >
           Reflection
         </span>
 
         {!submitted ? (
           <>
-            <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+            <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: TEXT }}>
               Explain to a friend WHY the inequality sign flips when you multiply both sides by a negative number. Use the number line to help your explanation.
             </p>
 
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="mb-2 min-h-[100px] w-full rounded-lg px-4 py-3 text-sm"
-              style={{ backgroundColor: C.bgPrimary, border: `2px solid ${C.border}`, color: C.textPrimary, resize: "vertical" }}
+              className="mb-2 min-h-[100px] w-full rounded-lg bg-nm-bg-primary px-4 py-3 text-sm"
+              style={{ border: `2px solid ${BORDER}`, color: TEXT, resize: "vertical" }}
               placeholder="Type your explanation..."
               aria-label="Reflection text"
             />
 
-            <p className="mb-4 text-xs" style={{ color: text.length >= 20 ? C.success : C.textMuted }}>
+            <p className="mb-4 text-xs" style={{ color: text.length >= 20 ? SUCCESS : TEXT_SEC }}>
               {text.length}/20 characters minimum
             </p>
 
@@ -960,7 +843,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               <button
                 onClick={onComplete}
                 className="min-h-[44px] px-4 py-2 text-sm"
-                style={{ color: C.textDim }}
+                style={{ color: MUTED }}
                 aria-label="Skip reflection"
               >
                 Skip
@@ -969,7 +852,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 onClick={handleSubmit}
                 disabled={text.length < 20}
                 className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ backgroundColor: C.primary }}
+                style={{ backgroundColor: PRIMARY }}
                 whileTap={text.length >= 20 ? { scale: 0.95 } : {}}
               >
                 Submit
@@ -978,15 +861,13 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING}>
-            <p className="mb-4 text-lg font-semibold" style={{ color: C.success }}>
+            <p className="mb-4 text-lg font-semibold" style={{ color: SUCCESS }}>
               Great explanation!
             </p>
-            <p className="mb-6 text-sm" style={{ color: C.textSecondary }}>
+            <p className="mb-6 text-sm" style={{ color: THEME.textLight }}>
               Understanding WHY the sign flips {"\u2014"} not just that it does {"\u2014"} is what separates real understanding from memorization. Negatives reverse order on the number line!
             </p>
-            <div className="flex justify-center">
-              <ContinueButton onClick={onComplete} label="Complete Lesson" />
-            </div>
+            <ContinueButton onClick={onComplete} label="Complete Lesson" />
           </motion.div>
         )}
       </div>

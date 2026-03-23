@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /**
  * SP-5.4a Compound Probability — Grade 7
@@ -23,70 +29,33 @@ import { VideoHook } from "@/components/lessons/VideoHook";
 
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
+/* ── Lesson-specific semantic colors (THEME) ── */
+const THEME = {
+  eventA: colors.functional.info,      // #60a5fa — blue
+  eventB: colors.accent.violet,        // #a78bfa — purple
+  result: colors.accent.cyan,          // #22d3ee — cyan
+  warn: colors.functional.warning,     // #fbbf24 — yellow
+} as const;
 
-const EVENT_A_COLOR = "#60a5fa"; // blue
-const EVENT_B_COLOR = "#a78bfa"; // purple
-const RESULT_COLOR = "#22d3ee"; // cyan
-const WARN_COLOR = "#fbbf24";   // yellow
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.secondary;
+const BORDER = colors.bg.elevated;
+const PRIMARY = colors.accent.indigo;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection",
-];
+const SPRING = springs.default;
 
 /* ------------------------------------------------------------------ */
 /*  Shared                                                             */
 /* ------------------------------------------------------------------ */
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} className="h-2 w-2 rounded-full transition-all duration-300" style={{ background: i <= current ? PRIMARY : BORDER, transform: i === current ? "scale(1.4)" : "scale(1)" }} />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:scale-[0.97]"
-      style={{ background: PRIMARY, minHeight: 48 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 function StageWrapper({ children }: { children: ReactNode }) {
   return (
@@ -95,8 +64,7 @@ function StageWrapper({ children }: { children: ReactNode }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex min-h-dvh flex-col items-center justify-center px-4 py-12"
-      style={{ background: BG }}
+      className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12"
     >
       {children}
     </motion.div>
@@ -146,7 +114,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1, rotateY: 0 }}
               transition={{ duration: 0.6 }}
               className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold"
-              style={{ background: `${EVENT_A_COLOR}25`, border: `3px solid ${EVENT_A_COLOR}`, color: EVENT_A_COLOR }}
+              style={{ background: `${THEME.eventA}25`, border: `3px solid ${THEME.eventA}`, color: THEME.eventA }}
             >
               H
             </motion.div>
@@ -157,7 +125,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1, rotateY: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold"
-              style={{ background: `${EVENT_B_COLOR}25`, border: `3px solid ${EVENT_B_COLOR}`, color: EVENT_B_COLOR }}
+              style={{ background: `${THEME.eventB}25`, border: `3px solid ${THEME.eventB}`, color: THEME.eventB }}
             >
               T
             </motion.div>
@@ -198,11 +166,11 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             style={{ color: TEXT }}
           >
             {"P(HH) = "}
-            <span style={{ color: EVENT_A_COLOR }}>{"1/2"}</span>
+            <span style={{ color: THEME.eventA }}>{"1/2"}</span>
             {" \u00D7 "}
-            <span style={{ color: EVENT_B_COLOR }}>{"1/2"}</span>
+            <span style={{ color: THEME.eventB }}>{"1/2"}</span>
             {" = "}
-            <span style={{ color: RESULT_COLOR }}>{"1/4"}</span>
+            <span style={{ color: THEME.result }}>{"1/4"}</span>
           </motion.p>
         )}
 
@@ -255,7 +223,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
 
         {/* Step 1: Coin */}
         <div className="flex gap-3">
-          <p className="text-sm font-semibold self-center" style={{ color: EVENT_A_COLOR }}>Coin:</p>
+          <p className="text-sm font-semibold self-center" style={{ color: THEME.eventA }}>Coin:</p>
           {(["H", "T"] as const).map((c) => (
             <motion.button
               key={c}
@@ -265,9 +233,9 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
               style={{
                 minHeight: 48,
                 minWidth: 56,
-                background: coinChoice === c ? `${EVENT_A_COLOR}40` : SURFACE,
-                border: `2px solid ${coinChoice === c ? EVENT_A_COLOR : BORDER}`,
-                color: coinChoice === c ? EVENT_A_COLOR : TEXT,
+                background: coinChoice === c ? `${THEME.eventA}40` : SURFACE,
+                border: `2px solid ${coinChoice === c ? THEME.eventA : BORDER}`,
+                color: coinChoice === c ? THEME.eventA : TEXT,
               }}
               aria-label={`Coin: ${c}`}
             >
@@ -279,7 +247,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
         {/* Step 2: Die */}
         {coinChoice && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap justify-center gap-2">
-            <p className="w-full text-center text-sm font-semibold" style={{ color: EVENT_B_COLOR }}>Die:</p>
+            <p className="w-full text-center text-sm font-semibold" style={{ color: THEME.eventB }}>Die:</p>
             {[1, 2, 3, 4, 5, 6].map((d) => (
               <motion.button
                 key={d}
@@ -289,9 +257,9 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                 style={{
                   minHeight: 48,
                   minWidth: 48,
-                  background: dieChoice === d ? `${EVENT_B_COLOR}40` : SURFACE,
-                  border: `2px solid ${dieChoice === d ? EVENT_B_COLOR : BORDER}`,
-                  color: dieChoice === d ? EVENT_B_COLOR : TEXT,
+                  background: dieChoice === d ? `${THEME.eventB}40` : SURFACE,
+                  border: `2px solid ${dieChoice === d ? THEME.eventB : BORDER}`,
+                  color: dieChoice === d ? THEME.eventB : TEXT,
                 }}
                 aria-label={`Die: ${d}`}
               >
@@ -308,9 +276,9 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={SPRING}
             className="rounded-xl px-6 py-3 text-center"
-            style={{ background: `${RESULT_COLOR}20`, border: `2px solid ${RESULT_COLOR}` }}
+            style={{ background: `${THEME.result}20`, border: `2px solid ${THEME.result}` }}
           >
-            <p className="font-mono text-lg font-bold" style={{ color: RESULT_COLOR }}>
+            <p className="font-mono text-lg font-bold" style={{ color: THEME.result }}>
               {"Outcome: "}{coinChoice}{dieChoice}
             </p>
             <p className="text-sm" style={{ color: MUTED }}>
@@ -340,7 +308,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             </p>
             <div className="flex flex-wrap gap-1">
               {outcomes.map((o) => (
-                <span key={o} className="rounded-md px-2 py-1 font-mono text-xs font-bold" style={{ background: `${RESULT_COLOR}20`, color: RESULT_COLOR }}>
+                <span key={o} className="rounded-md px-2 py-1 font-mono text-xs font-bold" style={{ background: `${THEME.result}20`, color: THEME.result }}>
                   {o}
                 </span>
               ))}
@@ -376,11 +344,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   return (
     <StageWrapper>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <div className="flex gap-2">
-          {prompts.map((_, i) => (
-            <div key={i} className="h-2 w-8 rounded-full" style={{ background: i <= promptIdx ? PRIMARY : BORDER }} />
-          ))}
-        </div>
+        <InteractionDots count={promptIdx + 1} total={prompts.length} activeColor={PRIMARY} />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -407,8 +371,8 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 {"(Independent)"}
               </p>
             </div>
-            <div className="rounded-xl p-3 text-center" style={{ background: `${WARN_COLOR}15` }}>
-              <p className="text-xs font-bold" style={{ color: WARN_COLOR }}>Without Replacement</p>
+            <div className="rounded-xl p-3 text-center" style={{ background: `${THEME.warn}15` }}>
+              <p className="text-xs font-bold" style={{ color: THEME.warn }}>Without Replacement</p>
               <p className="mt-1 font-mono text-sm" style={{ color: TEXT }}>
                 {"P = 4/52 \u00D7 3/51"}<br />
                 {"(Dependent)"}
@@ -448,8 +412,8 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
 
   const notations = [
     { text: "P(A and B) = P(A) \u00D7 P(B)", subtitle: "Independent events", color: SUCCESS },
-    { text: "P(A and B) = P(A) \u00D7 P(B|A)", subtitle: "Dependent events", color: WARN_COLOR },
-    { text: "Total outcomes = n\u2081 \u00D7 n\u2082", subtitle: "Counting principle", color: RESULT_COLOR },
+    { text: "P(A and B) = P(A) \u00D7 P(B|A)", subtitle: "Dependent events", color: THEME.warn },
+    { text: "Total outcomes = n\u2081 \u00D7 n\u2082", subtitle: "Counting principle", color: THEME.result },
   ];
 
   return (
@@ -478,9 +442,9 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
 
 function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   const scenarios = [
-    { icon: "🃏", title: "Card Games", desc: "Drawing two aces without replacement: P = 4/52 \u00D7 3/51 = 12/2652 \u2248 0.45%. Much harder than with replacement!" },
-    { icon: "🌧️", title: "Weather Forecasts", desc: "If there's a 30% chance of rain on Saturday AND Sunday (independent), P(both rainy) = 0.3 \u00D7 0.3 = 9%." },
-    { icon: "🧬", title: "Genetics", desc: "Each parent has a 50% chance of passing a gene. P(both pass it) = 0.5 \u00D7 0.5 = 25%." },
+    { icon: "\u{1F0CF}", title: "Card Games", desc: "Drawing two aces without replacement: P = 4/52 \u00D7 3/51 = 12/2652 \u2248 0.45%. Much harder than with replacement!" },
+    { icon: "\u{1F327}\uFE0F", title: "Weather Forecasts", desc: "If there's a 30% chance of rain on Saturday AND Sunday (independent), P(both rainy) = 0.3 \u00D7 0.3 = 9%." },
+    { icon: "\u{1F9EC}", title: "Genetics", desc: "Each parent has a 50% chance of passing a gene. P(both pass it) = 0.5 \u00D7 0.5 = 25%." },
   ];
 
   return (
@@ -575,8 +539,8 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           {problem.options.map((opt, i) => {
             const isCorrect = i === problem.correctIndex;
             const isSelected = i === selected;
-            let bg = SURFACE;
-            let border = BORDER;
+            let bg: string = SURFACE;
+            let border: string = BORDER;
             if (answered) {
               if (isCorrect) { bg = `${SUCCESS}20`; border = SUCCESS; }
               else if (isSelected) { bg = `${ERROR}20`; border = ERROR; }
@@ -618,7 +582,7 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
       <StageWrapper>
         <div className="flex flex-col items-center gap-4 text-center">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}>
-            <p className="text-4xl">🧠</p>
+            <p className="text-4xl">{"\u{1F9E0}"}</p>
             <h2 className="mt-2 text-xl font-bold" style={{ color: TEXT }}>Great reflection!</h2>
             <p className="mt-2 text-sm" style={{ color: MUTED }}>Self-explanation strengthens your understanding. +50 XP</p>
           </motion.div>
@@ -658,29 +622,20 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
 /* ================================================================== */
 
 export function CompoundProbabilityLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGES[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="SP-5.4a Compound Probability" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onContinue={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -12,58 +18,39 @@ interface AngleRelationshipsLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
-// ANIMATION CONFIGS
+// SHARED TOKEN ALIASES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.surface;
+const BORDER_LIGHT = colors.bg.elevated;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
-  angleA: "#818cf8",
-  angleAFill: "#818cf830",
+const THEME = {
+  angleA: colors.accent.indigo,
+  angleAFill: `${colors.accent.indigo}30`,
   angleB: "#f59e0b",
   angleBFill: "#f59e0b30",
-  line: "#94a3b8",
+  line: colors.text.secondary,
   vertex: "#ffffff",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
   textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  success: "#34d399",
-  successFill: "#34d39933",
-  error: "#f87171",
-  errorFill: "#f8717120",
+  successFill: `${colors.functional.success}33`,
+  errorFill: `${colors.functional.error}20`,
   primary: "#8b5cf6",
   primaryHover: "#7c3aed",
-  border: "#334155",
-  borderLight: "#475569",
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -102,75 +89,6 @@ function snapToNotable(raw: number): number {
 
 function clampAngle(deg: number): number {
   return Math.max(5, Math.min(175, deg));
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SHARED SMALL COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileHover={disabled ? {} : { backgroundColor: C.primaryHover }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -215,56 +133,56 @@ function IntersectionDiagram({
       {/* A: from 0 to angleDeg */}
       <path
         d={anglePiePath(0, angleDeg, r)}
-        fill={C.angleAFill}
-        stroke={C.angleA}
+        fill={THEME.angleAFill}
+        stroke={THEME.angleA}
         strokeWidth={highlightA ? 2.5 : 1.5}
         opacity={highlightPair === "supplementary" ? 1 : highlightPair === "vertical" ? 1 : 0.8}
       />
       {/* B: from angleDeg to 180 */}
       <path
         d={anglePiePath(angleDeg, 180, r)}
-        fill={C.angleBFill}
-        stroke={C.angleB}
+        fill={THEME.angleBFill}
+        stroke={THEME.angleB}
         strokeWidth={highlightB ? 2.5 : 1.5}
         opacity={highlightPair === "supplementary" ? 1 : 0.8}
       />
       {/* C: from 180 to 180+angleDeg */}
       <path
         d={anglePiePath(180, 180 + angleDeg, r)}
-        fill={C.angleAFill}
-        stroke={C.angleA}
+        fill={THEME.angleAFill}
+        stroke={THEME.angleA}
         strokeWidth={highlightPair === "vertical" ? 2.5 : 1.5}
         opacity={highlightPair === "vertical" ? 1 : 0.8}
       />
       {/* D: from 180+angleDeg to 360 */}
       <path
         d={anglePiePath(180 + angleDeg, 360, r)}
-        fill={C.angleBFill}
-        stroke={C.angleB}
+        fill={THEME.angleBFill}
+        stroke={THEME.angleB}
         strokeWidth={1.5}
         opacity={0.8}
       />
 
       {/* Lines */}
-      <line x1={line1Start.x} y1={line1Start.y} x2={line1End.x} y2={line1End.y} stroke={C.line} strokeWidth={2.5} />
-      <line x1={line2Start.x} y1={line2Start.y} x2={line2End.x} y2={line2End.y} stroke={C.line} strokeWidth={2.5} />
+      <line x1={line1Start.x} y1={line1Start.y} x2={line1End.x} y2={line1End.y} stroke={THEME.line} strokeWidth={2.5} />
+      <line x1={line2Start.x} y1={line2Start.y} x2={line2End.x} y2={line2End.y} stroke={THEME.line} strokeWidth={2.5} />
 
       {/* Vertex */}
-      <circle cx={0} cy={0} r={4} fill={C.vertex} />
+      <circle cx={0} cy={0} r={4} fill={THEME.vertex} />
 
       {/* Labels */}
       {showLabels && (
         <>
-          <text x={labelA.x} y={labelA.y} textAnchor={"middle" as const} dominantBaseline="central" fill={C.angleA} fontSize={12} fontWeight={700}>
+          <text x={labelA.x} y={labelA.y} textAnchor={"middle" as const} dominantBaseline="central" fill={THEME.angleA} fontSize={12} fontWeight={700}>
             A
           </text>
-          <text x={labelB.x} y={labelB.y} textAnchor={"middle" as const} dominantBaseline="central" fill={C.angleB} fontSize={12} fontWeight={700}>
+          <text x={labelB.x} y={labelB.y} textAnchor={"middle" as const} dominantBaseline="central" fill={THEME.angleB} fontSize={12} fontWeight={700}>
             B
           </text>
-          <text x={labelC.x} y={labelC.y} textAnchor={"middle" as const} dominantBaseline="central" fill={C.angleA} fontSize={12} fontWeight={700}>
+          <text x={labelC.x} y={labelC.y} textAnchor={"middle" as const} dominantBaseline="central" fill={THEME.angleA} fontSize={12} fontWeight={700}>
             C
           </text>
-          <text x={labelD.x} y={labelD.y} textAnchor={"middle" as const} dominantBaseline="central" fill={C.angleB} fontSize={12} fontWeight={700}>
+          <text x={labelD.x} y={labelD.y} textAnchor={"middle" as const} dominantBaseline="central" fill={THEME.angleB} fontSize={12} fontWeight={700}>
             D
           </text>
         </>
@@ -273,16 +191,16 @@ function IntersectionDiagram({
       {/* Values */}
       {showValues && (
         <>
-          <text x={labelA.x} y={labelA.y + 14} textAnchor={"middle" as const} fill={C.angleA} fontSize={10}>
+          <text x={labelA.x} y={labelA.y + 14} textAnchor={"middle" as const} fill={THEME.angleA} fontSize={10}>
             {Math.round(A)}{"\u00b0"}
           </text>
-          <text x={labelB.x} y={labelB.y + 14} textAnchor={"middle" as const} fill={C.angleB} fontSize={10}>
+          <text x={labelB.x} y={labelB.y + 14} textAnchor={"middle" as const} fill={THEME.angleB} fontSize={10}>
             {Math.round(B)}{"\u00b0"}
           </text>
-          <text x={labelC.x} y={labelC.y + 14} textAnchor={"middle" as const} fill={C.angleA} fontSize={10}>
+          <text x={labelC.x} y={labelC.y + 14} textAnchor={"middle" as const} fill={THEME.angleA} fontSize={10}>
             {Math.round(A)}{"\u00b0"}
           </text>
-          <text x={labelD.x} y={labelD.y + 14} textAnchor={"middle" as const} fill={C.angleB} fontSize={10}>
+          <text x={labelD.x} y={labelD.y + 14} textAnchor={"middle" as const} fill={THEME.angleB} fontSize={10}>
             {Math.round(B)}{"\u00b0"}
           </text>
         </>
@@ -343,7 +261,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               y1={CY}
               x2={CX + 160}
               y2={CY}
-              stroke={C.line}
+              stroke={THEME.line}
               strokeWidth={2.5}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -380,7 +298,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               exit={{ opacity: 0 }}
               transition={FADE}
               className="text-center font-semibold"
-              style={{ color: C.textPrimary, fontSize: 16 }}
+              style={{ color: TEXT, fontSize: 16 }}
             >
               {phase < 6
                 ? "Opposite angles are always equal."
@@ -397,10 +315,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={FADE}
               className="mt-2 text-center font-semibold"
-              style={{ color: C.textPrimary, fontSize: 18 }}
+              style={{ color: TEXT, fontSize: 18 }}
             >
               No matter the angle, these rules{" "}
-              <span style={{ color: C.angleA }}>never</span>{" "}
+              <span style={{ color: THEME.angleA }}>never</span>{" "}
               break.
             </motion.p>
           )}
@@ -408,9 +326,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {phase >= 9 && (
-        <div className="mt-6">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} color={THEME.primary} />
       )}
     </div>
   );
@@ -466,19 +382,19 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     >
       {/* Angle readout */}
       <div
-        className="mb-2 mt-2 flex items-center justify-center gap-4 rounded-xl px-4 py-2"
-        style={{ backgroundColor: C.bgSurface, fontVariantNumeric: "tabular-nums" }}
+        className="mb-2 mt-2 flex items-center justify-center gap-4 rounded-xl bg-nm-bg-secondary px-4 py-2"
+        style={{ fontVariantNumeric: "tabular-nums" }}
       >
-        <span style={{ color: C.angleA, fontSize: 16, fontWeight: 700 }}>
+        <span style={{ color: THEME.angleA, fontSize: 16, fontWeight: 700 }}>
           A = {Math.round(angleDeg)}{"\u00b0"}
         </span>
-        <span style={{ color: C.angleB, fontSize: 16, fontWeight: 700 }}>
+        <span style={{ color: THEME.angleB, fontSize: 16, fontWeight: 700 }}>
           B = {Math.round(180 - angleDeg)}{"\u00b0"}
         </span>
-        <span style={{ color: C.angleA, fontSize: 14, fontWeight: 600 }}>
+        <span style={{ color: THEME.angleA, fontSize: 14, fontWeight: 600 }}>
           C = {Math.round(angleDeg)}{"\u00b0"}
         </span>
-        <span style={{ color: C.angleB, fontSize: 14, fontWeight: 600 }}>
+        <span style={{ color: THEME.angleB, fontSize: 14, fontWeight: 600 }}>
           D = {Math.round(180 - angleDeg)}{"\u00b0"}
         </span>
       </div>
@@ -503,9 +419,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             cx={handleEnd.x}
             cy={handleEnd.y}
             r={14}
-            fill={C.primary}
+            fill={THEME.primary}
             fillOpacity={0.3}
-            stroke={C.primary}
+            stroke={THEME.primary}
             strokeWidth={2}
             style={{ cursor: "grab", touchAction: "none" }}
             {...(bind() as Record<string, unknown>)}
@@ -516,7 +432,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             cx={handleEnd.x}
             cy={handleEnd.y}
             r={5}
-            fill={C.primary}
+            fill={THEME.primary}
             pointerEvents="none"
           />
         </g>
@@ -526,13 +442,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <div className="mt-2 flex gap-2 justify-center text-xs font-semibold">
         <span
           className="rounded-lg px-3 py-1"
-          style={{ backgroundColor: C.angleAFill, color: C.angleA }}
+          style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}
         >
           A = C (vertical)
         </span>
         <span
           className="rounded-lg px-3 py-1"
-          style={{ backgroundColor: C.angleBFill, color: C.angleB }}
+          style={{ backgroundColor: THEME.angleBFill, color: THEME.angleB }}
         >
           A + B = 180{"\u00b0"}
         </span>
@@ -551,9 +467,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             style={{
               minHeight: 44,
               minWidth: 48,
-              backgroundColor: angleDeg === p ? C.primary : C.bgSurface,
-              color: angleDeg === p ? "#fff" : C.textMuted,
-              border: `1px solid ${angleDeg === p ? C.primary : C.border}`,
+              backgroundColor: angleDeg === p ? THEME.primary : SURFACE,
+              color: angleDeg === p ? "#fff" : MUTED,
+              border: `1px solid ${angleDeg === p ? THEME.primary : BORDER}`,
             }}
             whileTap={{ scale: 0.95 }}
           >
@@ -563,24 +479,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Interaction counter */}
-      <div className="mt-3 flex items-center gap-1 justify-center">
-        {Array.from({ length: 10 }, (_, i) => (
-          <div
-            key={i}
-            className="rounded-full transition-colors duration-200"
-            style={{
-              width: 6,
-              height: 6,
-              backgroundColor: i < Math.min(interactions, 10) ? C.primary : C.border,
-            }}
-          />
-        ))}
+      <div className="mt-3">
+        <InteractionDots count={Math.min(interactions, 10)} total={10} activeColor={THEME.primary} />
       </div>
 
       {canContinue && (
-        <div className="mt-4 flex justify-center">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} color={THEME.primary} />
       )}
     </div>
   );
@@ -636,19 +540,9 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-4 flex items-center gap-1 justify-center">
-          {DISCOVERY_PROMPTS.map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full"
-              style={{
-                width: 8,
-                height: 8,
-                backgroundColor: i <= promptIdx ? C.primary : C.border,
-              }}
-            />
-          ))}
+          <InteractionDots count={promptIdx + 1} total={DISCOVERY_PROMPTS.length} activeColor={THEME.primary} />
         </div>
 
         {/* Mini diagram */}
@@ -672,12 +566,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING}
         >
-          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: TEXT }}>
             {prompt.text}
           </p>
           <p
-            className="mb-6 rounded-lg px-4 py-3 text-sm"
-            style={{ backgroundColor: C.bgPrimary, color: C.textSecondary }}
+            className="mb-6 rounded-lg bg-nm-bg-primary px-4 py-3 text-sm"
+            style={{ color: THEME.textSecondary }}
           >
             {prompt.detail}
           </p>
@@ -687,7 +581,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <motion.button
             onClick={handleAck}
             className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-base font-semibold text-white"
-            style={{ backgroundColor: C.primary }}
+            style={{ backgroundColor: THEME.primary }}
             whileTap={{ scale: 0.95 }}
           >
             {prompt.button}
@@ -703,11 +597,11 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SYMBOL_STEPS = [
-  { notation: "Vertical angles: \u2220A = \u2220C", description: "Opposite angles at an intersection are equal", color: C.angleA },
-  { notation: "Vertical angles: \u2220B = \u2220D", description: "The other pair of opposite angles are also equal", color: C.angleB },
-  { notation: "Supplementary: \u2220A + \u2220B = 180\u00b0", description: "Adjacent angles on a line sum to 180\u00b0", color: C.textPrimary },
-  { notation: "If \u2220A = 65\u00b0, then \u2220B = 180\u00b0 \u2212 65\u00b0 = 115\u00b0", description: "Finding a missing angle", color: C.success },
-  { notation: "\u2220C = 65\u00b0, \u2220D = 115\u00b0", description: "All four angles from just ONE!", color: C.success },
+  { notation: "Vertical angles: \u2220A = \u2220C", description: "Opposite angles at an intersection are equal", color: THEME.angleA },
+  { notation: "Vertical angles: \u2220B = \u2220D", description: "The other pair of opposite angles are also equal", color: THEME.angleB },
+  { notation: "Supplementary: \u2220A + \u2220B = 180\u00b0", description: "Adjacent angles on a line sum to 180\u00b0", color: TEXT },
+  { notation: "If \u2220A = 65\u00b0, then \u2220B = 180\u00b0 \u2212 65\u00b0 = 115\u00b0", description: "Finding a missing angle", color: SUCCESS },
+  { notation: "\u2220C = 65\u00b0, \u2220D = 115\u00b0", description: "All four angles from just ONE!", color: SUCCESS },
 ] as const;
 
 function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
@@ -728,10 +622,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.angleAFill, color: C.angleA }}
+          style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}
         >
           Symbol Bridge
         </span>
@@ -746,7 +640,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={SPRING}
                 className="flex items-center gap-3 rounded-lg px-4 py-3"
-                style={{ backgroundColor: C.bgPrimary, border: `1px solid ${C.border}` }}
+                style={{ backgroundColor: BG, border: `1px solid ${BORDER}` }}
               >
                 <span
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -758,7 +652,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                   <p className="text-sm font-semibold" style={{ color: step.color }}>
                     {step.notation}
                   </p>
-                  <p className="text-xs" style={{ color: C.textMuted }}>
+                  <p className="text-xs" style={{ color: MUTED }}>
                     {step.description}
                   </p>
                 </div>
@@ -774,12 +668,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             transition={{ delay: 0.3, ...FADE }}
             className="mt-4"
           >
-            <p className="mb-4 text-center text-sm font-medium" style={{ color: C.textSecondary }}>
+            <p className="mb-4 text-center text-sm font-medium" style={{ color: THEME.textSecondary }}>
               Vertical angles are equal. Adjacent angles on a line sum to 180{"\u00b0"}.
             </p>
-            <div className="flex justify-center">
-              <ContinueButton onClick={onComplete} />
-            </div>
+            <ContinueButton onClick={onComplete} color={THEME.primary} />
           </motion.div>
         )}
       </div>
@@ -804,15 +696,15 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.angleAFill, color: C.angleA }}
+          style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}
         >
           Real World
         </span>
 
-        <p className="mb-4 text-base font-medium" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-base font-medium" style={{ color: TEXT }}>
           Angle relationships are everywhere!
         </p>
 
@@ -824,20 +716,20 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING, delay: i * 0.15 }}
               className="rounded-xl px-4 py-3"
-              style={{ backgroundColor: C.bgPrimary, border: `1px solid ${C.border}` }}
+              style={{ backgroundColor: BG, border: `1px solid ${BORDER}` }}
             >
               <div className="flex items-start gap-3">
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
-                  style={{ backgroundColor: C.angleAFill, color: C.angleA }}
+                  style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}
                 >
                   {card.icon}
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: C.textPrimary }}>
+                  <p className="text-sm font-semibold" style={{ color: TEXT }}>
                     {card.title}
                   </p>
-                  <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
+                  <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
                     {card.example}
                   </p>
                 </div>
@@ -847,9 +739,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center">
-        <ContinueButton onClick={onComplete} />
-      </div>
+      <ContinueButton onClick={onComplete} color={THEME.primary} />
     </div>
   );
 }
@@ -973,7 +863,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   if (!problem) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-4">
-        <ContinueButton onClick={onComplete} label="Complete Practice" />
+        <ContinueButton onClick={onComplete} color={THEME.primary}>Complete Practice</ContinueButton>
       </div>
     );
   }
@@ -1021,23 +911,23 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-3 flex items-center justify-between">
           <span
             className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
             style={{
-              backgroundColor: `${layerColors[problem.layer] ?? C.primary}20`,
-              color: layerColors[problem.layer] ?? C.primary,
+              backgroundColor: `${layerColors[problem.layer] ?? THEME.primary}20`,
+              color: layerColors[problem.layer] ?? THEME.primary,
             }}
           >
             {problem.layer}
           </span>
-          <span className="text-xs" style={{ color: C.textDim }}>
+          <span className="text-xs" style={{ color: MUTED }}>
             {probIdx + 1} / {PRACTICE_PROBLEMS.length}
           </span>
         </div>
 
-        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: TEXT }}>
           {problem.prompt}
         </p>
 
@@ -1048,6 +938,17 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               const isSelected = selected === i;
               const showCorrect = answered && i === problem.correctIndex;
               const showIncorrect = answered && isSelected && i !== problem.correctIndex;
+              let bgColor: string = BG;
+              if (showCorrect) bgColor = THEME.successFill;
+              else if (showIncorrect) bgColor = THEME.errorFill;
+              else if (isSelected) bgColor = `${THEME.primary}30`;
+              let borderColor: string = BORDER;
+              if (showCorrect) borderColor = SUCCESS;
+              else if (showIncorrect) borderColor = ERROR;
+              else if (isSelected) borderColor = THEME.primary;
+              let textColor: string = THEME.textSecondary;
+              if (showCorrect) textColor = SUCCESS;
+              else if (showIncorrect) textColor = ERROR;
               return (
                 <motion.button
                   key={i}
@@ -1055,23 +956,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   className="w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors"
                   style={{
                     minHeight: 48,
-                    backgroundColor: showCorrect
-                      ? C.successFill
-                      : showIncorrect
-                        ? C.errorFill
-                        : isSelected
-                          ? `${C.primary}30`
-                          : C.bgPrimary,
-                    border: `2px solid ${
-                      showCorrect
-                        ? C.success
-                        : showIncorrect
-                          ? C.error
-                          : isSelected
-                            ? C.primary
-                            : C.border
-                    }`,
-                    color: showCorrect ? C.success : showIncorrect ? C.error : C.textSecondary,
+                    backgroundColor: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    color: textColor,
                   }}
                   whileTap={answered ? {} : { scale: 0.98 }}
                 >
@@ -1089,6 +976,17 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               const isSel = tfSelected === val;
               const showCorrect = answered && val === problem.correctBool;
               const showIncorrect = answered && isSel && val !== problem.correctBool;
+              let bgColor: string = BG;
+              if (showCorrect) bgColor = THEME.successFill;
+              else if (showIncorrect) bgColor = THEME.errorFill;
+              else if (isSel) bgColor = `${THEME.primary}30`;
+              let borderColor: string = BORDER;
+              if (showCorrect) borderColor = SUCCESS;
+              else if (showIncorrect) borderColor = ERROR;
+              else if (isSel) borderColor = THEME.primary;
+              let textColor: string = THEME.textSecondary;
+              if (showCorrect) textColor = SUCCESS;
+              else if (showIncorrect) textColor = ERROR;
               return (
                 <motion.button
                   key={String(val)}
@@ -1096,17 +994,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   className="flex-1 rounded-xl py-3 text-center text-base font-semibold"
                   style={{
                     minHeight: 48,
-                    backgroundColor: showCorrect
-                      ? C.successFill
-                      : showIncorrect
-                        ? C.errorFill
-                        : isSel
-                          ? `${C.primary}30`
-                          : C.bgPrimary,
-                    border: `2px solid ${
-                      showCorrect ? C.success : showIncorrect ? C.error : isSel ? C.primary : C.border
-                    }`,
-                    color: showCorrect ? C.success : showIncorrect ? C.error : C.textSecondary,
+                    backgroundColor: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    color: textColor,
                   }}
                   whileTap={answered ? {} : { scale: 0.95 }}
                 >
@@ -1130,17 +1020,17 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                 minHeight: 48,
                 backgroundColor: answered
                   ? isCorrect
-                    ? C.successFill
-                    : C.errorFill
-                  : C.bgPrimary,
+                    ? THEME.successFill
+                    : THEME.errorFill
+                  : BG,
                 border: `2px solid ${
                   answered
                     ? isCorrect
-                      ? C.success
-                      : C.error
-                    : C.border
+                      ? SUCCESS
+                      : ERROR
+                    : BORDER
                 }`,
-                color: C.textPrimary,
+                color: TEXT,
               }}
               aria-label="Enter your answer"
               readOnly={answered}
@@ -1155,7 +1045,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             className="mt-4 w-full rounded-xl py-3 text-base font-semibold text-white"
             style={{
               minHeight: 48,
-              backgroundColor: C.primary,
+              backgroundColor: THEME.primary,
               opacity:
                 (problem.type === "multiple-choice" && selected === null) ||
                 (problem.type === "true-false" && tfSelected === null) ||
@@ -1180,14 +1070,14 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <div
               className="rounded-xl px-4 py-3"
               style={{
-                backgroundColor: isCorrect ? C.successFill : C.errorFill,
-                border: `1px solid ${isCorrect ? C.success : C.error}`,
+                backgroundColor: isCorrect ? THEME.successFill : THEME.errorFill,
+                border: `1px solid ${isCorrect ? SUCCESS : ERROR}`,
               }}
             >
-              <p className="text-sm font-semibold" style={{ color: isCorrect ? C.success : C.error }}>
+              <p className="text-sm font-semibold" style={{ color: isCorrect ? SUCCESS : ERROR }}>
                 {isCorrect ? "Correct!" : "Not quite."}
               </p>
-              <p className="mt-1 text-sm" style={{ color: C.textSecondary }}>
+              <p className="mt-1 text-sm" style={{ color: THEME.textSecondary }}>
                 {problem.feedback}
               </p>
             </div>
@@ -1195,7 +1085,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <motion.button
               onClick={handleNext}
               className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white"
-              style={{ minHeight: 48, backgroundColor: C.primary }}
+              style={{ minHeight: 48, backgroundColor: THEME.primary }}
               whileTap={{ scale: 0.97 }}
             >
               {probIdx < PRACTICE_PROBLEMS.length - 1 ? "Next \u2192" : "Finish Practice"}
@@ -1236,7 +1126,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         className="flex flex-1 flex-col items-center justify-center px-4"
         style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
       >
-        <div className="w-full rounded-2xl p-6 text-center" style={{ backgroundColor: C.bgSurface }}>
+        <div className="w-full rounded-2xl bg-nm-bg-secondary p-6 text-center">
           {submitted && (
             <>
               <motion.div
@@ -1244,14 +1134,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 animate={{ scale: 1 }}
                 transition={SPRING_POP}
                 className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-                style={{ backgroundColor: C.successFill }}
+                style={{ backgroundColor: THEME.successFill }}
               >
-                <span style={{ color: C.success, fontSize: 32 }}>{"✓"}</span>
+                <span style={{ color: SUCCESS, fontSize: 32 }}>{"✓"}</span>
               </motion.div>
-              <p className="mb-2 text-lg font-semibold" style={{ color: C.textPrimary }}>
+              <p className="mb-2 text-lg font-semibold" style={{ color: TEXT }}>
                 Great reflection!
               </p>
-              <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
+              <p className="mb-4 text-sm" style={{ color: MUTED }}>
                 Understanding WHY vertical angles are equal (not just that they are)
                 is the key to mastering geometry!
               </p>
@@ -1259,14 +1149,12 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           )}
 
           {skipped && (
-            <p className="mb-4 text-center text-sm" style={{ color: C.textMuted }}>
+            <p className="mb-4 text-center text-sm" style={{ color: MUTED }}>
               Reflection skipped. You can always come back to reflect later!
             </p>
           )}
 
-          <div className="mt-6 flex justify-center">
-            <ContinueButton onClick={onComplete} label="Complete Lesson" />
-          </div>
+          <ContinueButton onClick={onComplete} color={THEME.primary}>Complete Lesson</ContinueButton>
         </div>
       </motion.div>
     );
@@ -1277,15 +1165,15 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.angleAFill, color: C.angleA }}
+          style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}
         >
           Reflection
         </span>
 
-        <p className="mb-4 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-lg font-medium leading-relaxed" style={{ color: TEXT }}>
           {"Explain to a friend WHY vertical angles are always equal. Hint: use the fact that both vertical angles are supplementary to the SAME angle."}
         </p>
 
@@ -1312,14 +1200,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           style={{
             minHeight: 120,
             maxHeight: 240,
-            backgroundColor: C.bgPrimary,
-            border: `1px solid ${C.borderLight}`,
-            color: C.textSecondary,
+            backgroundColor: BG,
+            border: `1px solid ${BORDER_LIGHT}`,
+            color: THEME.textSecondary,
           }}
           aria-label="Write your reflection explaining why vertical angles are equal"
         />
 
-        <div className="mt-1 text-right text-xs" style={{ color: meetsMin ? C.success : C.textDim }}>
+        <div className="mt-1 text-right text-xs" style={{ color: meetsMin ? SUCCESS : MUTED }}>
           {text.length} / {minChars} minimum
         </div>
 
@@ -1327,7 +1215,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           onClick={handleSubmit}
           disabled={!meetsMin}
           className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none"
-          style={{ backgroundColor: C.primary, minHeight: 52 }}
+          style={{ backgroundColor: THEME.primary, minHeight: 52 }}
         >
           Submit Reflection
         </button>
@@ -1335,7 +1223,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={handleSkip}
           className="mt-2 w-full py-2 text-sm underline-offset-2 hover:underline"
-          style={{ color: C.textDim, minHeight: 44 }}
+          style={{ color: MUTED, minHeight: 44 }}
           aria-label="Skip reflection"
         >
           Skip
@@ -1350,45 +1238,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function AngleRelationshipsLesson({ onComplete }: AngleRelationshipsLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const stage = STAGE_ORDER[stageIndex]!;
-
-  const advanceStage = useCallback(() => {
-    setStageIndex((i) => {
-      const next = i + 1;
-      if (next >= STAGE_ORDER.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
   return (
-    <div
-      className="flex min-h-dvh flex-col"
-      style={{ backgroundColor: C.bgPrimary }}
-    >
-      <StageProgressDots currentIndex={stageIndex} total={STAGE_ORDER.length} />
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={advanceStage} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.2 Angle Relationships" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

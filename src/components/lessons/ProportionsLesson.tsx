@@ -7,34 +7,20 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
 import { cn } from "@/lib/utils/cn";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /* ================================================================== */
 /*  Types                                                              */
 /* ================================================================== */
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
 
 interface PracticeProblem {
   id: string;
@@ -56,29 +42,11 @@ interface PracticeProblem {
 /*  Constants                                                          */
 /* ================================================================== */
 
-const INDIGO = "#818cf8";
-const VIOLET = "#a78bfa";
-const EMERALD = "#34d399";
-const RED = "#f87171";
-const AMBER = "#fbbf24";
-const BLUE = "#60a5fa";
-const TEXT_PRIMARY = "#e2e8f0";
-const TEXT_SEC = "#94a3b8";
-const TEXT_DIM = "#64748b";
-const SURFACE = "#1e293b";
-const BG = "#0f172a";
-const BORDER_CLR = "#334155";
+/** Lesson-specific color aliases that don't exist in the shared palette. */
+const THEME = {
+  red: "#f87171",
+} as const;
 
-const SPRING: { type: "spring"; damping: number; stiffness: number } = {
-  type: "spring",
-  damping: 20,
-  stiffness: 300,
-};
-const SPRING_GENTLE: { type: "spring"; damping: number; stiffness: number } = {
-  type: "spring",
-  damping: 25,
-  stiffness: 200,
-};
 const EASE: { type: "tween"; duration: number; ease: "easeInOut" } = {
   type: "tween",
   duration: 0.3,
@@ -88,9 +56,9 @@ const EASE: { type: "tween"; duration: number; ease: "easeInOut" } = {
 const MIN_INTERACTIONS = 10;
 
 const LAYER_COLORS: Record<number, string> = {
-  0: INDIGO,
-  1: AMBER,
-  2: EMERALD,
+  0: colors.accent.indigo,
+  1: colors.accent.amber,
+  2: colors.accent.emerald,
 };
 const LAYER_LABELS: Record<number, string> = {
   0: "Recall",
@@ -334,106 +302,9 @@ function crossProductsEqual(
 /*  Shared Sub-Components                                              */
 /* ================================================================== */
 
-function ProgressBar({
-  current,
-  total,
-}: {
-  current: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-2 px-4 py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <motion.div
-          key={i}
-          className="rounded-full"
-          style={{
-            width: 10,
-            height: 10,
-            backgroundColor:
-              i <= current ? INDIGO : BORDER_CLR,
-          }}
-          animate={{
-            scale: i === current ? 1.25 : 1,
-            backgroundColor:
-              i < current
-                ? EMERALD
-                : i === current
-                  ? INDIGO
-                  : BORDER_CLR,
-          }}
-          transition={SPRING}
-        />
-      ))}
-    </div>
-  );
-}
+/* ProgressBar removed — LessonShell provides the progress header. */
 
-function ContinueButton({
-  onClick,
-  disabled = false,
-  children = "Continue" as ReactNode,
-  progress,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-  progress?: number;
-}) {
-  return (
-    <motion.button
-      className="relative inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-base font-medium select-none"
-      style={{
-        minHeight: 48,
-        minWidth: 48,
-        background: disabled ? `${INDIGO}66` : INDIGO,
-        color: "#fff",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onClick={disabled ? undefined : onClick}
-      whileHover={disabled ? undefined : { scale: 1.04 }}
-      whileTap={disabled ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", damping: 15, stiffness: 400 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: disabled ? 0.5 : 1, y: 0 }}
-    >
-      {progress !== undefined && progress < 1 && (
-        <svg
-          className="absolute -top-1 -right-1"
-          width={24}
-          height={24}
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={BORDER_CLR}
-            strokeWidth={2}
-          />
-          <motion.circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={INDIGO}
-            strokeWidth={2}
-            strokeDasharray={62.83}
-            strokeLinecap="round"
-            transform="rotate(-90 12 12)"
-            animate={{
-              strokeDashoffset: 62.83 * (1 - progress),
-            }}
-            transition={SPRING_GENTLE}
-          />
-        </svg>
-      )}
-      {children}
-    </motion.button>
-  );
-}
+/* Local ContinueButton removed — using shared ContinueButton from ui/. */
 
 function Stepper({
   value,
@@ -459,9 +330,9 @@ function Stepper({
         style={{
           minWidth: 44,
           minHeight: 44,
-          backgroundColor: SURFACE,
-          color: TEXT_PRIMARY,
-          border: `1px solid ${BORDER_CLR}`,
+          backgroundColor: colors.bg.secondary,
+          color: colors.text.primary,
+          border: `1px solid ${colors.bg.surface}`,
           cursor: value <= min ? "not-allowed" : "pointer",
           opacity: value <= min ? 0.4 : 1,
         }}
@@ -475,7 +346,7 @@ function Stepper({
         className="flex items-center justify-center text-lg font-bold tabular-nums"
         style={{
           minWidth: 32,
-          color: TEXT_PRIMARY,
+          color: colors.text.primary,
           textAlign: "center",
         }}
         aria-live="polite"
@@ -487,9 +358,9 @@ function Stepper({
         style={{
           minWidth: 44,
           minHeight: 44,
-          backgroundColor: SURFACE,
-          color: TEXT_PRIMARY,
-          border: `1px solid ${BORDER_CLR}`,
+          backgroundColor: colors.bg.secondary,
+          color: colors.text.primary,
+          border: `1px solid ${colors.bg.surface}`,
           cursor: value >= max ? "not-allowed" : "pointer",
           opacity: value >= max ? 0.4 : 1,
         }}
@@ -563,7 +434,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
     <div className="flex flex-1 flex-col items-center px-4 py-4">
       <motion.h2
         className="mb-2 text-center text-xl font-bold"
-        style={{ color: TEXT_PRIMARY }}
+        style={{ color: colors.text.primary }}
         initial={{ opacity: 0 }}
         animate={{ opacity: step >= 0 ? 1 : 0 }}
         transition={EASE}
@@ -585,23 +456,23 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
           width={origW}
           height={origH}
           rx={4}
-          fill={INDIGO}
+          fill={colors.accent.indigo}
           fillOpacity={0.3}
-          stroke={INDIGO}
+          stroke={colors.accent.indigo}
           strokeWidth={2}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{
             opacity: step >= 1 ? 1 : 0,
             scale: step >= 1 ? 1 : 0.8,
           }}
-          transition={SPRING}
+          transition={springs.default}
         />
         {step >= 1 && (
           <motion.text
             x={origX + origW / 2}
             y={origY + origH + 20}
             textAnchor={"middle" as const}
-            fill={INDIGO}
+            fill={colors.accent.indigo}
             fontSize={16}
             fontWeight="bold"
             initial={{ opacity: 0 }}
@@ -621,20 +492,20 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               width={addW}
               height={addH}
               rx={4}
-              fill={RED}
+              fill={THEME.red}
               fillOpacity={0.3}
-              stroke={RED}
+              stroke={THEME.red}
               strokeWidth={2}
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
-              transition={SPRING}
+              transition={springs.default}
             />
             <motion.text
               x={addX + addW / 2}
               y={addY + addH + 20}
               textAnchor={"middle" as const}
-              fill={RED}
+              fill={THEME.red}
               fontSize={16}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -652,7 +523,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={VW / 2}
               y={280}
               textAnchor={"middle" as const}
-              fill={RED}
+              fill={THEME.red}
               fontSize={14}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -663,7 +534,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={VW / 2}
               y={300}
               textAnchor={"middle" as const}
-              fill={RED}
+              fill={THEME.red}
               fontSize={16}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -683,19 +554,19 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               width={mulW}
               height={mulH}
               rx={4}
-              fill={EMERALD}
+              fill={colors.accent.emerald}
               fillOpacity={0.3}
-              stroke={EMERALD}
+              stroke={colors.accent.emerald}
               strokeWidth={2}
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={SPRING}
+              transition={springs.default}
             />
             <motion.text
               x={mulX + mulW / 2}
               y={mulY + mulH + 20}
               textAnchor={"middle" as const}
-              fill={EMERALD}
+              fill={colors.accent.emerald}
               fontSize={16}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -713,7 +584,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={VW / 2}
               y={360}
               textAnchor={"middle" as const}
-              fill={EMERALD}
+              fill={colors.accent.emerald}
               fontSize={14}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -724,7 +595,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={VW / 2}
               y={380}
               textAnchor={"middle" as const}
-              fill={EMERALD}
+              fill={colors.accent.emerald}
               fontSize={16}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -741,7 +612,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             x={VW / 2}
             y={VH - 30}
             textAnchor={"middle" as const}
-            fill={TEXT_PRIMARY}
+            fill={colors.text.primary}
             fontSize={15}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -754,7 +625,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             x={VW / 2}
             y={VH - 30}
             textAnchor={"middle" as const}
-            fill={TEXT_PRIMARY}
+            fill={colors.text.primary}
             fontSize={15}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -767,7 +638,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             x={VW / 2}
             y={VH - 30}
             textAnchor={"middle" as const}
-            fill={TEXT_PRIMARY}
+            fill={colors.text.primary}
             fontSize={15}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -940,9 +811,9 @@ function SpatialStage({
             style={{
               minHeight: 44,
               backgroundColor:
-                activeTab === i ? INDIGO : SURFACE,
-              color: activeTab === i ? "#fff" : TEXT_SEC,
-              border: `1px solid ${activeTab === i ? INDIGO : BORDER_CLR}`,
+                activeTab === i ? colors.accent.indigo : colors.bg.secondary,
+              color: activeTab === i ? "#fff" : colors.text.secondary,
+              border: `1px solid ${activeTab === i ? colors.accent.indigo : colors.bg.surface}`,
             }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
@@ -970,7 +841,7 @@ function SpatialStage({
             <div className="mb-3 flex flex-wrap items-center justify-center gap-3">
               <span
                 className="text-sm font-medium"
-                style={{ color: TEXT_SEC }}
+                style={{ color: colors.text.secondary }}
               >
                 Base Ratio:
               </span>
@@ -986,7 +857,7 @@ function SpatialStage({
               />
               <span
                 className="text-lg font-bold"
-                style={{ color: TEXT_SEC }}
+                style={{ color: colors.text.secondary }}
               >
                 :
               </span>
@@ -1009,10 +880,10 @@ function SpatialStage({
                 style={{
                   minHeight: 44,
                   backgroundColor: lockRatio
-                    ? `${EMERALD}20`
-                    : `${RED}20`,
-                  color: lockRatio ? EMERALD : RED,
-                  border: `1px solid ${lockRatio ? EMERALD : RED}`,
+                    ? `${colors.accent.emerald}20`
+                    : `${THEME.red}20`,
+                  color: lockRatio ? colors.accent.emerald : THEME.red,
+                  border: `1px solid ${lockRatio ? colors.accent.emerald : THEME.red}`,
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -1038,8 +909,8 @@ function SpatialStage({
                   style={{
                     width: origPxW,
                     height: origPxH,
-                    border: `2px solid ${INDIGO}`,
-                    backgroundColor: `${INDIGO}26`,
+                    border: `2px solid ${colors.accent.indigo}`,
+                    backgroundColor: `${colors.accent.indigo}26`,
                     borderRadius: 4,
                     display: "flex",
                     alignItems: "center",
@@ -1048,14 +919,14 @@ function SpatialStage({
                 >
                   <span
                     className="text-xs font-bold"
-                    style={{ color: TEXT_PRIMARY }}
+                    style={{ color: colors.text.primary }}
                   >
                     {baseW}:{baseH}
                   </span>
                 </div>
                 <span
                   className="text-xs"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: colors.text.secondary }}
                 >
                   Original
                 </span>
@@ -1067,10 +938,10 @@ function SpatialStage({
                   style={{
                     width: scaledPxW,
                     height: scaledPxH,
-                    border: `2px solid ${ratiosMatch ? EMERALD : RED}`,
+                    border: `2px solid ${ratiosMatch ? colors.accent.emerald : THEME.red}`,
                     backgroundColor: ratiosMatch
-                      ? `${EMERALD}26`
-                      : `${RED}26`,
+                      ? `${colors.accent.emerald}26`
+                      : `${THEME.red}26`,
                     borderRadius: 4,
                     display: "flex",
                     alignItems: "center",
@@ -1082,14 +953,14 @@ function SpatialStage({
                     width: scaledPxW,
                     height: scaledPxH,
                     borderColor: ratiosMatch
-                      ? EMERALD
-                      : RED,
+                      ? colors.accent.emerald
+                      : THEME.red,
                   }}
-                  transition={SPRING}
+                  transition={springs.default}
                 >
                   <span
                     className="text-xs font-bold"
-                    style={{ color: TEXT_PRIMARY }}
+                    style={{ color: colors.text.primary }}
                   >
                     {scaledW}:{scaledH}
                   </span>
@@ -1104,7 +975,7 @@ function SpatialStage({
                       minHeight: 44,
                       bottom: -12,
                       right: -12,
-                      backgroundColor: AMBER,
+                      backgroundColor: colors.accent.amber,
                       cursor: "grab",
                       touchAction: "none",
                     }}
@@ -1128,7 +999,7 @@ function SpatialStage({
                 </motion.div>
                 <span
                   className="text-xs"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: colors.text.secondary }}
                 >
                   Scaled
                 </span>
@@ -1137,25 +1008,24 @@ function SpatialStage({
 
             {/* Cross products + match indicator */}
             <div
-              className="rounded-xl p-3 text-center"
-              style={{ backgroundColor: SURFACE }}
+              className="rounded-xl bg-nm-bg-secondary p-3 text-center"
               role="math"
               aria-label={`Cross products: ${baseW} times ${scaledH} equals ${crossA}, ${baseH} times ${scaledW} equals ${crossB}. ${ratiosMatch ? "Equal" : "Not equal"}.`}
             >
               <div className="mb-1 flex items-center justify-center gap-3 font-mono text-sm">
                 <span
                   style={{
-                    color: ratiosMatch ? EMERALD : RED,
+                    color: ratiosMatch ? colors.accent.emerald : THEME.red,
                   }}
                 >
                   {baseW}
                   {"\u00d7"}
                   {scaledH} = {crossA}
                 </span>
-                <span style={{ color: TEXT_DIM }}>vs</span>
+                <span style={{ color: colors.text.muted }}>vs</span>
                 <span
                   style={{
-                    color: ratiosMatch ? EMERALD : RED,
+                    color: ratiosMatch ? colors.accent.emerald : THEME.red,
                   }}
                 >
                   {baseH}
@@ -1166,14 +1036,14 @@ function SpatialStage({
               <div
                 className="text-sm font-bold"
                 style={{
-                  color: ratiosMatch ? EMERALD : RED,
+                  color: ratiosMatch ? colors.accent.emerald : THEME.red,
                 }}
               >
                 {ratiosMatch
                   ? "\u2713 Same shape! This is a proportion."
                   : "\u2717 Different shape! Not a proportion."}
                 {ratiosMatch && lockRatio && (
-                  <span style={{ color: AMBER }}>
+                  <span style={{ color: colors.accent.amber }}>
                     {` (\u00d7${scaleFactor})`}
                   </span>
                 )}
@@ -1191,13 +1061,13 @@ function SpatialStage({
             <div className="mb-2 flex flex-wrap items-center justify-center gap-3">
               <span
                 className="text-sm font-medium"
-                style={{ color: TEXT_SEC }}
+                style={{ color: colors.text.secondary }}
               >
                 Base Ratio:
               </span>
               <span
                 className="text-lg font-bold"
-                style={{ color: INDIGO }}
+                style={{ color: colors.accent.indigo }}
               >
                 {baseW}:{baseH}
               </span>
@@ -1214,7 +1084,7 @@ function SpatialStage({
               <text
                 x={10}
                 y={TOP_Y - 20}
-                fill={TEXT_SEC}
+                fill={colors.text.secondary}
                 fontSize={12}
               >
                 Quantity A
@@ -1225,7 +1095,7 @@ function SpatialStage({
                 y1={TOP_Y}
                 x2={LINE_LEFT + LINE_WIDTH}
                 y2={TOP_Y}
-                stroke={INDIGO}
+                stroke={colors.accent.indigo}
                 strokeWidth={2}
               />
               {/* Top ticks */}
@@ -1245,7 +1115,7 @@ function SpatialStage({
                         y2={
                           TOP_Y + (isMajor ? 8 : 4)
                         }
-                        stroke={TEXT_DIM}
+                        stroke={colors.text.muted}
                         strokeWidth={
                           isMajor ? 1.5 : 1
                         }
@@ -1257,7 +1127,7 @@ function SpatialStage({
                           textAnchor={
                             "middle" as const
                           }
-                          fill={TEXT_SEC}
+                          fill={colors.text.secondary}
                           fontSize={10}
                         >
                           {i}
@@ -1272,7 +1142,7 @@ function SpatialStage({
               <text
                 x={10}
                 y={BOT_Y - 20}
-                fill={TEXT_SEC}
+                fill={colors.text.secondary}
                 fontSize={12}
               >
                 Quantity B
@@ -1283,7 +1153,7 @@ function SpatialStage({
                 y1={BOT_Y}
                 x2={LINE_LEFT + LINE_WIDTH}
                 y2={BOT_Y}
-                stroke={VIOLET}
+                stroke={colors.accent.violet}
                 strokeWidth={2}
               />
               {/* Bottom ticks */}
@@ -1303,7 +1173,7 @@ function SpatialStage({
                         y2={
                           BOT_Y + (isMajor ? 8 : 4)
                         }
-                        stroke={TEXT_DIM}
+                        stroke={colors.text.muted}
                         strokeWidth={
                           isMajor ? 1.5 : 1
                         }
@@ -1315,7 +1185,7 @@ function SpatialStage({
                           textAnchor={
                             "middle" as const
                           }
-                          fill={TEXT_SEC}
+                          fill={colors.text.secondary}
                           fontSize={10}
                         >
                           {i}
@@ -1338,7 +1208,7 @@ function SpatialStage({
                       y1={TOP_Y + 8}
                       x2={botX}
                       y2={BOT_Y - 8}
-                      stroke={AMBER}
+                      stroke={colors.accent.amber}
                       strokeWidth={1}
                       strokeDasharray="4 4"
                       initial={{ pathLength: 0 }}
@@ -1353,11 +1223,11 @@ function SpatialStage({
                       cx={topX}
                       cy={TOP_Y}
                       r={6}
-                      fill={INDIGO}
+                      fill={colors.accent.indigo}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{
-                        ...SPRING,
+                        ...springs.default,
                         delay: idx * 0.1,
                       }}
                     />
@@ -1366,11 +1236,11 @@ function SpatialStage({
                       cx={botX}
                       cy={BOT_Y}
                       r={6}
-                      fill={VIOLET}
+                      fill={colors.accent.violet}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{
-                        ...SPRING,
+                        ...springs.default,
                         delay: idx * 0.1 + 0.05,
                       }}
                     />
@@ -1381,7 +1251,7 @@ function SpatialStage({
                       textAnchor={
                         "middle" as const
                       }
-                      fill={TEXT_PRIMARY}
+                      fill={colors.text.primary}
                       fontSize={11}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1403,7 +1273,7 @@ function SpatialStage({
                 style={{
                   minHeight: 44,
                   minWidth: 44,
-                  backgroundColor: INDIGO,
+                  backgroundColor: colors.accent.indigo,
                   color: "#fff",
                   opacity: markerCount >= 6 ? 0.4 : 1,
                   cursor:
@@ -1430,9 +1300,9 @@ function SpatialStage({
                 style={{
                   minHeight: 44,
                   minWidth: 44,
-                  backgroundColor: SURFACE,
-                  color: TEXT_SEC,
-                  border: `1px solid ${BORDER_CLR}`,
+                  backgroundColor: colors.bg.secondary,
+                  color: colors.text.secondary,
+                  border: `1px solid ${colors.bg.surface}`,
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -1447,15 +1317,16 @@ function SpatialStage({
         )}
       </AnimatePresence>
 
+      {/* Interaction progress */}
+      <div className="mt-3 flex justify-center">
+        <InteractionDots count={Math.min(interactions, MIN_INTERACTIONS)} total={MIN_INTERACTIONS} activeColor={colors.accent.indigo} />
+      </div>
+
       {/* Continue */}
-      <div className="mt-4 flex justify-center">
+      <div className="mt-2 flex justify-center">
         <ContinueButton
           onClick={onContinue}
           disabled={!canContinue}
-          progress={Math.min(
-            interactions / MIN_INTERACTIONS,
-            1,
-          )}
         >
           {canContinue
             ? "Continue \u2192"
@@ -1554,10 +1425,10 @@ function DiscoveryStage({
               height: 8,
               backgroundColor:
                 i < promptIdx
-                  ? EMERALD
+                  ? colors.accent.emerald
                   : i === promptIdx
-                    ? INDIGO
-                    : BORDER_CLR,
+                    ? colors.accent.indigo
+                    : colors.bg.surface,
             }}
           />
         ))}
@@ -1573,18 +1444,17 @@ function DiscoveryStage({
           className="flex-1"
         >
           <div
-            className="rounded-2xl p-5"
-            style={{ backgroundColor: SURFACE }}
+            className="rounded-2xl bg-nm-bg-secondary p-5"
           >
             <h3
               className="mb-2 text-lg font-bold"
-              style={{ color: TEXT_PRIMARY }}
+              style={{ color: colors.text.primary }}
             >
               {currentPrompt.title}
             </h3>
             <p
               className="mb-4 text-sm leading-relaxed"
-              style={{ color: TEXT_SEC }}
+              style={{ color: colors.text.secondary }}
             >
               {currentPrompt.text}
             </p>
@@ -1598,8 +1468,8 @@ function DiscoveryStage({
                     style={{
                       width: 53,
                       height: 80,
-                      border: `2px solid ${INDIGO}`,
-                      backgroundColor: `${INDIGO}26`,
+                      border: `2px solid ${colors.accent.indigo}`,
+                      backgroundColor: `${colors.accent.indigo}26`,
                       borderRadius: 4,
                       display: "flex",
                       alignItems: "center",
@@ -1609,7 +1479,7 @@ function DiscoveryStage({
                     <span
                       className="text-xs font-bold"
                       style={{
-                        color: TEXT_PRIMARY,
+                        color: colors.text.primary,
                       }}
                     >
                       2:3
@@ -1622,8 +1492,8 @@ function DiscoveryStage({
                     style={{
                       width: 60,
                       height: 80,
-                      border: `2px solid ${RED}`,
-                      backgroundColor: `${RED}26`,
+                      border: `2px solid ${THEME.red}`,
+                      backgroundColor: `${THEME.red}26`,
                       borderRadius: 4,
                       display: "flex",
                       alignItems: "center",
@@ -1633,7 +1503,7 @@ function DiscoveryStage({
                     <span
                       className="text-xs font-bold"
                       style={{
-                        color: TEXT_PRIMARY,
+                        color: colors.text.primary,
                       }}
                     >
                       3:4
@@ -1641,7 +1511,7 @@ function DiscoveryStage({
                   </div>
                   <span
                     className="text-xs"
-                    style={{ color: RED }}
+                    style={{ color: THEME.red }}
                   >
                     {"\u2717"} +1
                   </span>
@@ -1652,8 +1522,8 @@ function DiscoveryStage({
                     style={{
                       width: 80,
                       height: 120,
-                      border: `2px solid ${EMERALD}`,
-                      backgroundColor: `${EMERALD}26`,
+                      border: `2px solid ${colors.accent.emerald}`,
+                      backgroundColor: `${colors.accent.emerald}26`,
                       borderRadius: 4,
                       display: "flex",
                       alignItems: "center",
@@ -1663,7 +1533,7 @@ function DiscoveryStage({
                     <span
                       className="text-xs font-bold"
                       style={{
-                        color: TEXT_PRIMARY,
+                        color: colors.text.primary,
                       }}
                     >
                       4:6
@@ -1671,7 +1541,7 @@ function DiscoveryStage({
                   </div>
                   <span
                     className="text-xs"
-                    style={{ color: EMERALD }}
+                    style={{ color: colors.accent.emerald }}
                   >
                     {"\u2713"} {"\u00d7"}2
                   </span>
@@ -1687,8 +1557,8 @@ function DiscoveryStage({
                     key={k}
                     className="rounded-full px-3 py-1 text-sm font-bold"
                     style={{
-                      backgroundColor: `${INDIGO}20`,
-                      color: INDIGO,
+                      backgroundColor: `${colors.accent.indigo}20`,
+                      color: colors.accent.indigo,
                     }}
                     initial={{
                       opacity: 0,
@@ -1699,7 +1569,7 @@ function DiscoveryStage({
                       scale: 1,
                     }}
                     transition={{
-                      ...SPRING,
+                      ...springs.default,
                       delay: k * 0.15,
                     }}
                   >
@@ -1713,36 +1583,34 @@ function DiscoveryStage({
             {currentPrompt.visual === "cross" && (
               <div className="mb-4 flex flex-col gap-2">
                 <div
-                  className="flex items-center justify-between rounded-lg p-3"
-                  style={{ backgroundColor: BG }}
+                  className="flex items-center justify-between rounded-lg bg-nm-bg-primary p-3"
                 >
                   <span
                     className="text-sm font-bold"
-                    style={{ color: INDIGO }}
+                    style={{ color: colors.accent.indigo }}
                   >
                     3:5 = 6:10
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: EMERALD }}
+                    style={{ color: colors.accent.emerald }}
                   >
                     3{"\u00d7"}10=30, 5{"\u00d7"}6=30{" "}
                     {"\u2713"}
                   </span>
                 </div>
                 <div
-                  className="flex items-center justify-between rounded-lg p-3"
-                  style={{ backgroundColor: BG }}
+                  className="flex items-center justify-between rounded-lg bg-nm-bg-primary p-3"
                 >
                   <span
                     className="text-sm font-bold"
-                    style={{ color: INDIGO }}
+                    style={{ color: colors.accent.indigo }}
                   >
                     3:5 vs 5:8
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: RED }}
+                    style={{ color: THEME.red }}
                   >
                     3{"\u00d7"}8=24, 5{"\u00d7"}5=25{" "}
                     {"\u2717"}
@@ -1756,35 +1624,34 @@ function DiscoveryStage({
               <div className="mb-4 flex flex-col items-center gap-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex flex-col items-center rounded-lg p-3"
-                    style={{ backgroundColor: BG }}
+                    className="flex flex-col items-center rounded-lg bg-nm-bg-primary p-3"
                   >
                     <span
                       className="text-lg font-bold"
-                      style={{ color: INDIGO }}
+                      style={{ color: colors.accent.indigo }}
                     >
                       2/3
                     </span>
                   </div>
                   <span
                     className="text-lg font-bold"
-                    style={{ color: TEXT_SEC }}
+                    style={{ color: colors.text.secondary }}
                   >
                     =
                   </span>
                   <div
                     className="flex flex-col items-center rounded-lg p-3"
                     style={{
-                      backgroundColor: BG,
-                      border: `2px ${solved4 ? "solid" : "dashed"} ${solved4 ? EMERALD : AMBER}`,
+                      backgroundColor: colors.bg.primary,
+                      border: `2px ${solved4 ? "solid" : "dashed"} ${solved4 ? colors.accent.emerald : colors.accent.amber}`,
                     }}
                   >
                     <span
                       className="text-lg font-bold"
                       style={{
                         color: solved4
-                          ? EMERALD
-                          : AMBER,
+                          ? colors.accent.emerald
+                          : colors.accent.amber,
                       }}
                     >
                       {solved4
@@ -1812,7 +1679,7 @@ function DiscoveryStage({
                 {solved4 && (
                   <motion.p
                     className="text-sm font-medium"
-                    style={{ color: EMERALD }}
+                    style={{ color: colors.accent.emerald }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
@@ -1829,35 +1696,34 @@ function DiscoveryStage({
               <div className="mb-4 flex flex-col items-center gap-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex flex-col items-center rounded-lg p-3"
-                    style={{ backgroundColor: BG }}
+                    className="flex flex-col items-center rounded-lg bg-nm-bg-primary p-3"
                   >
                     <span
                       className="text-lg font-bold"
-                      style={{ color: INDIGO }}
+                      style={{ color: colors.accent.indigo }}
                     >
                       4/5
                     </span>
                   </div>
                   <span
                     className="text-lg font-bold"
-                    style={{ color: TEXT_SEC }}
+                    style={{ color: colors.text.secondary }}
                   >
                     =
                   </span>
                   <div
                     className="flex flex-col items-center rounded-lg p-3"
                     style={{
-                      backgroundColor: BG,
-                      border: `2px ${solved5 ? "solid" : "dashed"} ${solved5 ? EMERALD : AMBER}`,
+                      backgroundColor: colors.bg.primary,
+                      border: `2px ${solved5 ? "solid" : "dashed"} ${solved5 ? colors.accent.emerald : colors.accent.amber}`,
                     }}
                   >
                     <span
                       className="text-lg font-bold"
                       style={{
                         color: solved5
-                          ? EMERALD
-                          : AMBER,
+                          ? colors.accent.emerald
+                          : colors.accent.amber,
                       }}
                     >
                       {solved5
@@ -1885,7 +1751,7 @@ function DiscoveryStage({
                 {solved5 && (
                   <motion.p
                     className="text-sm font-medium"
-                    style={{ color: EMERALD }}
+                    style={{ color: colors.accent.emerald }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
@@ -1932,24 +1798,24 @@ function SymbolBridgeStage({
         lines: [
           {
             text: "A proportion says two ratios are equal:",
-            color: TEXT_SEC,
+            color: colors.text.secondary,
           },
           {
             text: "2:3 = 4:6",
-            color: INDIGO,
+            color: colors.accent.indigo,
             bold: true,
             size: 22,
           },
-          { text: "As fractions:", color: TEXT_SEC },
+          { text: "As fractions:", color: colors.text.secondary },
           {
             text: "2/3 = 4/6",
-            color: INDIGO,
+            color: colors.accent.indigo,
             bold: true,
             size: 22,
           },
           {
             text: "General form: a/b = c/d",
-            color: TEXT_SEC,
+            color: colors.text.secondary,
           },
         ],
         chain: ["2:3", "4:6", "6:9", "8:12"],
@@ -1959,28 +1825,28 @@ function SymbolBridgeStage({
         lines: [
           {
             text: "To test a proportion, cross multiply:",
-            color: TEXT_SEC,
+            color: colors.text.secondary,
           },
           {
             text: "2/3 = 4/6",
-            color: INDIGO,
+            color: colors.accent.indigo,
             bold: true,
             size: 20,
           },
           {
             text: "2 \u00d7 6 = 12    3 \u00d7 4 = 12",
-            color: AMBER,
+            color: colors.accent.amber,
             bold: true,
             size: 18,
           },
           {
             text: "Equal cross products = proportion confirmed!",
-            color: EMERALD,
+            color: colors.accent.emerald,
             bold: true,
           },
           {
             text: "If a/b = c/d, then a \u00d7 d = b \u00d7 c",
-            color: TEXT_PRIMARY,
+            color: colors.text.primary,
             size: 16,
           },
         ],
@@ -1993,33 +1859,33 @@ function SymbolBridgeStage({
         lines: [
           {
             text: "Solve: 3/5 = x/20",
-            color: TEXT_SEC,
+            color: colors.text.secondary,
           },
           {
             text: "Cross multiply:",
-            color: TEXT_SEC,
+            color: colors.text.secondary,
           },
           {
             text: "3 \u00d7 20 = 5 \u00d7 x",
-            color: AMBER,
+            color: colors.accent.amber,
             bold: true,
             size: 18,
           },
           {
             text: "60 = 5x",
-            color: AMBER,
+            color: colors.accent.amber,
             bold: true,
             size: 18,
           },
           {
             text: "x = 60 / 5 = 12",
-            color: EMERALD,
+            color: colors.accent.emerald,
             bold: true,
             size: 20,
           },
           {
             text: "Verify: 3/5 = 12/20 \u2713",
-            color: EMERALD,
+            color: colors.accent.emerald,
           },
         ],
         procedure: true,
@@ -2049,7 +1915,7 @@ function SymbolBridgeStage({
               width: 8,
               height: 8,
               backgroundColor:
-                i <= step ? INDIGO : BORDER_CLR,
+                i <= step ? colors.accent.indigo : colors.bg.surface,
             }}
           />
         ))}
@@ -2064,12 +1930,11 @@ function SymbolBridgeStage({
           transition={EASE}
         >
           <div
-            className="rounded-2xl p-5"
-            style={{ backgroundColor: SURFACE }}
+            className="rounded-2xl bg-nm-bg-secondary p-5"
           >
             <h3
               className="mb-4 text-lg font-bold"
-              style={{ color: TEXT_PRIMARY }}
+              style={{ color: colors.text.primary }}
             >
               {currentStep.title}
             </h3>
@@ -2104,8 +1969,8 @@ function SymbolBridgeStage({
                       key={ratio}
                       className="rounded-full px-3 py-1 text-sm font-bold"
                       style={{
-                        backgroundColor: `${INDIGO}20`,
-                        color: INDIGO,
+                        backgroundColor: `${colors.accent.indigo}20`,
+                        color: colors.accent.indigo,
                       }}
                       initial={{
                         opacity: 0,
@@ -2116,9 +1981,7 @@ function SymbolBridgeStage({
                         scale: 1,
                       }}
                       transition={{
-                        type: "spring",
-                        damping: 15,
-                        stiffness: 400,
+                        ...springs.pop,
                         delay:
                           currentStep.lines
                             .length *
@@ -2138,8 +2001,8 @@ function SymbolBridgeStage({
               <motion.div
                 className="mt-4 rounded-lg p-2 text-center text-sm"
                 style={{
-                  backgroundColor: `${RED}15`,
-                  color: RED,
+                  backgroundColor: `${THEME.red}15`,
+                  color: THEME.red,
                 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -2159,8 +2022,8 @@ function SymbolBridgeStage({
               <motion.div
                 className="mt-4 rounded-lg p-3 text-center text-sm"
                 style={{
-                  backgroundColor: BG,
-                  color: TEXT_SEC,
+                  backgroundColor: colors.bg.primary,
+                  color: colors.text.secondary,
                 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -2171,7 +2034,7 @@ function SymbolBridgeStage({
                 }}
               >
                 <strong
-                  style={{ color: TEXT_PRIMARY }}
+                  style={{ color: colors.text.primary }}
                 >
                   To solve a/b = c/d:
                 </strong>
@@ -2223,28 +2086,28 @@ function RealWorldStage({
         icon: "\uD83C\uDF72",
         text: "A recipe uses 2 cups of flour for 3 cups of milk. For 9 cups of milk, you need 6 cups of flour.",
         math: "2/3 = 6/9 \u2014 triple the milk, triple the flour!",
-        color: AMBER,
+        color: colors.accent.amber,
       },
       {
         title: "Map Distances",
         icon: "\uD83D\uDDFA\uFE0F",
         text: "On a map, 1 cm = 5 km. Cities 3.4 cm apart are 17 km apart in reality.",
         math: "1/5 = 3.4/17 \u2014 map scales are proportions!",
-        color: BLUE,
+        color: colors.domain.numbers,
       },
       {
         title: "Video Game Aspect Ratio",
         icon: "\uD83C\uDFAE",
         text: "A 16:9 display with 1920px width has 1080px height.",
         math: "16/9 = 1920/1080 \u2014 that is why it is called 1080p!",
-        color: EMERALD,
+        color: colors.accent.emerald,
       },
       {
         title: "Sports Statistics",
         icon: "\uD83C\uDFC0",
         text: "A player makes 3/5 free throws. In 20 attempts, she would make about 12.",
         math: "3/5 = 12/20 \u2014 proportional reasoning predicts performance!",
-        color: INDIGO,
+        color: colors.accent.indigo,
       },
     ],
     [],
@@ -2274,7 +2137,7 @@ function RealWorldStage({
           <div
             className="rounded-2xl p-6"
             style={{
-              backgroundColor: SURFACE,
+              backgroundColor: colors.bg.secondary,
               borderLeft: `4px solid ${card.color}`,
             }}
           >
@@ -2284,21 +2147,21 @@ function RealWorldStage({
               </span>
               <h3
                 className="text-lg font-bold"
-                style={{ color: TEXT_PRIMARY }}
+                style={{ color: colors.text.primary }}
               >
                 {card.title}
               </h3>
             </div>
             <p
               className="mb-4 text-sm leading-relaxed"
-              style={{ color: TEXT_SEC }}
+              style={{ color: colors.text.secondary }}
             >
               {card.text}
             </p>
             <div
               className="rounded-lg p-3 text-center text-sm font-bold"
               style={{
-                backgroundColor: BG,
+                backgroundColor: colors.bg.primary,
                 color: card.color,
               }}
             >
@@ -2318,7 +2181,7 @@ function RealWorldStage({
               width: 8,
               height: 8,
               backgroundColor:
-                i === cardIdx ? INDIGO : TEXT_DIM,
+                i === cardIdx ? colors.accent.indigo : colors.text.muted,
             }}
           />
         ))}
@@ -2332,9 +2195,9 @@ function RealWorldStage({
             style={{
               minHeight: 44,
               minWidth: 44,
-              backgroundColor: SURFACE,
-              color: TEXT_SEC,
-              border: `1px solid ${BORDER_CLR}`,
+              backgroundColor: colors.bg.secondary,
+              color: colors.text.secondary,
+              border: `1px solid ${colors.bg.surface}`,
             }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setCardIdx((i) => i - 1)}
@@ -2348,7 +2211,7 @@ function RealWorldStage({
             style={{
               minHeight: 44,
               minWidth: 44,
-              backgroundColor: INDIGO,
+              backgroundColor: colors.accent.indigo,
               color: "#fff",
             }}
             whileTap={{ scale: 0.95 }}
@@ -2497,7 +2360,7 @@ function PracticeStage({
         <div
           className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
           style={{
-            backgroundColor: `${EMERALD}20`,
+            backgroundColor: `${colors.accent.emerald}20`,
           }}
         >
           <svg
@@ -2505,7 +2368,7 @@ function PracticeStage({
             height={40}
             viewBox="0 0 24 24"
             fill="none"
-            stroke={EMERALD}
+            stroke={colors.accent.emerald}
             strokeWidth={2.5}
           >
             <path d="M20 6 9 17l-5-5" />
@@ -2513,13 +2376,13 @@ function PracticeStage({
         </div>
         <h2
           className="mb-2 text-xl font-bold"
-          style={{ color: TEXT_PRIMARY }}
+          style={{ color: colors.text.primary }}
         >
           Practice Complete!
         </h2>
         <p
           className="mb-6"
-          style={{ color: TEXT_SEC }}
+          style={{ color: colors.text.secondary }}
         >
           {correctCount}/{total} correct ({pct}%)
         </p>
@@ -2550,17 +2413,17 @@ function PracticeStage({
               height: 12,
               backgroundColor:
                 state === "correct"
-                  ? EMERALD
+                  ? colors.accent.emerald
                   : state === "incorrect"
-                    ? RED
-                    : BORDER_CLR,
+                    ? THEME.red
+                    : colors.bg.surface,
               border:
                 i === currentIdx
-                  ? `2px solid ${INDIGO}`
+                  ? `2px solid ${colors.accent.indigo}`
                   : "none",
               boxShadow:
                 i === currentIdx
-                  ? `0 0 6px ${INDIGO}80`
+                  ? `0 0 6px ${colors.accent.indigo}80`
                   : "none",
             }}
           />
@@ -2579,11 +2442,11 @@ function PracticeStage({
           >
             {LAYER_LABELS[prob.layer]!}
           </span>
-          <span style={{ color: TEXT_DIM }}>
+          <span style={{ color: colors.text.muted }}>
             Problem {currentIdx + 1} / {total}
           </span>
         </span>
-        <span style={{ color: TEXT_DIM }}>
+        <span style={{ color: colors.text.muted }}>
           {correctCount} correct
         </span>
       </div>
@@ -2600,14 +2463,14 @@ function PracticeStage({
           <div
             className="rounded-xl p-5"
             style={{
-              backgroundColor: SURFACE,
-              border: `1px solid ${BORDER_CLR}`,
+              backgroundColor: colors.bg.secondary,
+              border: `1px solid ${colors.bg.surface}`,
             }}
           >
             <p
               className="mb-4 leading-relaxed"
               style={{
-                color: TEXT_PRIMARY,
+                color: colors.text.primary,
                 fontSize: 16,
                 lineHeight: 1.6,
               }}
@@ -2630,22 +2493,22 @@ function PracticeStage({
                             opt.id,
                           );
 
-                    let borderColor: string = BORDER_CLR;
-                    let bgColor: string = BG;
+                    let borderColor: string = colors.bg.surface;
+                    let bgColor: string = colors.bg.primary;
                     if (phase === "feedback") {
                       if (opt.correct) {
-                        borderColor = EMERALD;
-                        bgColor = `${EMERALD}15`;
+                        borderColor = colors.accent.emerald;
+                        bgColor = `${colors.accent.emerald}15`;
                       } else if (
                         isSelected &&
                         !opt.correct
                       ) {
-                        borderColor = RED;
-                        bgColor = `${RED}15`;
+                        borderColor = THEME.red;
+                        bgColor = `${THEME.red}15`;
                       }
                     } else if (isSelected) {
-                      borderColor = INDIGO;
-                      bgColor = `${INDIGO}15`;
+                      borderColor = colors.accent.indigo;
+                      bgColor = `${colors.accent.indigo}15`;
                     }
 
                     return (
@@ -2656,7 +2519,7 @@ function PracticeStage({
                           minHeight: 48,
                           backgroundColor: bgColor,
                           border: `2px solid ${borderColor}`,
-                          color: TEXT_PRIMARY,
+                          color: colors.text.primary,
                           cursor:
                             phase === "feedback"
                               ? "default"
@@ -2704,10 +2567,10 @@ function PracticeStage({
                                 phase ===
                                   "feedback" &&
                                 opt.correct
-                                  ? EMERALD
+                                  ? colors.accent.emerald
                                   : isSelected
-                                    ? INDIGO
-                                    : BORDER_CLR,
+                                    ? colors.accent.indigo
+                                    : colors.bg.surface,
                               color: "#fff",
                             }}
                           >
@@ -2721,8 +2584,8 @@ function PracticeStage({
                               className="mt-1 block text-xs"
                               style={{
                                 color: opt.correct
-                                  ? EMERALD
-                                  : RED,
+                                  ? colors.accent.emerald
+                                  : THEME.red,
                               }}
                             >
                               {opt.crossProducts}
@@ -2749,15 +2612,15 @@ function PracticeStage({
                   style={{
                     width: 100,
                     height: 48,
-                    backgroundColor: BG,
+                    backgroundColor: colors.bg.primary,
                     border: `2px solid ${
                       phase === "feedback"
                         ? isCorrect
-                          ? EMERALD
-                          : RED
-                        : BORDER_CLR
+                          ? colors.accent.emerald
+                          : THEME.red
+                        : colors.bg.surface
                     }`,
-                    color: TEXT_PRIMARY,
+                    color: colors.text.primary,
                     outline: "none",
                   }}
                   aria-label="Enter the missing value"
@@ -2772,7 +2635,7 @@ function PracticeStage({
                     <motion.button
                       className="text-xs underline select-none"
                       style={{
-                        color: TEXT_DIM,
+                        color: colors.text.muted,
                         minHeight: 44,
                         minWidth: 44,
                       }}
@@ -2793,9 +2656,9 @@ function PracticeStage({
                         key={i}
                         className="w-full rounded-lg p-3 text-xs"
                         style={{
-                          backgroundColor: `${INDIGO}10`,
-                          borderLeft: `3px solid ${INDIGO}`,
-                          color: TEXT_SEC,
+                          backgroundColor: `${colors.accent.indigo}10`,
+                          borderLeft: `3px solid ${colors.accent.indigo}`,
+                          color: colors.text.secondary,
                         }}
                         initial={{
                           opacity: 0,
@@ -2821,8 +2684,8 @@ function PracticeStage({
                     minHeight: 48,
                     minWidth: 48,
                     backgroundColor: canSubmit
-                      ? INDIGO
-                      : `${INDIGO}44`,
+                      ? colors.accent.indigo
+                      : `${colors.accent.indigo}44`,
                     color: "#fff",
                     cursor: canSubmit
                       ? "pointer"
@@ -2853,9 +2716,9 @@ function PracticeStage({
               <motion.div
                 className="mt-4 rounded-lg p-4 text-sm leading-relaxed"
                 style={{
-                  backgroundColor: BG,
-                  borderLeft: `3px solid ${isCorrect ? EMERALD : AMBER}`,
-                  color: TEXT_SEC,
+                  backgroundColor: colors.bg.primary,
+                  borderLeft: `3px solid ${isCorrect ? colors.accent.emerald : colors.accent.amber}`,
+                  color: colors.text.secondary,
                 }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2864,8 +2727,8 @@ function PracticeStage({
                   className="mb-1 block font-bold"
                   style={{
                     color: isCorrect
-                      ? EMERALD
-                      : AMBER,
+                      ? colors.accent.emerald
+                      : colors.accent.amber,
                   }}
                 >
                   {isCorrect
@@ -2937,13 +2800,13 @@ function ReflectionStage({
             <div
               className="mb-4 rounded-xl py-3 pl-4 pr-4"
               style={{
-                backgroundColor: BG,
-                borderLeft: `4px solid ${INDIGO}`,
+                backgroundColor: colors.bg.primary,
+                borderLeft: `4px solid ${colors.accent.indigo}`,
               }}
             >
               <p
                 className="text-sm italic leading-relaxed"
-                style={{ color: TEXT_SEC }}
+                style={{ color: colors.text.secondary }}
               >
                 Great reflection! Understanding WHY
                 proportions work multiplicatively is the
@@ -2959,8 +2822,7 @@ function ReflectionStage({
         )}
 
         <div
-          className="mb-6 rounded-xl p-5 text-center"
-          style={{ backgroundColor: SURFACE }}
+          className="mb-6 rounded-xl bg-nm-bg-secondary p-5 text-center"
         >
           <motion.div
             className="mb-3 flex items-center justify-center gap-3"
@@ -2976,8 +2838,8 @@ function ReflectionStage({
                   style={{
                     color:
                       s === "="
-                        ? TEXT_DIM
-                        : INDIGO,
+                        ? colors.text.muted
+                        : colors.accent.indigo,
                   }}
                   initial={{
                     opacity: 0,
@@ -3001,7 +2863,7 @@ function ReflectionStage({
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
             className="mt-3 text-sm font-semibold"
-            style={{ color: TEXT_PRIMARY }}
+            style={{ color: colors.text.primary }}
           >
             Same shape, different size.
           </motion.p>
@@ -3010,7 +2872,7 @@ function ReflectionStage({
             animate={{ opacity: 1 }}
             transition={{ delay: 2 }}
             className="mt-2 text-sm"
-            style={{ color: TEXT_SEC }}
+            style={{ color: colors.text.secondary }}
           >
             You have learned how proportions keep
             relationships in balance through
@@ -3041,15 +2903,14 @@ function ReflectionStage({
       }}
     >
       <div
-        className="w-full rounded-2xl p-6"
-        style={{ backgroundColor: SURFACE }}
+        className="w-full rounded-2xl bg-nm-bg-secondary p-6"
       >
         {/* Header */}
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest"
           style={{
-            backgroundColor: `${INDIGO}20`,
-            color: INDIGO,
+            backgroundColor: `${colors.accent.indigo}20`,
+            color: colors.accent.indigo,
           }}
         >
           Reflection
@@ -3059,7 +2920,7 @@ function ReflectionStage({
         <p
           className="mb-4 leading-relaxed"
           style={{
-            color: TEXT_PRIMARY,
+            color: colors.text.primary,
             fontSize: 18,
             fontWeight: 500,
             lineHeight: 1.6,
@@ -3074,35 +2935,33 @@ function ReflectionStage({
         {/* Visual hint */}
         <div className="mb-4 flex gap-3">
           <div
-            className="flex-1 rounded-lg p-3 text-center"
-            style={{ backgroundColor: BG }}
+            className="flex-1 rounded-lg bg-nm-bg-primary p-3 text-center"
           >
             <p
               className="text-xs uppercase"
-              style={{ color: TEXT_DIM }}
+              style={{ color: colors.text.muted }}
             >
               Add +1
             </p>
             <p
               className="mt-1 text-sm font-bold"
-              style={{ color: RED }}
+              style={{ color: THEME.red }}
             >
               2:3 {"\u2192"} 3:4 {"\u2717"}
             </p>
           </div>
           <div
-            className="flex-1 rounded-lg p-3 text-center"
-            style={{ backgroundColor: BG }}
+            className="flex-1 rounded-lg bg-nm-bg-primary p-3 text-center"
           >
             <p
               className="text-xs uppercase"
-              style={{ color: TEXT_DIM }}
+              style={{ color: colors.text.muted }}
             >
               Multiply {"\u00d7"}2
             </p>
             <p
               className="mt-1 text-sm font-bold"
-              style={{ color: EMERALD }}
+              style={{ color: colors.accent.emerald }}
             >
               2:3 {"\u2192"} 4:6 {"\u2713"}
             </p>
@@ -3117,9 +2976,9 @@ function ReflectionStage({
             className="w-full resize-none rounded-lg p-3 text-sm leading-relaxed"
             style={{
               minHeight: 120,
-              backgroundColor: BG,
-              border: `1px solid ${BORDER_CLR}`,
-              color: TEXT_PRIMARY,
+              backgroundColor: colors.bg.primary,
+              border: `1px solid ${colors.bg.surface}`,
+              color: colors.text.primary,
               outline: "none",
             }}
             placeholder="Think about what happens to the rectangle's shape when you add vs when you multiply..."
@@ -3128,8 +2987,8 @@ function ReflectionStage({
             className="absolute right-3 bottom-2 text-xs"
             style={{
               color: meetsMinimum
-                ? EMERALD
-                : TEXT_DIM,
+                ? colors.accent.emerald
+                : colors.text.muted,
             }}
           >
             {charCount}/30 minimum
@@ -3141,7 +3000,7 @@ function ReflectionStage({
           <button
             className="text-xs select-none"
             style={{
-              color: TEXT_DIM,
+              color: colors.text.muted,
               minHeight: 44,
               minWidth: 44,
               cursor: "pointer",
@@ -3156,8 +3015,8 @@ function ReflectionStage({
               minHeight: 48,
               minWidth: 48,
               backgroundColor: meetsMinimum
-                ? INDIGO
-                : `${INDIGO}44`,
+                ? colors.accent.indigo
+                : `${colors.accent.indigo}44`,
               color: "#fff",
               cursor: meetsMinimum
                 ? "pointer"
@@ -3188,59 +3047,32 @@ export function ProportionsLesson({
 }: {
   onComplete?: () => void;
 }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGES[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div
-      className="flex min-h-dvh flex-col"
-      style={{ backgroundColor: BG }}
+    <LessonShell
+      title="Proportions"
+      stages={[...NLS_STAGES]}
+      onComplete={onComplete}
     >
-      {/* Progress bar */}
-      <ProgressBar
-        current={stageIdx}
-        total={STAGES.length}
-      />
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={EASE}
-        >
-          {stage === "hook" && (
-            <HookStage onContinue={advance} />
-          )}
-          {stage === "spatial" && (
-            <SpatialStage onContinue={advance} />
-          )}
-          {stage === "discovery" && (
-            <DiscoveryStage onContinue={advance} />
-          )}
-          {stage === "symbol" && (
-            <SymbolBridgeStage onContinue={advance} />
-          )}
-          {stage === "realWorld" && (
-            <RealWorldStage onContinue={advance} />
-          )}
-          {stage === "practice" && (
-            <PracticeStage onComplete={advance} />
-          )}
-          {stage === "reflection" && (
-            <ReflectionStage onComplete={advance} />
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":
+            return <HookStage onContinue={advance} />;
+          case "spatial":
+            return <SpatialStage onContinue={advance} />;
+          case "discovery":
+            return <DiscoveryStage onContinue={advance} />;
+          case "symbol":
+            return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld":
+            return <RealWorldStage onContinue={advance} />;
+          case "practice":
+            return <PracticeStage onComplete={advance} />;
+          case "reflection":
+            return <ReflectionStage onComplete={advance} />;
+          default:
+            return null;
+        }
+      }}
+    </LessonShell>
   );
 }

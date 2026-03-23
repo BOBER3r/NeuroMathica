@@ -4,6 +4,13 @@ import { VideoHook } from "@/components/lessons/VideoHook";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -12,132 +19,22 @@ interface CoordinatePlaneLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
 // ANIMATION CONFIGS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME (values not covered by shared tokens)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
-  xAxis: "#60a5fa",
+const THEME = {
   xAxisFill: "#60a5fa33",
-  yAxis: "#34d399",
-  yAxisFill: "#34d39933",
-  point: "#818cf8",
   pointFill: "#818cf820",
-  origin: "#fbbf24",
-  originFill: "#fbbf2420",
-  gridLine: "#1e293b",
-  axisLine: "#475569",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  success: "#34d399",
   successFill: "#34d39933",
-  error: "#f87171",
   errorFill: "#f8717120",
-  primary: "#8b5cf6",
-  primaryHover: "#7c3aed",
-  border: "#334155",
-  borderLight: "#475569",
 } as const;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SHARED SMALL COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileHover={disabled ? {} : { backgroundColor: C.primaryHover }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SVG GRID HELPERS
@@ -222,7 +119,7 @@ function CoordinateGrid({
             y1={SVG_MARGIN}
             x2={toPixelX(i)}
             y2={SVG_MARGIN + SVG_GRID}
-            stroke={C.gridLine}
+            stroke={colors.bg.secondary}
             strokeWidth={1}
           />
           <line
@@ -230,7 +127,7 @@ function CoordinateGrid({
             y1={toPixelY(i)}
             x2={SVG_MARGIN + SVG_GRID}
             y2={toPixelY(i)}
-            stroke={C.gridLine}
+            stroke={colors.bg.secondary}
             strokeWidth={1}
           />
         </g>
@@ -242,7 +139,7 @@ function CoordinateGrid({
         y1={toPixelY(0)}
         x2={SVG_MARGIN + SVG_GRID}
         y2={toPixelY(0)}
-        stroke={C.xAxis}
+        stroke={colors.domain.numbers}
         strokeWidth={2}
       />
       <line
@@ -250,7 +147,7 @@ function CoordinateGrid({
         y1={SVG_MARGIN}
         x2={toPixelX(0)}
         y2={SVG_MARGIN + SVG_GRID}
-        stroke={C.yAxis}
+        stroke={colors.accent.emerald}
         strokeWidth={2}
       />
 
@@ -262,7 +159,7 @@ function CoordinateGrid({
             x={toPixelX(i)}
             y={toPixelY(0) + 16}
             textAnchor={"middle" as const}
-            fill={C.xAxis}
+            fill={colors.domain.numbers}
             fontSize={10}
           >
             {i}
@@ -273,7 +170,7 @@ function CoordinateGrid({
               x={toPixelX(0) - 12}
               y={toPixelY(i) + 4}
               textAnchor={"middle" as const}
-              fill={C.yAxis}
+              fill={colors.accent.emerald}
               fontSize={10}
             >
               {i}
@@ -286,7 +183,7 @@ function CoordinateGrid({
       <text
         x={SVG_MARGIN + SVG_GRID + 8}
         y={toPixelY(0) + 4}
-        fill={C.xAxis}
+        fill={colors.domain.numbers}
         fontSize={14}
         fontWeight={700}
       >
@@ -296,7 +193,7 @@ function CoordinateGrid({
         x={toPixelX(0) - 4}
         y={SVG_MARGIN - 8}
         textAnchor={"middle" as const}
-        fill={C.yAxis}
+        fill={colors.accent.emerald}
         fontSize={14}
         fontWeight={700}
       >
@@ -308,7 +205,7 @@ function CoordinateGrid({
         cx={toPixelX(0)}
         cy={toPixelY(0)}
         r={4}
-        fill={C.origin}
+        fill={colors.accent.amber}
       />
 
       {/* Highlight point (for practice) */}
@@ -319,7 +216,7 @@ function CoordinateGrid({
             y1={toPixelY(0)}
             x2={toPixelX(highlightPoint.x)}
             y2={toPixelY(highlightPoint.y)}
-            stroke={C.yAxis}
+            stroke={colors.accent.emerald}
             strokeWidth={1}
             strokeDasharray="4 3"
             opacity={0.5}
@@ -329,7 +226,7 @@ function CoordinateGrid({
             y1={toPixelY(highlightPoint.y)}
             x2={toPixelX(highlightPoint.x)}
             y2={toPixelY(highlightPoint.y)}
-            stroke={C.xAxis}
+            stroke={colors.domain.numbers}
             strokeWidth={1}
             strokeDasharray="4 3"
             opacity={0.5}
@@ -338,7 +235,7 @@ function CoordinateGrid({
             cx={toPixelX(highlightPoint.x)}
             cy={toPixelY(highlightPoint.y)}
             r={8}
-            fill={C.origin}
+            fill={colors.accent.amber}
             initial={{ scale: 0 }}
             animate={{ scale: [1, 1.3, 1] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
@@ -357,7 +254,7 @@ function CoordinateGrid({
                 y1={toPixelY(0)}
                 x2={toPixelX(p.x)}
                 y2={toPixelY(p.y)}
-                stroke={C.yAxis}
+                stroke={colors.accent.emerald}
                 strokeWidth={1}
                 strokeDasharray="4 3"
                 opacity={0.4}
@@ -367,7 +264,7 @@ function CoordinateGrid({
                 y1={toPixelY(p.y)}
                 x2={toPixelX(p.x)}
                 y2={toPixelY(p.y)}
-                stroke={C.xAxis}
+                stroke={colors.domain.numbers}
                 strokeWidth={1}
                 strokeDasharray="4 3"
                 opacity={0.4}
@@ -378,15 +275,15 @@ function CoordinateGrid({
             cx={toPixelX(p.x)}
             cy={toPixelY(p.y)}
             r={6}
-            fill={C.point}
+            fill={colors.accent.indigo}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={SPRING_POP}
+            transition={springs.pop}
           />
           <text
             x={toPixelX(p.x) + 10}
             y={toPixelY(p.y) - 8}
-            fill={C.textSecondary}
+            fill={colors.text.primary}
             fontSize={10}
           >
             ({p.x}, {p.y})
@@ -444,7 +341,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8 }}
               className="mb-4 text-center italic"
-              style={{ color: C.textPrimary, fontSize: "clamp(18px, 5vw, 28px)" }}
+              style={{ color: colors.text.primary, fontSize: "clamp(18px, 5vw, 28px)" }}
             >
               Every point has an address.
             </motion.p>
@@ -467,14 +364,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               {/* Grid lines */}
               {Array.from({ length: GRID_UNITS + 1 }, (_, i) => (
                 <g key={`hg-${i}`}>
-                  <line x1={toPixelX(i)} y1={SVG_MARGIN} x2={toPixelX(i)} y2={SVG_MARGIN + SVG_GRID} stroke={C.gridLine} strokeWidth={1} />
-                  <line x1={SVG_MARGIN} y1={toPixelY(i)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(i)} stroke={C.gridLine} strokeWidth={1} />
+                  <line x1={toPixelX(i)} y1={SVG_MARGIN} x2={toPixelX(i)} y2={SVG_MARGIN + SVG_GRID} stroke={colors.bg.secondary} strokeWidth={1} />
+                  <line x1={SVG_MARGIN} y1={toPixelY(i)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(i)} stroke={colors.bg.secondary} strokeWidth={1} />
                 </g>
               ))}
 
               {/* Axes */}
-              <line x1={SVG_MARGIN} y1={toPixelY(0)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(0)} stroke={C.xAxis} strokeWidth={2} />
-              <line x1={toPixelX(0)} y1={SVG_MARGIN} x2={toPixelX(0)} y2={SVG_MARGIN + SVG_GRID} stroke={C.yAxis} strokeWidth={2} />
+              <line x1={SVG_MARGIN} y1={toPixelY(0)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(0)} stroke={colors.domain.numbers} strokeWidth={2} />
+              <line x1={toPixelX(0)} y1={SVG_MARGIN} x2={toPixelX(0)} y2={SVG_MARGIN + SVG_GRID} stroke={colors.accent.emerald} strokeWidth={2} />
 
               {/* Points appearing */}
               {hookPoints.map((p, i) => {
@@ -488,7 +385,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                       y1={toPixelY(0)}
                       x2={toPixelX(p.x)}
                       y2={toPixelY(p.y)}
-                      stroke={C.yAxis}
+                      stroke={colors.accent.emerald}
                       strokeWidth={1}
                       strokeDasharray="4 3"
                       initial={{ pathLength: 0 }}
@@ -500,7 +397,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                       y1={toPixelY(p.y)}
                       x2={toPixelX(p.x)}
                       y2={toPixelY(p.y)}
-                      stroke={C.xAxis}
+                      stroke={colors.domain.numbers}
                       strokeWidth={1}
                       strokeDasharray="4 3"
                       initial={{ pathLength: 0 }}
@@ -512,16 +409,16 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                       cx={toPixelX(p.x)}
                       cy={toPixelY(p.y)}
                       r={7}
-                      fill={C.point}
+                      fill={colors.accent.indigo}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={SPRING_POP}
+                      transition={springs.pop}
                     />
                     {/* Label */}
                     <motion.text
                       x={toPixelX(p.x) + 10}
                       y={toPixelY(p.y) - 10}
-                      fill={C.textPrimary}
+                      fill={colors.text.primary}
                       fontSize={12}
                       fontWeight={600}
                       initial={{ opacity: 0 }}
@@ -539,7 +436,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 <motion.polygon
                   points={hookPoints.map((p) => `${toPixelX(p.x)},${toPixelY(p.y)}`).join(" ")}
                   fill="none"
-                  stroke={C.point}
+                  stroke={colors.accent.indigo}
                   strokeWidth={2}
                   strokeDasharray="6 4"
                   opacity={0.5}
@@ -561,7 +458,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               exit={{ opacity: 0 }}
               transition={FADE}
               className="mt-2 text-center font-semibold"
-              style={{ color: C.xAxis, fontSize: 16 }}
+              style={{ color: colors.domain.numbers, fontSize: 16 }}
             >
               How far right. How far up.
             </motion.p>
@@ -576,10 +473,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={FADE}
               className="mt-2 text-center font-semibold"
-              style={{ color: C.textPrimary, fontSize: 18 }}
+              style={{ color: colors.text.primary, fontSize: 18 }}
             >
               {"Every point has a unique "}
-              <span style={{ color: C.point }}>address</span>
+              <span style={{ color: colors.accent.indigo }}>address</span>
               {"."}
             </motion.p>
           )}
@@ -628,18 +525,17 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     >
       {/* Coordinate display */}
       <div
-        className="mb-2 mt-2 flex items-center justify-center rounded-xl px-4 py-2 font-mono"
+        className="mb-2 mt-2 flex items-center justify-center rounded-xl bg-nm-bg-secondary px-4 py-2 font-mono"
         style={{
-          backgroundColor: C.bgSurface,
           fontSize: "clamp(18px, 4.5vw, 24px)",
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        <span style={{ color: C.textMuted }}>(</span>
-        <span style={{ color: C.xAxis }}>{lastCoord ? lastCoord.x : "?"}</span>
-        <span style={{ color: C.textMuted }}>, </span>
-        <span style={{ color: C.yAxis }}>{lastCoord ? lastCoord.y : "?"}</span>
-        <span style={{ color: C.textMuted }}>)</span>
+        <span style={{ color: colors.text.muted }}>(</span>
+        <span style={{ color: colors.domain.numbers }}>{lastCoord ? lastCoord.x : "?"}</span>
+        <span style={{ color: colors.text.muted }}>, </span>
+        <span style={{ color: colors.accent.emerald }}>{lastCoord ? lastCoord.y : "?"}</span>
+        <span style={{ color: colors.text.muted }}>)</span>
       </div>
 
       {/* Grid */}
@@ -652,13 +548,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Instructions + counter */}
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-sm" style={{ color: C.textMuted }}>
+        <p className="text-sm" style={{ color: colors.text.muted }}>
           Tap the grid to place points!
         </p>
         <div className="flex items-center gap-2">
           <span
             className="text-xs font-semibold"
-            style={{ color: canContinue ? C.success : C.textDim }}
+            style={{ color: canContinue ? colors.functional.success : colors.text.muted }}
           >
             {points.length} / 8
           </span>
@@ -666,7 +562,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleClear}
               className="rounded-lg px-2 py-1 text-xs"
-              style={{ color: C.textDim, minHeight: 32, minWidth: 44 }}
+              style={{ color: colors.text.muted, minHeight: 32, minWidth: 44 }}
             >
               Clear
             </button>
@@ -732,33 +628,27 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-4 flex items-center gap-1 justify-center">
-          {DISCOVERY_PROMPTS.map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full"
-              style={{
-                width: 8,
-                height: 8,
-                backgroundColor: i <= promptIdx ? C.primary : C.border,
-              }}
-            />
-          ))}
+          <InteractionDots
+            count={promptIdx + 1}
+            total={DISCOVERY_PROMPTS.length}
+            activeColor={colors.accent.violet}
+          />
         </div>
 
         <motion.div
           key={promptIdx}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={SPRING}
+          transition={springs.default}
         >
-          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: colors.text.primary }}>
             {prompt.text}
           </p>
           <p
-            className="mb-4 rounded-lg px-4 py-3 text-sm"
-            style={{ backgroundColor: C.bgPrimary, color: C.textSecondary }}
+            className="mb-4 rounded-lg bg-nm-bg-primary px-4 py-3 text-sm"
+            style={{ color: colors.text.primary }}
           >
             {prompt.detail}
           </p>
@@ -775,22 +665,22 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               {/* Simple grid */}
               {Array.from({ length: GRID_UNITS + 1 }, (_, i) => (
                 <g key={`dg-${i}`}>
-                  <line x1={toPixelX(i)} y1={SVG_MARGIN} x2={toPixelX(i)} y2={SVG_MARGIN + SVG_GRID} stroke={C.gridLine} strokeWidth={1} />
-                  <line x1={SVG_MARGIN} y1={toPixelY(i)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(i)} stroke={C.gridLine} strokeWidth={1} />
+                  <line x1={toPixelX(i)} y1={SVG_MARGIN} x2={toPixelX(i)} y2={SVG_MARGIN + SVG_GRID} stroke={colors.bg.secondary} strokeWidth={1} />
+                  <line x1={SVG_MARGIN} y1={toPixelY(i)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(i)} stroke={colors.bg.secondary} strokeWidth={1} />
                 </g>
               ))}
-              <line x1={SVG_MARGIN} y1={toPixelY(0)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(0)} stroke={C.xAxis} strokeWidth={2} />
-              <line x1={toPixelX(0)} y1={SVG_MARGIN} x2={toPixelX(0)} y2={SVG_MARGIN + SVG_GRID} stroke={C.yAxis} strokeWidth={2} />
+              <line x1={SVG_MARGIN} y1={toPixelY(0)} x2={SVG_MARGIN + SVG_GRID} y2={toPixelY(0)} stroke={colors.domain.numbers} strokeWidth={2} />
+              <line x1={toPixelX(0)} y1={SVG_MARGIN} x2={toPixelX(0)} y2={SVG_MARGIN + SVG_GRID} stroke={colors.accent.emerald} strokeWidth={2} />
 
               {/* (3,5) */}
-              <motion.circle cx={toPixelX(3)} cy={toPixelY(5)} r={8} fill={C.point} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_POP} />
-              <text x={toPixelX(3) + 12} y={toPixelY(5) - 10} fill={C.point} fontSize={11} fontWeight={700}>
+              <motion.circle cx={toPixelX(3)} cy={toPixelY(5)} r={8} fill={colors.accent.indigo} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={springs.pop} />
+              <text x={toPixelX(3) + 12} y={toPixelY(5) - 10} fill={colors.accent.indigo} fontSize={11} fontWeight={700}>
                 (3, 5)
               </text>
 
               {/* (5,3) */}
-              <motion.circle cx={toPixelX(5)} cy={toPixelY(3)} r={8} fill={C.origin} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...SPRING_POP, delay: 0.3 }} />
-              <text x={toPixelX(5) + 12} y={toPixelY(3) - 10} fill={C.origin} fontSize={11} fontWeight={700}>
+              <motion.circle cx={toPixelX(5)} cy={toPixelY(3)} r={8} fill={colors.accent.amber} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...springs.pop, delay: 0.3 }} />
+              <text x={toPixelX(5) + 12} y={toPixelY(3) - 10} fill={colors.accent.amber} fontSize={11} fontWeight={700}>
                 (5, 3)
               </text>
             </svg>
@@ -801,7 +691,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <motion.button
             onClick={handleAck}
             className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-base font-semibold text-white"
-            style={{ backgroundColor: C.primary }}
+            style={{ backgroundColor: colors.accent.violet }}
             whileTap={{ scale: 0.95 }}
           >
             {prompt.button}
@@ -817,11 +707,11 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SYMBOL_STEPS = [
-  { notation: "x-axis: horizontal (left \u2194 right)", color: C.xAxis },
-  { notation: "y-axis: vertical (up \u2195 down)", color: C.yAxis },
-  { notation: "(x, y) = (3, 4) means: 3 right, 4 up", color: C.point },
-  { notation: "Origin = (0, 0) \u2014 the starting point", color: C.origin },
-  { notation: "Quadrant I: x > 0, y > 0 (top-right)", color: C.primary },
+  { notation: "x-axis: horizontal (left \u2194 right)", color: colors.domain.numbers },
+  { notation: "y-axis: vertical (up \u2195 down)", color: colors.accent.emerald },
+  { notation: "(x, y) = (3, 4) means: 3 right, 4 up", color: colors.accent.indigo },
+  { notation: "Origin = (0, 0) \u2014 the starting point", color: colors.accent.amber },
+  { notation: "Quadrant I: x > 0, y > 0 (top-right)", color: colors.accent.violet },
 ] as const;
 
 function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
@@ -842,10 +732,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col items-center justify-center px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.pointFill, color: C.point }}
+          style={{ backgroundColor: THEME.pointFill, color: colors.accent.indigo }}
         >
           Symbol Bridge
         </span>
@@ -858,9 +748,9 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 key={i}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={SPRING}
-                className="flex items-center gap-3 rounded-lg px-4 py-3"
-                style={{ backgroundColor: C.bgPrimary, border: `1px solid ${C.border}` }}
+                transition={springs.default}
+                className="flex items-center gap-3 rounded-lg bg-nm-bg-primary px-4 py-3"
+                style={{ border: `1px solid ${colors.bg.surface}` }}
               >
                 <span
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -883,7 +773,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             transition={{ delay: 0.3, ...FADE }}
             className="mt-4"
           >
-            <p className="mb-4 text-center text-sm font-medium" style={{ color: C.textSecondary }}>
+            <p className="mb-4 text-center text-sm font-medium" style={{ color: colors.text.primary }}>
               {"(x, y) means: go x units right, then y units up from the origin."}
             </p>
             <div className="flex justify-center">
@@ -913,15 +803,15 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.xAxisFill, color: C.xAxis }}
+          style={{ backgroundColor: THEME.xAxisFill, color: colors.domain.numbers }}
         >
           Real World
         </span>
 
-        <p className="mb-4 text-base font-medium" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-base font-medium" style={{ color: colors.text.primary }}>
           Coordinates are everywhere!
         </p>
 
@@ -931,22 +821,22 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
               key={i}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SPRING, delay: i * 0.15 }}
-              className="rounded-xl px-4 py-3"
-              style={{ backgroundColor: C.bgPrimary, border: `1px solid ${C.border}` }}
+              transition={{ ...springs.default, delay: i * 0.15 }}
+              className="rounded-xl bg-nm-bg-primary px-4 py-3"
+              style={{ border: `1px solid ${colors.bg.surface}` }}
             >
               <div className="flex items-start gap-3">
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
-                  style={{ backgroundColor: C.pointFill, color: C.point }}
+                  style={{ backgroundColor: THEME.pointFill, color: colors.accent.indigo }}
                 >
                   {card.icon.charAt(0)}
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: C.textPrimary }}>
+                  <p className="text-sm font-semibold" style={{ color: colors.text.primary }}>
                     {card.title}
                   </p>
-                  <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
+                  <p className="text-xs leading-relaxed" style={{ color: colors.text.muted }}>
                     {card.example}
                   </p>
                 </div>
@@ -1115,9 +1005,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   };
 
   const layerColors: Record<string, string> = {
-    recall: "#60a5fa",
-    procedure: "#f59e0b",
-    understanding: "#a78bfa",
+    recall: colors.domain.numbers,
+    procedure: colors.accent.amber,
+    understanding: colors.accent.violet,
   };
 
   return (
@@ -1125,23 +1015,23 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-3 flex items-center justify-between">
           <span
             className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
             style={{
-              backgroundColor: `${layerColors[problem.layer] ?? C.primary}20`,
-              color: layerColors[problem.layer] ?? C.primary,
+              backgroundColor: `${layerColors[problem.layer] ?? colors.accent.violet}20`,
+              color: layerColors[problem.layer] ?? colors.accent.violet,
             }}
           >
             {problem.layer}
           </span>
-          <span className="text-xs" style={{ color: C.textDim }}>
+          <span className="text-xs" style={{ color: colors.text.muted }}>
             {probIdx + 1} / {PRACTICE_PROBLEMS.length}
           </span>
         </div>
 
-        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: colors.text.primary }}>
           {problem.prompt}
         </p>
 
@@ -1152,6 +1042,21 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               const isSelected = selected === i;
               const showCorrect = answered && i === problem.correctIndex;
               const showIncorrect = answered && isSelected && i !== problem.correctIndex;
+
+              let bgColor: string = colors.bg.primary;
+              if (showCorrect) bgColor = THEME.successFill;
+              else if (showIncorrect) bgColor = THEME.errorFill;
+              else if (isSelected) bgColor = `${colors.accent.violet}30`;
+
+              let borderColor: string = colors.bg.surface;
+              if (showCorrect) borderColor = colors.functional.success;
+              else if (showIncorrect) borderColor = colors.functional.error;
+              else if (isSelected) borderColor = colors.accent.violet;
+
+              let textColor: string = colors.text.primary;
+              if (showCorrect) textColor = colors.functional.success;
+              else if (showIncorrect) textColor = colors.functional.error;
+
               return (
                 <motion.button
                   key={i}
@@ -1159,23 +1064,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   className="w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors"
                   style={{
                     minHeight: 48,
-                    backgroundColor: showCorrect
-                      ? C.successFill
-                      : showIncorrect
-                        ? C.errorFill
-                        : isSelected
-                          ? `${C.primary}30`
-                          : C.bgPrimary,
-                    border: `2px solid ${
-                      showCorrect
-                        ? C.success
-                        : showIncorrect
-                          ? C.error
-                          : isSelected
-                            ? C.primary
-                            : C.border
-                    }`,
-                    color: showCorrect ? C.success : showIncorrect ? C.error : C.textSecondary,
+                    backgroundColor: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    color: textColor,
                   }}
                   whileTap={answered ? {} : { scale: 0.98 }}
                 >
@@ -1193,6 +1084,21 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               const isSel = tfSelected === val;
               const showCorrect = answered && val === problem.correctBool;
               const showIncorrect = answered && isSel && val !== problem.correctBool;
+
+              let bgColor: string = colors.bg.primary;
+              if (showCorrect) bgColor = THEME.successFill;
+              else if (showIncorrect) bgColor = THEME.errorFill;
+              else if (isSel) bgColor = `${colors.accent.violet}30`;
+
+              let borderColor: string = colors.bg.surface;
+              if (showCorrect) borderColor = colors.functional.success;
+              else if (showIncorrect) borderColor = colors.functional.error;
+              else if (isSel) borderColor = colors.accent.violet;
+
+              let textColor: string = colors.text.primary;
+              if (showCorrect) textColor = colors.functional.success;
+              else if (showIncorrect) textColor = colors.functional.error;
+
               return (
                 <motion.button
                   key={String(val)}
@@ -1200,17 +1106,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   className="flex-1 rounded-xl py-3 text-center text-base font-semibold"
                   style={{
                     minHeight: 48,
-                    backgroundColor: showCorrect
-                      ? C.successFill
-                      : showIncorrect
-                        ? C.errorFill
-                        : isSel
-                          ? `${C.primary}30`
-                          : C.bgPrimary,
-                    border: `2px solid ${
-                      showCorrect ? C.success : showIncorrect ? C.error : isSel ? C.primary : C.border
-                    }`,
-                    color: showCorrect ? C.success : showIncorrect ? C.error : C.textSecondary,
+                    backgroundColor: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    color: textColor,
                   }}
                   whileTap={answered ? {} : { scale: 0.95 }}
                 >
@@ -1232,7 +1130,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               svgRef={gridSvgRef}
             />
             {gridTap && (
-              <p className="mt-1 text-center text-sm font-mono" style={{ color: C.textSecondary }}>
+              <p className="mt-1 text-center text-sm font-mono" style={{ color: colors.text.primary }}>
                 Selected: ({gridTap.x}, {gridTap.y})
               </p>
             )}
@@ -1246,7 +1144,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             className="mt-4 w-full rounded-xl py-3 text-base font-semibold text-white"
             style={{
               minHeight: 48,
-              backgroundColor: C.primary,
+              backgroundColor: colors.accent.violet,
               opacity:
                 (problem.type === "multiple-choice" && selected === null) ||
                 (problem.type === "true-false" && tfSelected === null) ||
@@ -1271,14 +1169,14 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <div
               className="rounded-xl px-4 py-3"
               style={{
-                backgroundColor: isCorrect ? C.successFill : C.errorFill,
-                border: `1px solid ${isCorrect ? C.success : C.error}`,
+                backgroundColor: isCorrect ? THEME.successFill : THEME.errorFill,
+                border: `1px solid ${isCorrect ? colors.functional.success : colors.functional.error}`,
               }}
             >
-              <p className="text-sm font-semibold" style={{ color: isCorrect ? C.success : C.error }}>
+              <p className="text-sm font-semibold" style={{ color: isCorrect ? colors.functional.success : colors.functional.error }}>
                 {isCorrect ? "Correct!" : "Not quite."}
               </p>
-              <p className="mt-1 text-sm" style={{ color: C.textSecondary }}>
+              <p className="mt-1 text-sm" style={{ color: colors.text.primary }}>
                 {problem.feedback}
               </p>
             </div>
@@ -1286,7 +1184,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <motion.button
               onClick={handleNext}
               className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white"
-              style={{ minHeight: 48, backgroundColor: C.primary }}
+              style={{ minHeight: 48, backgroundColor: colors.accent.violet }}
               whileTap={{ scale: 0.97 }}
             >
               {probIdx < PRACTICE_PROBLEMS.length - 1 ? "Next \u2192" : "Finish Practice"}
@@ -1327,22 +1225,22 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         className="flex flex-1 flex-col items-center justify-center px-4"
         style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
       >
-        <div className="w-full rounded-2xl p-6 text-center" style={{ backgroundColor: C.bgSurface }}>
+        <div className="w-full rounded-2xl bg-nm-bg-secondary p-6 text-center">
           {submitted && (
             <>
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={SPRING_POP}
+                transition={springs.pop}
                 className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-                style={{ backgroundColor: C.successFill }}
+                style={{ backgroundColor: THEME.successFill }}
               >
-                <span style={{ color: C.success, fontSize: 32 }}>{"✓"}</span>
+                <span style={{ color: colors.functional.success, fontSize: 32 }}>{"✓"}</span>
               </motion.div>
-              <p className="mb-2 text-lg font-semibold" style={{ color: C.textPrimary }}>
+              <p className="mb-2 text-lg font-semibold" style={{ color: colors.text.primary }}>
                 Great reflection!
               </p>
-              <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
+              <p className="mb-4 text-sm" style={{ color: colors.text.muted }}>
                 Understanding why order matters in coordinates is a key skill.
                 You are ready to explore more on the coordinate plane!
               </p>
@@ -1350,7 +1248,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           )}
 
           {skipped && (
-            <p className="mb-4 text-center text-sm" style={{ color: C.textMuted }}>
+            <p className="mb-4 text-center text-sm" style={{ color: colors.text.muted }}>
               Reflection skipped. You can always come back to reflect later!
             </p>
           )}
@@ -1368,15 +1266,15 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
       className="flex flex-1 flex-col px-4"
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
-      <div className="mt-4 rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mt-4 rounded-2xl bg-nm-bg-secondary p-6">
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: C.pointFill, color: C.point }}
+          style={{ backgroundColor: THEME.pointFill, color: colors.accent.indigo }}
         >
           Reflection
         </span>
 
-        <p className="mb-4 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+        <p className="mb-4 text-lg font-medium leading-relaxed" style={{ color: colors.text.primary }}>
           {"Explain to a friend why (3, 5) and (5, 3) are different points. Use the idea of \u2018running\u2019 and \u2018jumping\u2019 or any other analogy."}
         </p>
 
@@ -1385,18 +1283,17 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="They're different because..."
-          className="w-full resize-none rounded-xl p-4 text-base leading-relaxed"
+          className="w-full resize-none rounded-xl bg-nm-bg-primary p-4 text-base leading-relaxed"
           style={{
             minHeight: 120,
             maxHeight: 240,
-            backgroundColor: C.bgPrimary,
-            border: `1px solid ${C.borderLight}`,
-            color: C.textSecondary,
+            border: `1px solid ${colors.bg.elevated}`,
+            color: colors.text.primary,
           }}
           aria-label="Write your reflection explaining why coordinate order matters"
         />
 
-        <div className="mt-1 text-right text-xs" style={{ color: meetsMin ? C.success : C.textDim }}>
+        <div className="mt-1 text-right text-xs" style={{ color: meetsMin ? colors.functional.success : colors.text.muted }}>
           {text.length} / {minChars} minimum
         </div>
 
@@ -1404,7 +1301,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           onClick={handleSubmit}
           disabled={!meetsMin}
           className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none"
-          style={{ backgroundColor: C.primary, minHeight: 52 }}
+          style={{ backgroundColor: colors.accent.violet, minHeight: 52 }}
         >
           Submit Reflection
         </button>
@@ -1412,7 +1309,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={handleSkip}
           className="mt-2 w-full py-2 text-sm underline-offset-2 hover:underline"
-          style={{ color: C.textDim, minHeight: 44 }}
+          style={{ color: colors.text.muted, minHeight: 44 }}
           aria-label="Skip reflection"
         >
           Skip
@@ -1427,45 +1324,32 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function CoordinatePlaneLesson({ onComplete }: CoordinatePlaneLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const stage = STAGE_ORDER[stageIndex]!;
-
-  const advanceStage = useCallback(() => {
-    setStageIndex((i) => {
-      const next = i + 1;
-      if (next >= STAGE_ORDER.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
   return (
-    <div
-      className="flex min-h-dvh flex-col"
-      style={{ backgroundColor: C.bgPrimary }}
+    <LessonShell
+      title="GE-5.1 Coordinate Plane"
+      stages={[...NLS_STAGES]}
+      onComplete={onComplete}
     >
-      <StageProgressDots currentIndex={stageIndex} total={STAGE_ORDER.length} />
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={advanceStage} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":
+            return <HookStage onComplete={advance} />;
+          case "spatial":
+            return <SpatialStage onComplete={advance} />;
+          case "discovery":
+            return <DiscoveryStage onComplete={advance} />;
+          case "symbol":
+            return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":
+            return <RealWorldStage onComplete={advance} />;
+          case "practice":
+            return <PracticeStage onComplete={advance} />;
+          case "reflection":
+            return <ReflectionStage onComplete={advance} />;
+          default:
+            return null;
+        }
+      }}
+    </LessonShell>
   );
 }

@@ -1,13 +1,10 @@
 <!--
 === SYNC IMPACT REPORT ===
-Version change: N/A (initial creation) -> 1.0.0
-Modified principles: N/A (initial creation)
+Version change: 1.0.0 -> 1.1.0
+Modified principles: None
 
 Added sections:
-  - Core Principles (7 principles)
-  - Pedagogical Framework (Five Pillars + Neural Learning Sequence)
-  - Development Rules (7 rules)
-  - Governance
+  - DR-8: Atomic Component Architecture (new development rule)
 
 Removed sections: N/A
 
@@ -17,8 +14,10 @@ Templates requiring updates:
     (will be populated dynamically by /speckit.plan at runtime)
   - .specify/templates/spec-template.md — no structural conflicts. ✅ ok
   - .specify/templates/tasks-template.md — no structural conflicts. ✅ ok
+  - specs/lessons/DEVELOPER-GUIDE.md — updated to reference LessonShell
+    and shared tokens. ✅ ok
 
-Follow-up TODOs: None. All placeholders resolved.
+Follow-up TODOs: None.
 === END SYNC IMPACT REPORT ===
 -->
 
@@ -198,6 +197,34 @@ All user-facing strings MUST be externalized into locale files. RTL layout
 support MUST be planned from the start. Mathematical notation is universal;
 the surrounding UI MUST be localizable.
 
+### DR-8: Atomic Component Architecture
+
+The frontend follows an atomic design hierarchy. Lessons MUST compose from
+shared building blocks rather than defining local duplicates.
+
+**Component hierarchy:**
+
+| Layer | Location | Examples |
+|-------|----------|----------|
+| Atoms | `src/components/ui/` | Button, Card, ProgressBar, BottomSheet |
+| Molecules | `src/components/lessons/ui/` | ContinueButton, CompareToggle, InteractionDots, MCQuestion, PromptCard, ReflectionInput, ScenarioCards, NotationReveal, InteractiveSVG, HookVideo |
+| Templates | `src/components/lessons/ui/` | LessonShell, PracticeShell, StageContainer |
+| Pages | `src/app/(app)/learn/` | Lesson page router |
+
+**Mandatory rules:**
+
+- Lessons MUST use `LessonShell` for stage orchestration (progress header,
+  slide transitions, stage navigation). Manual stage state management is
+  prohibited in new lessons.
+- Colors MUST use shared tokens from `@/lib/tokens/colors`. Lesson-specific
+  semantic aliases (e.g. `THEME.gcf`) MAY reference shared tokens. Hardcoded
+  hex values that duplicate CSS custom properties are prohibited.
+- Animation configs MUST use shared springs from `@/lib/tokens/motion`.
+- Reusable molecules (`ContinueButton`, `CompareToggle`, `InteractionDots`,
+  etc.) MUST be imported from `@/components/lessons/ui/`, not redefined
+  locally.
+- Stage types MUST use `NLS_STAGES` and `NLSStage` from `@/lib/tokens/stages`.
+
 ## Governance
 
 This constitution is the highest-authority document for NeuroMathica
@@ -229,4 +256,4 @@ This constitution follows semantic versioning (MAJOR.MINOR.PATCH):
 - Quarterly audits SHOULD verify that shipped content follows the Neural
   Learning Sequence without exceptions.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22
+**Version**: 1.1.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23

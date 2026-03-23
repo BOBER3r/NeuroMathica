@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -19,67 +24,44 @@ interface GcfLcmLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   SPRING CONFIGS (per NT-2.3 spec)
+   SHARED TOKEN ALIASES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const GENTLE_SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const BOUNCY_SPRING = { type: "spring" as const, damping: 15, stiffness: 350 };
-const SNAP_SPRING = { type: "spring" as const, damping: 25, stiffness: 400 };
-const _HOP_SPRING = { type: "spring" as const, damping: 22, stiffness: 350 };
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
+const SPRING_STIFF = springs.stiff;
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const SURFACE_ELEVATED = colors.bg.surface;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const PRIMARY = colors.accent.indigo;
+const EMERALD = colors.accent.emerald;
+const AMBER = colors.accent.amber;
+const VIOLET = colors.accent.violet;
+const SUCCESS = colors.functional.success;
+const INFO = colors.functional.info;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLORS (per NT-2.3 colour palette)
+   LESSON-SPECIFIC THEME
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const C = {
-  numberA: "#818cf8",       // indigo-400 — first number / LCM accent
+const THEME = {
   numberABg: "rgba(129,140,248,0.06)",
   numberAStroke: "#6366f1",
-  numberB: "#34d399",       // emerald-400 — second number
   numberBBg: "rgba(52,211,153,0.06)",
   numberBStroke: "#059669",
-  gcfAccent: "#fbbf24",     // amber-400 — GCF / overlap / sync
   gcfBg: "rgba(251,191,36,0.08)",
-  valid: "#34d399",
-  invalid: "#fb7185",
-  textPrimary: "#f1f5f9",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  textDimmer: "#475569",
-  surface: "#1e293b",
-  surfaceDeep: "#0f172a",
-  border: "#334155",
-  borderDim: "#1e293b",
-  blue: "#60a5fa",
-  violet: "#a78bfa",
-  amber: "#f59e0b",
+  textLight: "#e2e8f0",   // slate-200, lighter than tokens text.secondary
+  amber500: "#f59e0b",    // amber-500, distinct from tokens amber-400
 } as const;
 
 const LAYER_COLORS: Record<number, string> = {
-  0: C.blue,
-  1: C.violet,
-  2: C.amber,
+  0: INFO,
+  1: VIOLET,
+  2: THEME.amber500,
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -179,47 +161,14 @@ function XpFloat({ amount }: { amount: number }) {
       animate={{ opacity: 0, y: -24 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 text-xs font-bold"
-      style={{ color: C.gcfAccent }}
+      style={{ color: AMBER }}
     >
       +{amount} XP
     </motion.span>
   );
 }
 
-function CTAButton({
-  label,
-  onClick,
-  disabled = false,
-  ariaLabel,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  ariaLabel?: string;
-}) {
-  return (
-    <motion.div
-      className="w-full max-w-sm mx-auto pb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={disabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-    >
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          "w-full rounded-xl px-6 py-3 text-base font-semibold text-white transition-all duration-150",
-          "min-h-[44px] min-w-[44px] select-none active:scale-95",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
-          disabled && "opacity-40 cursor-not-allowed pointer-events-none",
-        )}
-        style={{ backgroundColor: C.numberA }}
-      >
-        {label}
-      </button>
-    </motion.div>
-  );
-}
+/* CTAButton removed — now using shared ContinueButton from ui/ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STAGE 1 — HOOK
@@ -327,7 +276,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           <motion.text
             x={200} y={30}
             textAnchor={"middle" as const}
-            fill={C.textMuted}
+            fill={TEXT_SEC}
             fontSize={18}
             fontStyle="italic"
             initial={{ opacity: 0 }}
@@ -342,23 +291,23 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         <motion.g
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
           style={{ transformOrigin: "130px 80px" }}
         >
-          <rect x={128} y={80} width={4} height={80} rx={2} fill={C.numberA} />
-          <circle cx={130} cy={160} r={10} fill={C.numberA} stroke={C.numberAStroke} strokeWidth={1.5} />
+          <rect x={128} y={80} width={4} height={80} rx={2} fill={PRIMARY} />
+          <circle cx={130} cy={160} r={10} fill={PRIMARY} stroke={THEME.numberAStroke} strokeWidth={1.5} />
         </motion.g>
 
         {/* Left metronome label */}
         <motion.text
           x={130} y={185}
           textAnchor={"middle" as const}
-          fill={C.numberA}
+          fill={PRIMARY}
           fontSize={14}
           fontWeight={600}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
         >
           Every 3 beats
         </motion.text>
@@ -367,29 +316,29 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         <motion.g
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ ...GENTLE_SPRING, delay: 0.15 }}
+          transition={{ ...SPRING, delay: 0.15 }}
           style={{ transformOrigin: "270px 80px" }}
         >
-          <rect x={268} y={80} width={4} height={80} rx={2} fill={C.numberB} />
-          <circle cx={270} cy={160} r={10} fill={C.numberB} stroke={C.numberBStroke} strokeWidth={1.5} />
+          <rect x={268} y={80} width={4} height={80} rx={2} fill={EMERALD} />
+          <circle cx={270} cy={160} r={10} fill={EMERALD} stroke={THEME.numberBStroke} strokeWidth={1.5} />
         </motion.g>
 
         {/* Right metronome label */}
         <motion.text
           x={270} y={185}
           textAnchor={"middle" as const}
-          fill={C.numberB}
+          fill={EMERALD}
           fontSize={14}
           fontWeight={600}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ ...GENTLE_SPRING, delay: 0.15 }}
+          transition={{ ...SPRING, delay: 0.15 }}
         >
           Every 4 beats
         </motion.text>
 
         {/* Beat track baseline */}
-        <line x1={trackLeft} y1={trackY} x2={trackRight} y2={trackY} stroke="#1e293b" strokeWidth={1} />
+        <line x1={trackLeft} y1={trackY} x2={trackRight} y2={trackY} stroke={SURFACE} strokeWidth={1} />
 
         {/* Tick marks and labels */}
         {Array.from({ length: 13 }, (_, i) => {
@@ -397,13 +346,13 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           const isSyncBeat = i === 12 && showSync;
           return (
             <g key={`tick-${i}`}>
-              <line x1={x} y1={trackY - 5} x2={x} y2={trackY + 5} stroke="#334155" strokeWidth={1} />
+              <line x1={x} y1={trackY - 5} x2={x} y2={trackY + 5} stroke={SURFACE_ELEVATED} strokeWidth={1} />
               <text
                 x={x}
                 y={trackY + 18}
                 textAnchor={"middle" as const}
                 fontSize={11}
-                fill={isSyncBeat ? C.gcfAccent : C.textDimmer}
+                fill={isSyncBeat ? AMBER : colors.bg.elevated}
                 fontWeight={isSyncBeat ? 700 : 400}
               >
                 {i}
@@ -420,10 +369,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               cx={beatX(b)}
               cy={trackY}
               r={5}
-              fill={C.numberA}
+              fill={PRIMARY}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={BOUNCY_SPRING}
+              transition={SPRING_POP}
             />
           ) : null
         ))}
@@ -436,10 +385,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               cx={beatX(b)}
               cy={trackY}
               r={5}
-              fill={C.numberB}
+              fill={EMERALD}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={BOUNCY_SPRING}
+              transition={SPRING_POP}
             />
           ) : null
         ))}
@@ -451,19 +400,19 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             cy={trackY}
             r={8}
             fill="url(#syncGrad)"
-            stroke={C.gcfAccent}
+            stroke={AMBER}
             strokeWidth={2}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={BOUNCY_SPRING}
+            transition={SPRING_POP}
           />
         )}
 
         {/* Gradient defs */}
         <defs>
           <radialGradient id="syncGrad">
-            <stop offset="0%" stopColor={C.numberA} />
-            <stop offset="100%" stopColor={C.numberB} />
+            <stop offset="0%" stopColor={PRIMARY} />
+            <stop offset="100%" stopColor={EMERALD} />
           </radialGradient>
         </defs>
 
@@ -473,7 +422,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.text
               x={200} y={260}
               textAnchor={"middle" as const}
-              fill={C.gcfAccent}
+              fill={AMBER}
               fontSize={20}
               fontWeight={700}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -485,7 +434,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.text
               x={200} y={280}
               textAnchor={"middle" as const}
-              fill={C.textSecondary}
+              fill={THEME.textLight}
               fontSize={14}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -496,7 +445,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.text
               x={200} y={300}
               textAnchor={"middle" as const}
-              fill={C.numberA}
+              fill={PRIMARY}
               fontSize={13}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -507,7 +456,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <motion.text
               x={200} y={318}
               textAnchor={"middle" as const}
-              fill={C.numberB}
+              fill={EMERALD}
               fontSize={13}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -523,13 +472,13 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
       {showLcmLabel && (
         <motion.p
           className="mt-2 text-center text-lg"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           {"This is called the "}
-          <span style={{ color: C.gcfAccent, fontWeight: 700 }}>
+          <span style={{ color: AMBER, fontWeight: 700 }}>
             Least Common Multiple
           </span>
           .
@@ -540,25 +489,26 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
       {showGcfTease && (
         <motion.p
           className="mt-1 text-center text-lg"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           {"But what about the "}
-          <span style={{ color: C.numberA, fontWeight: 700 }}>
+          <span style={{ color: PRIMARY, fontWeight: 700 }}>
             BIGGEST factor
           </span>
           {" they SHARE?"}
         </motion.p>
       )}
 
-      <CTAButton
-        label="Explore GCF & LCM"
+      <ContinueButton
         onClick={onComplete}
         disabled={!showCTA}
-        ariaLabel="Continue to interactive exploration of GCF and LCM"
-      />
+        color={PRIMARY}
+      >
+        {"Explore GCF & LCM"}
+      </ContinueButton>
 
       {/* Accessibility narration */}
       <div aria-live="polite" className="sr-only">
@@ -709,15 +659,15 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     return (
       <div className="flex flex-1 flex-col items-center px-4 pt-2">
         {/* Instruction */}
-        <div className="w-full max-w-lg rounded-xl p-3 mb-3" style={{ backgroundColor: C.surface }}>
-          <p className="text-center text-base font-semibold" style={{ color: C.textPrimary }}>
+        <div className="w-full max-w-lg rounded-xl bg-nm-bg-secondary p-3 mb-3">
+          <p className="text-center text-base font-semibold" style={{ color: TEXT }}>
             Sort the prime factors!
           </p>
           <div className="flex justify-center gap-4 mt-1">
-            <span className="text-sm" style={{ color: C.numberA }}>{challenge.refA}</span>
-            <span className="text-sm" style={{ color: C.numberB }}>{challenge.refB}</span>
+            <span className="text-sm" style={{ color: PRIMARY }}>{challenge.refA}</span>
+            <span className="text-sm" style={{ color: EMERALD }}>{challenge.refB}</span>
           </div>
-          <p className="text-center text-xs mt-1" style={{ color: C.textDim }}>
+          <p className="text-center text-xs mt-1" style={{ color: MUTED }}>
             Challenge {challengeIdx + 1} of {VENN_CHALLENGES.length}
           </p>
         </div>
@@ -726,9 +676,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <div className="w-full max-w-lg">
           <svg viewBox="0 0 400 260" className="w-full" role="application" aria-label={`Prime Factor Venn Diagram: sort prime factors of ${challenge.a} and ${challenge.b}`}>
             {/* Left circle */}
-            <circle cx={155} cy={130} r={95} fill={C.numberABg} stroke={C.numberA} strokeWidth={1.5} strokeDasharray="6 3" />
+            <circle cx={155} cy={130} r={95} fill={THEME.numberABg} stroke={PRIMARY} strokeWidth={1.5} strokeDasharray="6 3" />
             {/* Right circle */}
-            <circle cx={245} cy={130} r={95} fill={C.numberBBg} stroke={C.numberB} strokeWidth={1.5} strokeDasharray="6 3" />
+            <circle cx={245} cy={130} r={95} fill={THEME.numberBBg} stroke={EMERALD} strokeWidth={1.5} strokeDasharray="6 3" />
 
             {/* Overlap region indicator via clipPath */}
             <defs>
@@ -740,24 +690,24 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               </clipPath>
             </defs>
             {/* Amber overlap: a rect clipped to left circle, then further by right circle */}
-            <circle cx={245} cy={130} r={95} fill={C.gcfBg} clipPath={`url(#clipL-${challengeIdx})`} />
+            <circle cx={245} cy={130} r={95} fill={THEME.gcfBg} clipPath={`url(#clipL-${challengeIdx})`} />
 
             {/* Labels above circles */}
-            <text x={110} y={28} textAnchor={"middle" as const} fill={C.numberA} fontSize={20} fontWeight={700}>
+            <text x={110} y={28} textAnchor={"middle" as const} fill={PRIMARY} fontSize={20} fontWeight={700}>
               {challenge.a}
             </text>
-            <text x={290} y={28} textAnchor={"middle" as const} fill={C.numberB} fontSize={20} fontWeight={700}>
+            <text x={290} y={28} textAnchor={"middle" as const} fill={EMERALD} fontSize={20} fontWeight={700}>
               {challenge.b}
             </text>
 
             {/* Zone labels */}
-            <text x={95} y={130} textAnchor={"middle" as const} fill={C.numberA} fontSize={11} opacity={0.4}>
+            <text x={95} y={130} textAnchor={"middle" as const} fill={PRIMARY} fontSize={11} opacity={0.4}>
               {`Only in ${challenge.a}`}
             </text>
-            <text x={200} y={78} textAnchor={"middle" as const} fill={C.gcfAccent} fontSize={11} opacity={0.4}>
+            <text x={200} y={78} textAnchor={"middle" as const} fill={AMBER} fontSize={11} opacity={0.4}>
               Shared
             </text>
-            <text x={305} y={130} textAnchor={"middle" as const} fill={C.numberB} fontSize={11} opacity={0.4}>
+            <text x={305} y={130} textAnchor={"middle" as const} fill={EMERALD} fontSize={11} opacity={0.4}>
               {`Only in ${challenge.b}`}
             </text>
 
@@ -766,9 +716,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               const tx = 72 + (i % 2) * 40;
               const ty = 105 + Math.floor(i / 2) * 40;
               return (
-                <motion.g key={`pl-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SNAP_SPRING}>
-                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={C.surface} stroke={C.numberA} strokeWidth={1.5} />
-                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={C.textPrimary} fontSize={18} fontWeight={700}>
+                <motion.g key={`pl-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_STIFF}>
+                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={SURFACE} stroke={PRIMARY} strokeWidth={1.5} />
+                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={TEXT} fontSize={18} fontWeight={700}>
                     {t.value}
                   </text>
                 </motion.g>
@@ -780,9 +730,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               const tx = 182 + (i % 2) * 36;
               const ty = 100 + Math.floor(i / 2) * 40;
               return (
-                <motion.g key={`po-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SNAP_SPRING}>
-                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={C.surface} stroke={C.gcfAccent} strokeWidth={1.5} />
-                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={C.textPrimary} fontSize={18} fontWeight={700}>
+                <motion.g key={`po-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_STIFF}>
+                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={SURFACE} stroke={AMBER} strokeWidth={1.5} />
+                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={TEXT} fontSize={18} fontWeight={700}>
                     {t.value}
                   </text>
                 </motion.g>
@@ -794,9 +744,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               const tx = 284 + (i % 2) * 40;
               const ty = 105 + Math.floor(i / 2) * 40;
               return (
-                <motion.g key={`pr-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SNAP_SPRING}>
-                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={C.surface} stroke={C.numberB} strokeWidth={1.5} />
-                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={C.textPrimary} fontSize={18} fontWeight={700}>
+                <motion.g key={`pr-${t.id}`} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_STIFF}>
+                  <rect x={tx} y={ty} width={36} height={36} rx={8} fill={SURFACE} stroke={EMERALD} strokeWidth={1.5} />
+                  <text x={tx + 18} y={ty + 24} textAnchor={"middle" as const} fill={TEXT} fontSize={18} fontWeight={700}>
                     {t.value}
                   </text>
                 </motion.g>
@@ -808,7 +758,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {/* Source tray - tap-to-place */}
         {trayTiles.length > 0 && (
           <div className="w-full max-w-lg mt-2">
-            <p className="text-xs mb-1 text-center" style={{ color: C.textDim }}>
+            <p className="text-xs mb-1 text-center" style={{ color: MUTED }}>
               Tap a tile, then tap a zone to place it
             </p>
             <TilePlacer
@@ -823,7 +773,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {/* Return buttons for placed tiles */}
         {(leftTiles.length > 0 || overlapTiles.length > 0 || rightTiles.length > 0) && !challengeComplete && (
           <div className="w-full max-w-lg mt-2">
-            <p className="text-xs text-center mb-1" style={{ color: C.textDim }}>
+            <p className="text-xs text-center mb-1" style={{ color: MUTED }}>
               Tap placed tiles to return them
             </p>
             <div className="flex flex-wrap justify-center gap-1">
@@ -833,9 +783,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   onClick={() => moveTile(t.id, "tray")}
                   className="min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm font-bold active:scale-95"
                   style={{
-                    backgroundColor: C.surface,
-                    border: `1px solid ${C.border}`,
-                    color: C.textPrimary,
+                    backgroundColor: SURFACE,
+                    border: `1px solid ${SURFACE_ELEVATED}`,
+                    color: TEXT,
                   }}
                 >
                   {t.value} {"\u2190"}
@@ -848,16 +798,16 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {/* GCF/LCM readout */}
         <div className="w-full max-w-lg flex justify-center gap-6 mt-3">
           <motion.p className="text-lg" key={`gcf-r-${overlapProduct}`} animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.2 }}>
-            <span style={{ color: C.gcfAccent, fontWeight: 700 }}>GCF</span>
+            <span style={{ color: AMBER, fontWeight: 700 }}>GCF</span>
             {" = "}
-            <span style={{ color: C.textPrimary }}>
+            <span style={{ color: TEXT }}>
               {overlapProduct}{!allPlaced ? "\u2026" : ""}
             </span>
           </motion.p>
           <motion.p className="text-lg" key={`lcm-r-${allPlacedProduct}`} animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.2 }}>
-            <span style={{ color: C.numberA, fontWeight: 700 }}>LCM</span>
+            <span style={{ color: PRIMARY, fontWeight: 700 }}>LCM</span>
             {" = "}
-            <span style={{ color: C.textPrimary }}>
+            <span style={{ color: TEXT }}>
               {allPlacedProduct}{!allPlaced ? "\u2026" : ""}
             </span>
           </motion.p>
@@ -867,7 +817,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {showHint && !challengeComplete && (
           <motion.p
             className="mt-2 text-sm italic text-center max-w-lg"
-            style={{ color: C.textMuted }}
+            style={{ color: TEXT_SEC }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -881,20 +831,20 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             className="mt-3 text-center"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={BOUNCY_SPRING}
+            transition={SPRING_POP}
           >
-            <p className="text-sm" style={{ color: C.gcfAccent }}>
+            <p className="text-sm" style={{ color: AMBER }}>
               {"GCF("}{challenge.a}{", "}{challenge.b}{") = "}
               {product(correct.overlap)}
               {" \u2014 the product of the SHARED factors!"}
             </p>
-            <p className="text-sm" style={{ color: C.numberA }}>
+            <p className="text-sm" style={{ color: PRIMARY }}>
               {"LCM("}{challenge.a}{", "}{challenge.b}{") = "}
               {product([...correct.left, ...correct.overlap, ...correct.right])}
               {" \u2014 the product of ALL unique factors!"}
             </p>
             {isCoprime && (
-              <p className="text-sm mt-1" style={{ color: C.gcfAccent }}>
+              <p className="text-sm mt-1" style={{ color: AMBER }}>
                 {"No shared factors! GCF = 1. These numbers are called "}
                 <span style={{ fontWeight: 700 }}>coprime</span>.
               </p>
@@ -903,7 +853,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               <button
                 onClick={nextChallenge}
                 className="min-h-[44px] min-w-[44px] rounded-xl px-6 py-3 text-base font-semibold text-white active:scale-95"
-                style={{ backgroundColor: C.numberA }}
+                style={{ backgroundColor: PRIMARY }}
               >
                 {challengeIdx + 1 >= VENN_CHALLENGES.length ? "See Number Lines" : "Next Challenge"}
               </button>
@@ -919,8 +869,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center px-4 pt-2">
-      <div className="w-full max-w-lg rounded-xl p-3 mb-3" style={{ backgroundColor: C.surface }}>
-        <p className="text-center text-base font-semibold" style={{ color: C.textPrimary }}>
+      <div className="w-full max-w-lg rounded-xl bg-nm-bg-secondary p-3 mb-3">
+        <p className="text-center text-base font-semibold" style={{ color: TEXT }}>
           Find where they land together!
         </p>
       </div>
@@ -940,18 +890,19 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={() => setNlExampleIdx((i) => i + 1)}
           className="mt-3 min-h-[44px] min-w-[44px] rounded-xl px-5 py-2 text-sm font-semibold text-white active:scale-95"
-          style={{ backgroundColor: C.numberA }}
+          style={{ backgroundColor: PRIMARY }}
         >
           {"Next Example \u2192"}
         </button>
       )}
 
-      <CTAButton
-        label="Continue"
+      <ContinueButton
         onClick={onComplete}
         disabled={!canContinue}
-        ariaLabel="Continue to guided discovery"
-      />
+        color={PRIMARY}
+      >
+        Continue
+      </ContinueButton>
     </div>
   );
 }
@@ -993,9 +944,9 @@ function TilePlacer({
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
             )}
             style={{
-              backgroundColor: C.surface,
-              border: `2px solid ${selectedTileId === t.id ? C.numberA : C.border}`,
-              color: C.textPrimary,
+              backgroundColor: SURFACE,
+              border: `2px solid ${selectedTileId === t.id ? PRIMARY : SURFACE_ELEVATED}`,
+              color: TEXT,
             }}
             aria-pressed={selectedTileId === t.id}
           >
@@ -1015,21 +966,21 @@ function TilePlacer({
           <button
             onClick={() => handleZoneTap("left")}
             className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-semibold active:scale-95"
-            style={{ backgroundColor: C.numberABg, border: `1px solid ${C.numberA}`, color: C.numberA }}
+            style={{ backgroundColor: THEME.numberABg, border: `1px solid ${PRIMARY}`, color: PRIMARY }}
           >
             {`Only ${challengeA}`}
           </button>
           <button
             onClick={() => handleZoneTap("overlap")}
             className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-semibold active:scale-95"
-            style={{ backgroundColor: C.gcfBg, border: `1px solid ${C.gcfAccent}`, color: C.gcfAccent }}
+            style={{ backgroundColor: THEME.gcfBg, border: `1px solid ${AMBER}`, color: AMBER }}
           >
             Shared
           </button>
           <button
             onClick={() => handleZoneTap("right")}
             className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-semibold active:scale-95"
-            style={{ backgroundColor: C.numberBBg, border: `1px solid ${C.numberB}`, color: C.numberB }}
+            style={{ backgroundColor: THEME.numberBBg, border: `1px solid ${EMERALD}`, color: EMERALD }}
           >
             {`Only ${challengeB}`}
           </button>
@@ -1095,8 +1046,8 @@ function NumberLineDisplay({
     <div className="w-full max-w-lg">
       <svg viewBox="0 0 400 240" className="w-full" role="img" aria-label={`Number lines showing multiples of ${a} and ${b}, meeting at ${lcmVal}`}>
         {/* Top number line */}
-        <line x1={margin} y1={topY} x2={margin + lineWidth} y2={topY} stroke={C.numberA} strokeWidth={2} />
-        <polygon points={`${margin + lineWidth},${topY - 4} ${margin + lineWidth + 8},${topY} ${margin + lineWidth},${topY + 4}`} fill={C.numberA} />
+        <line x1={margin} y1={topY} x2={margin + lineWidth} y2={topY} stroke={PRIMARY} strokeWidth={2} />
+        <polygon points={`${margin + lineWidth},${topY - 4} ${margin + lineWidth + 8},${topY} ${margin + lineWidth},${topY + 4}`} fill={PRIMARY} />
 
         {/* Top multiples and hop arcs */}
         {multiplesA.map((m, i) => {
@@ -1107,7 +1058,7 @@ function NumberLineDisplay({
             <g key={`ta-${m}`}>
               <motion.path
                 d={`M ${prevX} ${topY} Q ${(prevX + x) / 2} ${topY - 25} ${x} ${topY}`}
-                stroke={C.numberA}
+                stroke={PRIMARY}
                 strokeWidth={1.5}
                 fill="none"
                 initial={{ pathLength: 0 }}
@@ -1118,17 +1069,17 @@ function NumberLineDisplay({
                 cx={x}
                 cy={topY}
                 r={isCommon ? 7 : 5}
-                fill={C.numberA}
-                stroke={isCommon ? C.gcfAccent : "none"}
+                fill={PRIMARY}
+                stroke={isCommon ? AMBER : "none"}
                 strokeWidth={isCommon ? 2 : 0}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ ...BOUNCY_SPRING, delay: i * 0.15 + 0.2 }}
+                transition={{ ...SPRING_POP, delay: i * 0.15 + 0.2 }}
                 onClick={() => handleDotTap(m)}
                 className="cursor-pointer"
                 data-interactive="true"
               />
-              <text x={x} y={topY - 12} textAnchor={"middle" as const} fill={isCommon ? C.gcfAccent : C.numberA} fontSize={12} fontWeight={isCommon ? 700 : 400}>
+              <text x={x} y={topY - 12} textAnchor={"middle" as const} fill={isCommon ? AMBER : PRIMARY} fontSize={12} fontWeight={isCommon ? 700 : 400}>
                 {m}
               </text>
             </g>
@@ -1136,8 +1087,8 @@ function NumberLineDisplay({
         })}
 
         {/* Bottom number line */}
-        <line x1={margin} y1={botY} x2={margin + lineWidth} y2={botY} stroke={C.numberB} strokeWidth={2} />
-        <polygon points={`${margin + lineWidth},${botY - 4} ${margin + lineWidth + 8},${botY} ${margin + lineWidth},${botY + 4}`} fill={C.numberB} />
+        <line x1={margin} y1={botY} x2={margin + lineWidth} y2={botY} stroke={EMERALD} strokeWidth={2} />
+        <polygon points={`${margin + lineWidth},${botY - 4} ${margin + lineWidth + 8},${botY} ${margin + lineWidth},${botY + 4}`} fill={EMERALD} />
 
         {/* Bottom multiples and hop arcs */}
         {multiplesB.map((m, i) => {
@@ -1148,7 +1099,7 @@ function NumberLineDisplay({
             <g key={`tb-${m}`}>
               <motion.path
                 d={`M ${prevX} ${botY} Q ${(prevX + x) / 2} ${botY - 25} ${x} ${botY}`}
-                stroke={C.numberB}
+                stroke={EMERALD}
                 strokeWidth={1.5}
                 fill="none"
                 initial={{ pathLength: 0 }}
@@ -1159,17 +1110,17 @@ function NumberLineDisplay({
                 cx={x}
                 cy={botY}
                 r={isCommon ? 7 : 5}
-                fill={C.numberB}
-                stroke={isCommon ? C.gcfAccent : "none"}
+                fill={EMERALD}
+                stroke={isCommon ? AMBER : "none"}
                 strokeWidth={isCommon ? 2 : 0}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ ...BOUNCY_SPRING, delay: i * 0.15 + 0.2 }}
+                transition={{ ...SPRING_POP, delay: i * 0.15 + 0.2 }}
                 onClick={() => handleDotTap(m)}
                 className="cursor-pointer"
                 data-interactive="true"
               />
-              <text x={x} y={botY + 18} textAnchor={"middle" as const} fill={isCommon ? C.gcfAccent : C.numberB} fontSize={12} fontWeight={isCommon ? 700 : 400}>
+              <text x={x} y={botY + 18} textAnchor={"middle" as const} fill={isCommon ? AMBER : EMERALD} fontSize={12} fontWeight={isCommon ? 700 : 400}>
                 {m}
               </text>
             </g>
@@ -1182,8 +1133,8 @@ function NumberLineDisplay({
           const isFirst = m === lcmVal;
           return (
             <g key={`cm-${m}`}>
-              <line x1={x} y1={topY + 8} x2={x} y2={botY - 8} stroke={C.gcfAccent} strokeWidth={1.5} strokeDasharray="4 4" />
-              <text x={x} y={(topY + botY) / 2 + 4} textAnchor={"middle" as const} fill={C.gcfAccent} fontSize={isFirst ? 16 : 14} fontWeight={700}>
+              <line x1={x} y1={topY + 8} x2={x} y2={botY - 8} stroke={AMBER} strokeWidth={1.5} strokeDasharray="4 4" />
+              <text x={x} y={(topY + botY) / 2 + 4} textAnchor={"middle" as const} fill={AMBER} fontSize={isFirst ? 16 : 14} fontWeight={700}>
                 {m}
               </text>
               {isFirst && (
@@ -1191,11 +1142,11 @@ function NumberLineDisplay({
                   x={x}
                   y={(topY + botY) / 2 + 20}
                   textAnchor={"middle" as const}
-                  fill={C.gcfAccent}
+                  fill={AMBER}
                   fontSize={12}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={BOUNCY_SPRING}
+                  transition={SPRING_POP}
                 >
                   LCM!
                 </motion.text>
@@ -1213,15 +1164,15 @@ function NumberLineDisplay({
               width={120}
               height={24}
               rx={6}
-              fill={C.surface}
-              stroke={commonMultiples.includes(tapped) ? C.gcfAccent : C.border}
+              fill={SURFACE}
+              stroke={commonMultiples.includes(tapped) ? AMBER : SURFACE_ELEVATED}
               strokeWidth={1}
             />
             <text
               x={Math.max(65, Math.min(posX(tapped), 395))}
               y={226}
               textAnchor={"middle" as const}
-              fill={commonMultiples.includes(tapped) ? C.gcfAccent : C.textSecondary}
+              fill={commonMultiples.includes(tapped) ? AMBER : THEME.textLight}
               fontSize={11}
             >
               {commonMultiples.includes(tapped)
@@ -1233,7 +1184,7 @@ function NumberLineDisplay({
       </svg>
 
       {/* Annotation */}
-      <p className="text-sm text-center mt-1 px-2" style={{ color: C.textSecondary }}>
+      <p className="text-sm text-center mt-1 px-2" style={{ color: THEME.textLight }}>
         {annotation}
       </p>
     </div>
@@ -1313,23 +1264,23 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           key={prompt.id}
           className="w-full max-w-lg rounded-2xl p-5"
           style={{
-            backgroundColor: C.surface,
-            border: `1px solid ${C.border}`,
+            backgroundColor: SURFACE,
+            border: `1px solid ${SURFACE_ELEVATED}`,
           }}
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -40 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
         >
           {/* Prompt counter */}
-          <p className="text-xs mb-3" style={{ color: C.textDim }}>
+          <p className="text-xs mb-3" style={{ color: MUTED }}>
             {promptIdx + 1} of {DISCOVERY_PROMPTS.length}
           </p>
 
           {/* Prompt text */}
           <p
             className="text-base leading-relaxed mb-4"
-            style={{ color: C.textSecondary }}
+            style={{ color: THEME.textLight }}
             aria-live="polite"
           >
             {prompt.text}
@@ -1338,7 +1289,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           {/* Micro-check question */}
           {showMicroButtons && micro !== undefined && (
             <>
-              <p className="text-sm font-medium mb-2" style={{ color: C.textPrimary }}>
+              <p className="text-sm font-medium mb-2" style={{ color: TEXT }}>
                 {micro.question}
               </p>
               <div className="flex gap-3 mb-4">
@@ -1351,8 +1302,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                       backgroundColor: opt.label === "GCF"
                         ? "rgba(251,191,36,0.1)"
                         : "rgba(129,140,248,0.1)",
-                      color: opt.label === "GCF" ? C.gcfAccent : C.numberA,
-                      border: `1px solid ${opt.label === "GCF" ? C.gcfAccent : C.numberA}`,
+                      color: opt.label === "GCF" ? AMBER : PRIMARY,
+                      border: `1px solid ${opt.label === "GCF" ? AMBER : PRIMARY}`,
                     }}
                     aria-label={`I think ${opt.label} is bigger`}
                   >
@@ -1368,7 +1319,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             <motion.p
               className="text-sm mb-4 px-3 py-2 rounded-lg"
               style={{
-                color: microFeedback.correct ? C.valid : C.textMuted,
+                color: microFeedback.correct ? SUCCESS : TEXT_SEC,
                 backgroundColor: microFeedback.correct
                   ? "rgba(52,211,153,0.1)"
                   : "rgba(148,163,184,0.1)",
@@ -1386,7 +1337,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               <button
                 onClick={handleNext}
                 className="min-h-[44px] min-w-[44px] rounded-xl px-6 py-3 text-sm font-semibold text-white active:scale-95"
-                style={{ backgroundColor: C.numberA }}
+                style={{ backgroundColor: PRIMARY }}
               >
                 {promptIdx + 1 >= DISCOVERY_PROMPTS.length ? "Continue" : "Next"}
               </button>
@@ -1472,12 +1423,12 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 
   const accentColor =
     card.highlight === "GCF"
-      ? C.gcfAccent
+      ? AMBER
       : card.highlight === "LCM"
-        ? C.numberA
+        ? PRIMARY
         : card.highlight === "identity"
-          ? C.gcfAccent
-          : C.textPrimary;
+          ? AMBER
+          : TEXT;
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4">
@@ -1486,17 +1437,17 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
           key={card.id}
           className="w-full max-w-lg rounded-2xl p-5"
           style={{
-            backgroundColor: C.surface,
+            backgroundColor: SURFACE,
             border: card.highlight === "identity"
-              ? `2px solid ${C.gcfAccent}`
-              : `1px solid ${C.border}`,
+              ? `2px solid ${AMBER}`
+              : `1px solid ${SURFACE_ELEVATED}`,
           }}
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -40 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
         >
-          <p className="text-xs mb-1" style={{ color: C.textDim }}>
+          <p className="text-xs mb-1" style={{ color: MUTED }}>
             {cardIdx + 1} of {SYMBOL_CARDS.length}
           </p>
 
@@ -1512,7 +1463,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
               key={`${card.id}-line-${i}`}
               className="text-sm leading-relaxed mb-2 font-mono"
               style={{
-                color: line.includes("\u2713") ? C.valid : C.textSecondary,
+                color: line.includes("\u2713") ? SUCCESS : THEME.textLight,
                 paddingLeft: line.startsWith("  ") ? 16 : 0,
               }}
               initial={{ opacity: 0, y: 8 }}
@@ -1529,7 +1480,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleNext}
               className="min-h-[44px] min-w-[44px] rounded-xl px-6 py-3 text-sm font-semibold text-white active:scale-95"
-              style={{ backgroundColor: C.numberA }}
+              style={{ backgroundColor: PRIMARY }}
             >
               {cardIdx + 1 >= SYMBOL_CARDS.length ? "Continue" : "Next"}
             </button>
@@ -1556,19 +1507,19 @@ const RW_CARDS: RealWorldCard[] = [
     id: "fractions",
     title: "Simplifying Fractions with GCF",
     body: "You baked 24 cookies and ate 16. What fraction did you eat? 16/24 seems messy \u2014 but GCF(16, 24) = 8. Divide both by 8: 16/24 = 2/3. You ate two-thirds of the cookies!",
-    accentColor: C.gcfAccent,
+    accentColor: AMBER,
   },
   {
     id: "scheduling",
     title: "When Do Schedules Sync?",
     body: "Your favorite streamer goes live every 3 days. Your friend\u2019s favorite goes live every 5 days. Both went live today. When will they BOTH be live on the same day again? LCM(3, 5) = 15. In 15 days!",
-    accentColor: C.numberA,
+    accentColor: PRIMARY,
   },
   {
     id: "party-bags",
     title: "Party Favor Bags",
     body: "You have 18 candies and 12 stickers to put into identical party bags with no leftovers. What\u2019s the MOST bags you can make? GCF(18, 12) = 6 bags! Each gets 3 candies and 2 stickers.",
-    accentColor: C.valid,
+    accentColor: SUCCESS,
   },
 ];
 
@@ -1593,28 +1544,28 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           key={card.id}
           className="w-full max-w-lg rounded-2xl p-5"
           style={{
-            backgroundColor: C.surface,
-            border: `1px solid ${C.border}`,
+            backgroundColor: SURFACE,
+            border: `1px solid ${SURFACE_ELEVATED}`,
             borderLeft: `4px solid ${card.accentColor}`,
           }}
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
           role="article"
         >
-          <p className="text-xs mb-1" style={{ color: C.textDim }}>
+          <p className="text-xs mb-1" style={{ color: MUTED }}>
             {cardIdx + 1} of {RW_CARDS.length}
           </p>
           <h3
             className="text-lg font-bold mb-3"
-            style={{ color: C.textPrimary }}
+            style={{ color: TEXT }}
           >
             {card.title}
           </h3>
           <p
             className="text-sm leading-relaxed mb-4"
-            style={{ color: C.textSecondary }}
+            style={{ color: THEME.textLight }}
           >
             {card.body}
           </p>
@@ -1623,7 +1574,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleNext}
               className="min-h-[44px] min-w-[44px] rounded-xl px-6 py-3 text-sm font-semibold text-white active:scale-95"
-              style={{ backgroundColor: C.numberA }}
+              style={{ backgroundColor: PRIMARY }}
             >
               {cardIdx + 1 >= RW_CARDS.length ? "Continue" : "Next"}
             </button>
@@ -1879,13 +1830,13 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           key={problem.id}
           className="relative w-full max-w-lg rounded-2xl p-5"
           style={{
-            backgroundColor: C.surfaceDeep,
-            border: `1px solid ${C.surface}`,
+            backgroundColor: BG,
+            border: `1px solid ${SURFACE}`,
           }}
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -40 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
         >
           {showXp && <XpFloat amount={10} />}
 
@@ -1894,18 +1845,18 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <div
               className="h-2.5 w-2.5 rounded-full"
               style={{
-                backgroundColor: LAYER_COLORS[problem.layer] ?? C.blue,
+                backgroundColor: LAYER_COLORS[problem.layer] ?? INFO,
               }}
               aria-hidden="true"
             />
-            <span className="text-xs" style={{ color: C.textDim }}>
+            <span className="text-xs" style={{ color: MUTED }}>
               {problemIdx + 1} of {PROBLEMS.length}
             </span>
           </div>
 
           <p
             className="mb-5 text-base font-medium leading-relaxed"
-            style={{ color: C.textPrimary }}
+            style={{ color: TEXT }}
           >
             {problem.prompt}
           </p>
@@ -1926,9 +1877,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
                         )}
                         style={{
-                          backgroundColor: sel ? C.surface : "transparent",
-                          border: `2px solid ${sel ? C.numberA : C.border}`,
-                          color: sel ? C.numberA : C.textSecondary,
+                          backgroundColor: sel ? SURFACE : "transparent",
+                          border: `2px solid ${sel ? PRIMARY : SURFACE_ELEVATED}`,
+                          color: sel ? PRIMARY : THEME.textLight,
                         }}
                         role="radio"
                         aria-checked={sel}
@@ -1952,16 +1903,16 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                     }
                     className="w-20 rounded-lg px-3 py-3 text-center text-2xl font-bold outline-none"
                     style={{
-                      backgroundColor: C.surfaceDeep,
-                      border: `2px solid ${C.border}`,
-                      color: C.textPrimary,
+                      backgroundColor: BG,
+                      border: `2px solid ${SURFACE_ELEVATED}`,
+                      color: TEXT,
                     }}
                     aria-label="Enter a number"
                     onFocus={(e) => {
-                      e.currentTarget.style.borderColor = C.numberA;
+                      e.currentTarget.style.borderColor = PRIMARY;
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.borderColor = SURFACE_ELEVATED;
                     }}
                   />
                 </div>
@@ -1974,7 +1925,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   "w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px] transition-all duration-150 active:scale-95",
                   !canSubmit && "opacity-40 cursor-not-allowed",
                 )}
-                style={{ backgroundColor: C.numberA }}
+                style={{ backgroundColor: PRIMARY }}
                 aria-disabled={!canSubmit}
               >
                 Check Answer
@@ -1994,8 +1945,8 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   backgroundColor: isCorrect
                     ? "rgba(52,211,153,0.15)"
                     : "rgba(148,163,184,0.15)",
-                  color: isCorrect ? C.valid : C.textMuted,
-                  border: `1px solid ${isCorrect ? C.valid : C.textMuted}`,
+                  color: isCorrect ? SUCCESS : TEXT_SEC,
+                  border: `1px solid ${isCorrect ? SUCCESS : TEXT_SEC}`,
                 }}
               >
                 {isCorrect
@@ -2004,14 +1955,14 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               </div>
               <p
                 className="mb-5 text-sm leading-relaxed"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textLight }}
               >
                 {getFeedbackText()}
               </p>
               <button
                 onClick={handleNext}
                 className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px] active:scale-95"
-                style={{ backgroundColor: C.numberA }}
+                style={{ backgroundColor: PRIMARY }}
               >
                 {problemIdx + 1 >= PROBLEMS.length
                   ? "Continue"
@@ -2047,14 +1998,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           className="w-full max-w-lg text-center"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={GENTLE_SPRING}
+          transition={SPRING}
         >
           {submitted && (
             <div
               className="mb-6 rounded-2xl p-5"
               style={{
-                backgroundColor: C.surface,
-                border: `1px solid ${C.border}`,
+                backgroundColor: SURFACE,
+                border: `1px solid ${SURFACE_ELEVATED}`,
               }}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -2066,21 +2017,21 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                     width={16}
                     height={16}
                     viewBox="0 0 24 24"
-                    fill={C.gcfAccent}
+                    fill={AMBER}
                   >
                     <path d="M12 2a7 7 0 00-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 00-7-7zM9 21a1 1 0 001 1h4a1 1 0 001-1v-1H9v1z" />
                   </svg>
                 </div>
                 <span
                   className="text-sm font-semibold"
-                  style={{ color: C.gcfAccent }}
+                  style={{ color: AMBER }}
                 >
                   Great reflection!
                 </span>
               </div>
               <p
                 className="text-sm leading-relaxed"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textLight }}
               >
                 Thanks for sharing your thinking! Explaining GCF and LCM in
                 your own words helps solidify the connection between the Venn
@@ -2088,11 +2039,12 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               </p>
             </div>
           )}
-          <CTAButton
-            label="Complete Lesson"
+          <ContinueButton
             onClick={onComplete}
-            ariaLabel="Complete the GCF and LCM lesson"
-          />
+            color={PRIMARY}
+          >
+            Complete Lesson
+          </ContinueButton>
         </motion.div>
       </div>
     );
@@ -2115,7 +2067,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#a78bfa"
+            stroke={VIOLET}
             strokeWidth={2}
           >
             <path d="M12 20h9" />
@@ -2125,7 +2077,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 
         <h2
           className="mb-2 text-lg font-bold"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
         >
           {"Reflect & Explain"}
         </h2>
@@ -2133,14 +2085,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         <div
           className="mb-6 rounded-2xl p-4"
           style={{
-            backgroundColor: C.surface,
-            border: `1px solid ${C.border}`,
-            borderLeft: `4px solid ${C.gcfAccent}`,
+            backgroundColor: SURFACE,
+            border: `1px solid ${SURFACE_ELEVATED}`,
+            borderLeft: `4px solid ${AMBER}`,
           }}
         >
           <p
             className="text-sm leading-relaxed"
-            style={{ color: C.textSecondary }}
+            style={{ color: THEME.textLight }}
           >
             {REFL_PROMPT}
           </p>
@@ -2155,9 +2107,9 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           rows={5}
           className="w-full resize-none rounded-xl px-4 py-3 outline-none"
           style={{
-            backgroundColor: C.surfaceDeep,
-            border: `1px solid ${C.border}`,
-            color: C.textPrimary,
+            backgroundColor: BG,
+            border: `1px solid ${SURFACE_ELEVATED}`,
+            color: TEXT,
             fontSize: 16,
             minHeight: 120,
             maxHeight: 300,
@@ -2168,27 +2120,28 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         <div className="mt-2 flex justify-between">
           <span
             className="text-xs"
-            style={{ color: ok ? C.valid : C.textDim }}
+            style={{ color: ok ? SUCCESS : MUTED }}
           >
             {text.trim().length}/{REFL_MIN} min characters
           </span>
-          <span className="text-xs" style={{ color: C.textDim }}>
+          <span className="text-xs" style={{ color: MUTED }}>
             {text.length}/{REFL_MAX}
           </span>
         </div>
       </motion.div>
 
       <div className="flex flex-col items-center gap-2 pb-8">
-        <CTAButton
-          label="Share My Thinking"
+        <ContinueButton
           onClick={() => setSubmitted(true)}
           disabled={!ok}
-          ariaLabel="Submit your reflection"
-        />
+          color={PRIMARY}
+        >
+          Share My Thinking
+        </ContinueButton>
         <button
           onClick={() => setSkipped(true)}
           className="text-xs min-h-[44px] px-4"
-          style={{ color: C.textDimmer }}
+          style={{ color: colors.bg.elevated }}
           aria-label="Skip reflection"
         >
           Skip
@@ -2203,79 +2156,28 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export function GcfLcmLesson({ onComplete }: GcfLcmLessonProps) {
-  const [si, setSi] = useState(0);
-  const stage = STAGE_ORDER[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    setSi((prev) => {
-      if (prev + 1 >= STAGE_ORDER.length) {
-        onComplete?.();
-        return prev;
-      }
-      return prev + 1;
-    });
-  }, [onComplete]);
-
-  const finish = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
-  function renderStage() {
-    switch (stage) {
-      case "hook":
-        return <HookStage onComplete={advance} />;
-      case "spatial":
-        return <SpatialStage onComplete={advance} />;
-      case "discovery":
-        return <DiscoveryStage onComplete={advance} />;
-      case "symbol":
-        return <SymbolBridgeStage onComplete={advance} />;
-      case "realWorld":
-        return <RealWorldStage onComplete={advance} />;
-      case "practice":
-        return <PracticeStage onComplete={advance} />;
-      case "reflection":
-        return <ReflectionStage onComplete={finish} />;
-      default:
-        return null;
-    }
-  }
-
   return (
-    <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
-      {/* Stage progress indicator */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 bg-nm-bg-primary/95 px-4 py-3 backdrop-blur-sm">
-        {STAGE_ORDER.map((s, i) => (
-          <div
-            key={s}
-            className="flex-1 h-1.5 rounded-full transition-colors duration-300"
-            style={{
-              backgroundColor: i <= si ? C.numberA : C.border,
-              opacity: i <= si ? 1 : 0.3,
-            }}
-            role="progressbar"
-            aria-valuenow={i <= si ? 100 : 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Stage ${i + 1}: ${s}`}
-          />
-        ))}
-      </div>
-
-      <main className="flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={stage}
-            className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          >
-            {renderStage()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
+    <LessonShell title="NT-2.3 GCF & LCM" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":
+            return <HookStage onComplete={advance} />;
+          case "spatial":
+            return <SpatialStage onComplete={advance} />;
+          case "discovery":
+            return <DiscoveryStage onComplete={advance} />;
+          case "symbol":
+            return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":
+            return <RealWorldStage onComplete={advance} />;
+          case "practice":
+            return <PracticeStage onComplete={advance} />;
+          case "reflection":
+            return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:
+            return null;
+        }
+      }}
+    </LessonShell>
   );
 }

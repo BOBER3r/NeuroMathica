@@ -1,43 +1,44 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const COLORS = {
-  face: "#60a5fa",
-  faceFill: "#60a5fa33",
-  net: "#34d399",
-  netFill: "#34d39933",
-  cylinder: "#f59e0b",
-  cylinderFill: "#f59e0b33",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  bgElevated: "#334155",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  success: "#34d399",
-  error: "#f87171",
-  primary: "#8b5cf6",
+/* ── Lesson-specific semantic colors (geometry domain) ── */
+const THEME = {
+  face: colors.functional.info,
+  faceFill: colors.functional.info + "33",
+  net: colors.accent.emerald,
+  netFill: colors.accent.emerald + "33",
+  cylinder: colors.accent.amber,
+  cylinderFill: colors.accent.amber + "33",
 } as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
-const PI = Math.PI;
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const SURFACE = colors.bg.secondary;
+const ELEVATED = colors.bg.surface;
+const PRIMARY = colors.accent.violet;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+
+const SPRING = springs.default;
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
 
 interface PracticeProblem {
   id: number;
@@ -96,41 +97,12 @@ const PRACTICE_PROBLEMS: PracticeProblem[] = [
     feedback: "Wrapping covers the outside \u2014 that's surface area!" },
 ];
 
-// ---------------------------------------------------------------------------
-// Shared micro-components
-// ---------------------------------------------------------------------------
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: {
-  onClick: () => void; label?: string; delay?: number;
-}) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut", delay }}
-      className="w-full flex justify-center pt-4 pb-8">
-      <Button size="lg" onClick={onClick} className="min-w-[160px]"
-        style={{ backgroundColor: COLORS.primary }}>{label}</Button>
-    </motion.div>
-  );
-}
-
-function InteractionDots({ count, total }: { count: number; total: number }) {
-  return (
-    <div className="flex items-center gap-1 justify-center">
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} className="rounded-full transition-colors duration-200"
-          style={{ width: 6, height: 6,
-            backgroundColor: i < count ? COLORS.primary : COLORS.bgElevated }} />
-      ))}
-    </div>
-  );
-}
-
 // ===========================================================================
 // STAGE 1: HOOK
 // ===========================================================================
 
-function HookStage({ onComplete }: { onComplete: () => void }) {
-  return <VideoHook src="/videos/GE4_7aHook.webm" onComplete={onComplete} />;
+function HookStage({ onContinue }: { onContinue: () => void }) {
+  return <VideoHook src="/videos/GE4_7aHook.webm" onComplete={onContinue} />;
 
   const [phase, setPhase] = useState(0);
 
@@ -150,22 +122,22 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   const svgH = 240;
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-md" aria-label="Unfolding a box into a net">
         {/* Closed box */}
         {phase < 2 && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <rect x={110} y={70} width={100} height={80}
-              fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={2} rx={2} />
+              fill={THEME.faceFill} stroke={THEME.face} strokeWidth={2} rx={2} />
             {/* 3D edges */}
-            <line x1={110} y1={70} x2={130} y2={50} stroke={COLORS.face} strokeWidth={1.5} />
-            <line x1={210} y1={70} x2={230} y2={50} stroke={COLORS.face} strokeWidth={1.5} />
-            <line x1={130} y1={50} x2={230} y2={50} stroke={COLORS.face} strokeWidth={1.5} />
-            <line x1={210} y1={70} x2={210} y2={150} stroke={COLORS.face} strokeWidth={2} />
-            <line x1={230} y1={50} x2={230} y2={130} stroke={COLORS.face} strokeWidth={1.5} />
-            <line x1={210} y1={150} x2={230} y2={130} stroke={COLORS.face} strokeWidth={1.5} />
-            <text x={160} y={185} textAnchor={"middle" as const} fill={COLORS.textPrimary} fontSize={14} fontWeight={600}>
+            <line x1={110} y1={70} x2={130} y2={50} stroke={THEME.face} strokeWidth={1.5} />
+            <line x1={210} y1={70} x2={230} y2={50} stroke={THEME.face} strokeWidth={1.5} />
+            <line x1={130} y1={50} x2={230} y2={50} stroke={THEME.face} strokeWidth={1.5} />
+            <line x1={210} y1={70} x2={210} y2={150} stroke={THEME.face} strokeWidth={2} />
+            <line x1={230} y1={50} x2={230} y2={130} stroke={THEME.face} strokeWidth={1.5} />
+            <line x1={210} y1={150} x2={230} y2={130} stroke={THEME.face} strokeWidth={1.5} />
+            <text x={160} y={185} textAnchor={"middle" as const} fill={TEXT} fontSize={14} fontWeight={600}>
               A gift box
             </text>
           </motion.g>
@@ -175,18 +147,18 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 2 && (
           <motion.g initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING}>
             {/* Cross-shaped net */}
-            <rect x={120} y={10} width={80} height={50} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={1.5} />
-            <rect x={40} y={60} width={80} height={50} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={1.5} />
-            <rect x={120} y={60} width={80} height={50} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={1.5} />
-            <rect x={200} y={60} width={80} height={50} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={1.5} />
-            <rect x={120} y={110} width={80} height={50} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={1.5} />
-            <rect x={120} y={160} width={80} height={50} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={1.5} />
+            <rect x={120} y={10} width={80} height={50} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={1.5} />
+            <rect x={40} y={60} width={80} height={50} fill={THEME.netFill} stroke={THEME.net} strokeWidth={1.5} />
+            <rect x={120} y={60} width={80} height={50} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={1.5} />
+            <rect x={200} y={60} width={80} height={50} fill={THEME.netFill} stroke={THEME.net} strokeWidth={1.5} />
+            <rect x={120} y={110} width={80} height={50} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={1.5} />
+            <rect x={120} y={160} width={80} height={50} fill={THEME.netFill} stroke={THEME.net} strokeWidth={1.5} />
           </motion.g>
         )}
 
         {phase >= 3 && (
           <motion.text x={svgW / 2} y={230} textAnchor={"middle" as const}
-            fill={COLORS.textSecondary} fontSize={13} fontWeight={600}
+            fill={TEXT_SEC} fontSize={13} fontWeight={600}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             Unfold it {"\u2192"} measure each face {"\u2192"} add them up
           </motion.text>
@@ -197,13 +169,13 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 4 && (
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="text-center mt-4 font-medium"
-            style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             How much wrapping paper do you need?
           </motion.p>
         )}
       </AnimatePresence>
 
-      {phase >= 5 && <ContinueButton onClick={onComplete} delay={0.3} />}
+      {phase >= 5 && <ContinueButton onClick={onContinue} delay={0.3} />}
     </section>
   );
 }
@@ -212,7 +184,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 2: SPATIAL
 // ===========================================================================
 
-function SpatialStage({ onComplete }: { onComplete: () => void }) {
+function SpatialStage({ onContinue }: { onContinue: () => void }) {
   const [length, setLength] = useState(4);
   const [width, setWidth] = useState(3);
   const [height, setHeight] = useState(5);
@@ -228,10 +200,10 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const interact = useCallback(() => { setInteractions((i) => i + 1); }, []);
 
   return (
-    <section className="flex flex-1 flex-col items-center px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center px-4 pt-4 bg-nm-bg-primary"
+      aria-live="polite">
       <p className="text-center mb-2 font-medium"
-        style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+        style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
         Adjust dimensions and highlight each face pair
       </p>
 
@@ -241,8 +213,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           <button key={f} onClick={() => { setHighlighted(f); interact(); }}
             className="rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] min-w-[44px]"
             style={{
-              backgroundColor: highlighted === f ? COLORS.face : COLORS.bgSurface,
-              color: COLORS.textPrimary,
+              backgroundColor: highlighted === f ? THEME.face : SURFACE,
+              color: TEXT,
             }}>
             {f === "top" ? `Top/Bottom (${topArea})` : f === "front" ? `Front/Back (${frontArea})` : `Left/Right (${sideArea})`}
           </button>
@@ -252,35 +224,35 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <svg viewBox="0 0 280 180" className="w-full max-w-xs" aria-label="Interactive rectangular prism net">
         {/* Simplified net */}
         <rect x={90} y={5} width={length * 16} height={width * 16}
-          fill={highlighted === "top" ? COLORS.faceFill : "transparent"}
-          stroke={highlighted === "top" ? COLORS.face : COLORS.textMuted} strokeWidth={highlighted === "top" ? 2.5 : 1} />
+          fill={highlighted === "top" ? THEME.faceFill : "transparent"}
+          stroke={highlighted === "top" ? THEME.face : MUTED} strokeWidth={highlighted === "top" ? 2.5 : 1} />
         <rect x={10} y={5 + width * 16} width={width * 16} height={height * 16}
-          fill={highlighted === "side" ? COLORS.netFill : "transparent"}
-          stroke={highlighted === "side" ? COLORS.net : COLORS.textMuted} strokeWidth={highlighted === "side" ? 2.5 : 1} />
+          fill={highlighted === "side" ? THEME.netFill : "transparent"}
+          stroke={highlighted === "side" ? THEME.net : MUTED} strokeWidth={highlighted === "side" ? 2.5 : 1} />
         <rect x={90} y={5 + width * 16} width={length * 16} height={height * 16}
-          fill={highlighted === "front" ? COLORS.cylinderFill : "transparent"}
-          stroke={highlighted === "front" ? COLORS.cylinder : COLORS.textMuted} strokeWidth={highlighted === "front" ? 2.5 : 1} />
+          fill={highlighted === "front" ? THEME.cylinderFill : "transparent"}
+          stroke={highlighted === "front" ? THEME.cylinder : MUTED} strokeWidth={highlighted === "front" ? 2.5 : 1} />
         <rect x={90} y={5 + width * 16 + height * 16} width={length * 16} height={width * 16}
-          fill={highlighted === "top" ? COLORS.faceFill : "transparent"}
-          stroke={highlighted === "top" ? COLORS.face : COLORS.textMuted} strokeWidth={highlighted === "top" ? 2.5 : 1} />
+          fill={highlighted === "top" ? THEME.faceFill : "transparent"}
+          stroke={highlighted === "top" ? THEME.face : MUTED} strokeWidth={highlighted === "top" ? 2.5 : 1} />
       </svg>
 
       {/* Dimension controls */}
       <div className="w-full max-w-xs space-y-2 mb-2">
         {([["Length", length, setLength] as const, ["Width", width, setWidth] as const, ["Height", height, setHeight] as const]).map(([label, val, setter]) => (
           <div key={label} className="flex items-center gap-3">
-            <span className="text-xs w-14" style={{ color: COLORS.textMuted }}>{label}</span>
+            <span className="text-xs w-14" style={{ color: MUTED }}>{label}</span>
             <button onClick={() => { if (val > 1) { setter(val - 1); interact(); } }}
               className="rounded-full flex items-center justify-center min-h-[44px] min-w-[44px] font-bold"
-              style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary }}>
+              style={{ backgroundColor: SURFACE, color: TEXT }}>
               {"\u2212"}
             </button>
-            <span className="font-mono font-bold tabular-nums flex-1 text-center" style={{ color: COLORS.textPrimary }}>
+            <span className="font-mono font-bold tabular-nums flex-1 text-center" style={{ color: TEXT }}>
               {val}
             </span>
             <button onClick={() => { if (val < 8) { setter(val + 1); interact(); } }}
               className="rounded-full flex items-center justify-center min-h-[44px] min-w-[44px] font-bold"
-              style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary }}>
+              style={{ backgroundColor: SURFACE, color: TEXT }}>
               +
             </button>
           </div>
@@ -288,16 +260,16 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Calculation */}
-      <div className="rounded-xl p-3 w-full max-w-xs" style={{ backgroundColor: COLORS.bgSurface }}>
-        <p className="font-mono text-sm text-center" style={{ color: COLORS.textPrimary }}>
-          SA = 2({topArea} + {frontArea} + {sideArea}) = <span className="font-bold" style={{ color: COLORS.primary }}>{sa}</span>
+      <div className="rounded-xl p-3 w-full max-w-xs" style={{ backgroundColor: SURFACE }}>
+        <p className="font-mono text-sm text-center" style={{ color: TEXT }}>
+          SA = 2({topArea} + {frontArea} + {sideArea}) = <span className="font-bold" style={{ color: PRIMARY }}>{sa}</span>
         </p>
       </div>
 
       <div className="mt-3">
-        <InteractionDots count={Math.min(interactions, 8)} total={8} />
+        <InteractionDots count={Math.min(interactions, 8)} total={8} activeColor={PRIMARY} />
       </div>
-      {canContinue && <ContinueButton onClick={onComplete} />}
+      {canContinue && <ContinueButton onClick={onContinue} />}
     </section>
   );
 }
@@ -306,7 +278,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 3: DISCOVERY
 // ===========================================================================
 
-function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
+function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   const [step, setStep] = useState(0);
 
   const prompts = useMemo(() => [
@@ -318,36 +290,36 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   const current = prompts[step];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <svg viewBox="0 0 260 130" className="w-full max-w-[260px] mb-6">
         {step === 0 && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Three face pairs */}
-            <rect x={10} y={10} width={60} height={40} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={2} />
-            <rect x={10} y={60} width={60} height={40} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={2} />
-            <text x={40} y={115} textAnchor={"middle" as const} fill={COLORS.face} fontSize={10}>top/bottom</text>
-            <rect x={90} y={10} width={40} height={60} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={2} />
-            <rect x={90} y={75} width={40} height={25} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={2} />
-            <text x={110} y={115} textAnchor={"middle" as const} fill={COLORS.net} fontSize={10}>front/back</text>
-            <rect x={150} y={10} width={40} height={60} fill={COLORS.cylinderFill} stroke={COLORS.cylinder} strokeWidth={2} />
-            <rect x={150} y={75} width={40} height={25} fill={COLORS.cylinderFill} stroke={COLORS.cylinder} strokeWidth={2} />
-            <text x={170} y={115} textAnchor={"middle" as const} fill={COLORS.cylinder} fontSize={10}>left/right</text>
+            <rect x={10} y={10} width={60} height={40} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={2} />
+            <rect x={10} y={60} width={60} height={40} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={2} />
+            <text x={40} y={115} textAnchor={"middle" as const} fill={THEME.face} fontSize={10}>top/bottom</text>
+            <rect x={90} y={10} width={40} height={60} fill={THEME.netFill} stroke={THEME.net} strokeWidth={2} />
+            <rect x={90} y={75} width={40} height={25} fill={THEME.netFill} stroke={THEME.net} strokeWidth={2} />
+            <text x={110} y={115} textAnchor={"middle" as const} fill={THEME.net} fontSize={10}>front/back</text>
+            <rect x={150} y={10} width={40} height={60} fill={THEME.cylinderFill} stroke={THEME.cylinder} strokeWidth={2} />
+            <rect x={150} y={75} width={40} height={25} fill={THEME.cylinderFill} stroke={THEME.cylinder} strokeWidth={2} />
+            <text x={170} y={115} textAnchor={"middle" as const} fill={THEME.cylinder} fontSize={10}>left/right</text>
           </motion.g>
         )}
         {step === 1 && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <circle cx={40} cy={30} r={20} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={2} />
-            <circle cx={40} cy={100} r={20} fill={COLORS.faceFill} stroke={COLORS.face} strokeWidth={2} />
-            <rect x={80} y={15} width={160} height={50} fill={COLORS.netFill} stroke={COLORS.net} strokeWidth={2} />
-            <text x={160} y={90} textAnchor={"middle" as const} fill={COLORS.net} fontSize={11}>
+            <circle cx={40} cy={30} r={20} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={2} />
+            <circle cx={40} cy={100} r={20} fill={THEME.faceFill} stroke={THEME.face} strokeWidth={2} />
+            <rect x={80} y={15} width={160} height={50} fill={THEME.netFill} stroke={THEME.net} strokeWidth={2} />
+            <text x={160} y={90} textAnchor={"middle" as const} fill={THEME.net} fontSize={11}>
               width = 2{"\u03C0"}r
             </text>
           </motion.g>
         )}
         {step === 2 && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <motion.text x={130} y={65} textAnchor={"middle" as const} fill={COLORS.primary}
+            <motion.text x={130} y={65} textAnchor={"middle" as const} fill={PRIMARY}
               fontSize={20} fontWeight={700}
               initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING}>
               square units (cm{"\u00B2"}, m{"\u00B2"}, ...)
@@ -360,14 +332,15 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={SPRING} className="max-w-md text-center px-4">
           <p className="font-medium mb-4"
-            style={{ color: COLORS.textPrimary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             {current.text}
           </p>
-          <Button size="lg"
-            onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onComplete(); }}
-            className="min-w-[140px]" style={{ backgroundColor: COLORS.primary }}>
+          <button
+            onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onContinue(); }}
+            className="min-h-[48px] min-w-[140px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+            style={{ backgroundColor: PRIMARY }}>
             {current.btn}
-          </Button>
+          </button>
         </motion.div>
       )}
     </section>
@@ -378,7 +351,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 4: SYMBOL BRIDGE
 // ===========================================================================
 
-function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
+function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   const [revealed, setRevealed] = useState(0);
 
   useEffect(() => {
@@ -390,16 +363,16 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const notations = [
-    { formula: "SA = 2(lw + lh + wh)", desc: "Rectangular prism: 3 pairs of rectangular faces", color: COLORS.face },
-    { formula: "SA = 2\u03C0r\u00B2 + 2\u03C0rh", desc: "Cylinder: two circles + one rectangle", color: COLORS.net },
-    { formula: "SA = 6s\u00B2", desc: "Cube: six identical square faces", color: COLORS.cylinder },
+    { formula: "SA = 2(lw + lh + wh)", desc: "Rectangular prism: 3 pairs of rectangular faces", color: THEME.face },
+    { formula: "SA = 2\u03C0r\u00B2 + 2\u03C0rh", desc: "Cylinder: two circles + one rectangle", color: THEME.net },
+    { formula: "SA = 6s\u00B2", desc: "Cube: six identical square faces", color: THEME.cylinder },
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <h2 className="text-center font-bold mb-8"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Surface Area Formulas
       </h2>
       <div className="space-y-4 w-full max-w-md">
@@ -408,15 +381,15 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             {revealed > i && (
               <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING}
                 className="rounded-xl p-4"
-                style={{ backgroundColor: COLORS.bgSurface, borderLeft: `4px solid ${n.color}` }}>
+                style={{ backgroundColor: SURFACE, borderLeft: `4px solid ${n.color}` }}>
                 <p className="font-bold font-mono text-lg" style={{ color: n.color }}>{n.formula}</p>
-                <p className="text-sm mt-1" style={{ color: COLORS.textMuted }}>{n.desc}</p>
+                <p className="text-sm mt-1" style={{ color: MUTED }}>{n.desc}</p>
               </motion.div>
             )}
           </AnimatePresence>
         ))}
       </div>
-      {revealed >= 3 && <ContinueButton onClick={onComplete} delay={0.5} />}
+      {revealed >= 3 && <ContinueButton onClick={onContinue} delay={0.5} />}
     </section>
   );
 }
@@ -425,7 +398,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 5: REAL WORLD
 // ===========================================================================
 
-function RealWorldStage({ onComplete }: { onComplete: () => void }) {
+function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   const scenarios = [
     { icon: "\u{1F381}", title: "Gift Wrapping", desc: "How much paper to wrap a box? Surface area tells you.", math: "SA = 2(lw + lh + wh)" },
     { icon: "\u{1F3E0}", title: "Painting a Room", desc: "The wall area determines how much paint you need.", math: "Sum of wall areas" },
@@ -433,10 +406,10 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <h2 className="text-center font-bold mb-6"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Real World Connections
       </h2>
       <div className="space-y-4 w-full max-w-md">
@@ -444,17 +417,17 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, ...SPRING }}
             className="rounded-xl p-4 flex gap-3 items-start"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            style={{ backgroundColor: SURFACE }}>
             <span className="text-2xl" role="img" aria-hidden="true">{s.icon}</span>
             <div>
-              <p className="font-semibold" style={{ color: COLORS.textPrimary }}>{s.title}</p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{s.desc}</p>
-              <p className="text-xs font-mono mt-1" style={{ color: COLORS.primary }}>{s.math}</p>
+              <p className="font-semibold" style={{ color: TEXT }}>{s.title}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{s.desc}</p>
+              <p className="text-xs font-mono mt-1" style={{ color: PRIMARY }}>{s.math}</p>
             </div>
           </motion.div>
         ))}
       </div>
-      <ContinueButton onClick={onComplete} delay={0.3} />
+      <ContinueButton onClick={onContinue} delay={0.3} />
     </section>
   );
 }
@@ -463,7 +436,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 6: PRACTICE
 // ===========================================================================
 
-function PracticeStage({ onComplete }: { onComplete: () => void }) {
+function PracticeStage({ onContinue }: { onContinue: () => void }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
@@ -482,48 +455,48 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   }, [userAnswer, currentQ, problem.correctAnswer]);
 
   const handleNext = useCallback(() => {
-    if (isLast) { onComplete(); return; }
+    if (isLast) { onContinue(); return; }
     setCurrentQ((q) => q + 1); setSelected(null); setInputValue(""); setSubmitted(false);
-  }, [isLast, onComplete]);
+  }, [isLast, onContinue]);
 
   return (
-    <section className="flex flex-1 flex-col px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col px-4 pt-4 bg-nm-bg-primary"
+      aria-live="polite">
       <div className="flex items-center gap-1.5 justify-center mb-4">
         {PRACTICE_PROBLEMS.map((_, i) => {
           const r = results[i];
-          let bg: string = COLORS.bgElevated;
-          if (r === true) bg = COLORS.success;
-          else if (r === false) bg = COLORS.error;
+          let bg: string = ELEVATED;
+          if (r === true) bg = SUCCESS;
+          else if (r === false) bg = ERROR;
           return <div key={i} className="rounded-full transition-colors duration-200"
             style={{ width: 10, height: 10, backgroundColor: bg,
-              border: i === currentQ ? `2px solid ${COLORS.primary}` : "none" }} />;
+              border: i === currentQ ? `2px solid ${PRIMARY}` : "none" }} />;
         })}
       </div>
 
       <motion.div key={currentQ} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
         transition={SPRING} className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: COLORS.textMuted }}>
+        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: MUTED }}>
           {problem.layer} {"\u2022"} {currentQ + 1}/{PRACTICE_PROBLEMS.length}
         </p>
         <p className="text-center font-medium mb-6"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
+          style={{ color: TEXT, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
           {problem.prompt}
         </p>
 
         {problem.type === "multiple-choice" && problem.options && (
           <div className="space-y-2 w-full">
             {problem.options.map((opt) => {
-              let bg: string = COLORS.bgSurface; let border: string = COLORS.bgElevated;
+              let bg: string = SURFACE; let border: string = ELEVATED;
               if (submitted) {
-                if (opt === problem.correctAnswer) { bg = "#34d39933"; border = COLORS.success; }
-                else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = COLORS.error; }
-              } else if (opt === selected) { bg = "#8b5cf633"; border = COLORS.primary; }
+                if (opt === problem.correctAnswer) { bg = SUCCESS + "33"; border = SUCCESS; }
+                else if (opt === selected && opt !== problem.correctAnswer) { bg = ERROR + "33"; border = ERROR; }
+              } else if (opt === selected) { bg = PRIMARY + "33"; border = PRIMARY; }
               return (
                 <button key={opt} onClick={() => { if (!submitted) setSelected(opt); }}
                   disabled={submitted}
                   className="w-full text-left rounded-xl px-4 py-3 transition-colors min-h-[44px]"
-                  style={{ backgroundColor: bg, border: `2px solid ${border}`, color: COLORS.textPrimary }}>
+                  style={{ backgroundColor: bg, border: `2px solid ${border}`, color: TEXT }}>
                   {opt}
                 </button>
               );
@@ -536,8 +509,8 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             onChange={(e) => { if (!submitted) setInputValue(e.target.value); }}
             disabled={submitted} placeholder="Enter your answer"
             className="w-full rounded-xl px-4 py-3 text-center text-lg font-mono min-h-[44px]"
-            style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary,
-              border: `2px solid ${submitted ? (isCorrect ? COLORS.success : COLORS.error) : COLORS.bgElevated}`,
+            style={{ backgroundColor: SURFACE, color: TEXT,
+              border: `2px solid ${submitted ? (isCorrect ? SUCCESS : ERROR) : ELEVATED}`,
               outline: "none" }} />
         )}
 
@@ -545,26 +518,29 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           {submitted && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}
               className="mt-4 rounded-xl p-4 w-full"
-              style={{ backgroundColor: isCorrect ? "#34d39920" : "#f8717120",
-                border: `1px solid ${isCorrect ? COLORS.success : COLORS.error}` }}>
-              <p className="font-bold mb-1" style={{ color: isCorrect ? COLORS.success : COLORS.error }}>
+              style={{ backgroundColor: isCorrect ? SUCCESS + "20" : ERROR + "20",
+                border: `1px solid ${isCorrect ? SUCCESS : ERROR}` }}>
+              <p className="font-bold mb-1" style={{ color: isCorrect ? SUCCESS : ERROR }}>
                 {isCorrect ? "Correct!" : "Not quite"}
               </p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{problem.feedback}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{problem.feedback}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
         <div className="w-full mt-4 pb-8">
           {!submitted ? (
-            <Button size="lg" onClick={handleSubmit} disabled={!userAnswer} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: userAnswer ? 1 : 0.4 }}>
+            <button onClick={handleSubmit} disabled={!userAnswer}
+              className="w-full min-h-[48px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:brightness-95 transition-[filter] duration-150 disabled:opacity-40 disabled:pointer-events-none"
+              style={{ backgroundColor: PRIMARY }}>
               Check Answer
-            </Button>
+            </button>
           ) : (
-            <Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <button onClick={handleNext}
+              className="w-full min-h-[48px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+              style={{ backgroundColor: PRIMARY }}>
               {isLast ? "Continue" : "Next \u2192"}
-            </Button>
+            </button>
           )}
         </div>
       </motion.div>
@@ -585,14 +561,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const handleSkip = useCallback(() => { setSubmitted(true); }, []);
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={SPRING} className="w-full max-w-md">
         <h2 className="text-center font-bold mb-2"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
+          style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
         <p className="text-center mb-6"
-          style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+          style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
           How is surface area different from volume? When would you use each in real life?
         </p>
 
@@ -601,20 +577,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <textarea value={text} onChange={(e) => setText(e.target.value)}
               placeholder="Type your explanation here..." rows={4}
               className="w-full rounded-xl px-4 py-3 resize-none min-h-[120px]"
-              style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary,
-                border: `2px solid ${COLORS.bgElevated}`, outline: "none" }} />
+              style={{ backgroundColor: SURFACE, color: TEXT,
+                border: `2px solid ${ELEVATED}`, outline: "none" }} />
             <p className="text-xs mt-1 text-right"
-              style={{ color: text.trim().length >= 20 ? COLORS.success : COLORS.textMuted }}>
+              style={{ color: text.trim().length >= 20 ? SUCCESS : MUTED }}>
               {text.trim().length}/20 characters minimum
             </p>
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             transition={SPRING} className="rounded-xl p-6 text-center"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            style={{ backgroundColor: SURFACE }}>
             <p className="text-2xl mb-2" role="img" aria-label="Star">{"\u2B50"}</p>
-            <p className="font-bold" style={{ color: COLORS.success }}>Great thinking!</p>
-            <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+            <p className="font-bold" style={{ color: SUCCESS }}>Great thinking!</p>
+            <p className="text-sm mt-1" style={{ color: TEXT_SEC }}>
               Reflecting on concepts deepens your understanding.
             </p>
           </motion.div>
@@ -624,20 +600,23 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
       <div className="w-full max-w-md mx-auto pb-8 pt-4 space-y-2">
         {!submitted ? (
           <>
-            <Button size="lg" onClick={handleSubmit} disabled={!canSubmit} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: canSubmit ? 1 : 0.4 }}>
+            <button onClick={handleSubmit} disabled={!canSubmit}
+              className="w-full min-h-[48px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:brightness-95 transition-[filter] duration-150 disabled:opacity-40 disabled:pointer-events-none"
+              style={{ backgroundColor: PRIMARY }}>
               Submit Reflection
-            </Button>
+            </button>
             <button onClick={handleSkip} className="w-full text-center py-2 min-h-[44px]"
-              style={{ color: "#64748b", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
+              style={{ color: MUTED, fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
               Skip
             </button>
           </>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-            <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <button onClick={onComplete}
+              className="w-full min-h-[48px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+              style={{ backgroundColor: PRIMARY }}>
               Complete Lesson
-            </Button>
+            </button>
           </motion.div>
         )}
       </div>
@@ -650,44 +629,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ===========================================================================
 
 export function SurfaceAreaLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const stage = STAGES[stageIdx] ?? ("hook" as Stage);
-
-  const advanceStage = useCallback(() => {
-    setStageIdx((i) => {
-      const next = i + 1;
-      if (next >= STAGES.length) { onComplete?.(); return i; }
-      return next;
-    });
-  }, [onComplete]);
-
-  const handleReflectionComplete = useCallback(() => { onComplete?.(); }, [onComplete]);
-  const stageProgress = ((stageIdx + 1) / STAGES.length) * 100;
-
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: COLORS.bgPrimary }}>
-      <div className="sticky top-0 z-10 backdrop-blur-sm px-4 py-2"
-        style={{ backgroundColor: `${COLORS.bgPrimary}e6`, borderBottom: `1px solid ${COLORS.bgSurface}` }}>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium" style={{ color: COLORS.textMuted }}>GE-4.7a Surface Area</span>
-          <span className="text-xs tabular-nums" style={{ color: "#475569" }}>{stageIdx + 1}/{STAGES.length}</span>
-        </div>
-        <ProgressBar value={stageProgress} variant="xp" size="sm" />
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }} transition={SPRING_GENTLE}>
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={handleReflectionComplete} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.7a Surface Area" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

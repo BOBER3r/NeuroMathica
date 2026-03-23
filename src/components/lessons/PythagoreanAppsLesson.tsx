@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /**
  * GE-4.3a Pythagorean Applications — Grade 8
@@ -23,90 +29,33 @@ import { VideoHook } from "@/components/lessons/VideoHook";
 
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.secondary;
+const BORDER = colors.bg.elevated;
+const PRIMARY = colors.accent.indigo;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-const COLOR_A = "#60a5fa"; // horizontal
-const COLOR_B = "#a78bfa"; // vertical
-const COLOR_C = "#f472b6"; // diagonal
+/* ── Lesson-specific semantic colors ── */
+const THEME = {
+  colorA: colors.domain.numbers,    // "#60a5fa" — horizontal
+  colorB: colors.accent.violet,     // "#a78bfa" — vertical
+  colorC: "#f472b6",                // diagonal (lesson-specific pink)
+} as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
+const SPRING = springs.default;
 
 /* ------------------------------------------------------------------ */
 /*  Shared sub-components                                              */
 /* ------------------------------------------------------------------ */
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="h-2 w-2 rounded-full transition-all duration-300"
-          style={{
-            background: i <= current ? PRIMARY : BORDER,
-            transform: i === current ? "scale(1.4)" : "scale(1)",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  delay = 0,
-}: {
-  onClick: () => void;
-  label?: string;
-  delay?: number;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]"
-      style={{ background: PRIMARY, minHeight: 48 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 function StageWrapper({ children }: { children: ReactNode }) {
   return (
@@ -115,8 +64,7 @@ function StageWrapper({ children }: { children: ReactNode }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex min-h-dvh flex-col items-center justify-center px-4 py-12"
-      style={{ background: BG }}
+      className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12"
     >
       {children}
     </motion.div>
@@ -181,7 +129,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             <motion.polyline
               points={`${startX},${startY} ${endX},${startY} ${endX},${endY}`}
               fill="none"
-              stroke={COLOR_A}
+              stroke={THEME.colorA}
               strokeWidth={3}
               strokeDasharray="8 4"
               initial={{ pathLength: 0 }}
@@ -195,7 +143,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={200}
               y={305}
               textAnchor={"middle" as const}
-              fill={COLOR_A}
+              fill={THEME.colorA}
               fontSize={14}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -211,7 +159,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               y1={startY}
               x2={endX}
               y2={endY}
-              stroke={COLOR_C}
+              stroke={THEME.colorC}
               strokeWidth={3}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -224,7 +172,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={170}
               y={175}
               textAnchor={"middle" as const}
-              fill={COLOR_C}
+              fill={THEME.colorC}
               fontSize={14}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -332,38 +280,40 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             )),
           )}
 
-          <line x1={toSvgX(pointA.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointA.y)} stroke={COLOR_A} strokeWidth={2} strokeDasharray="6 3" />
-          <line x1={toSvgX(pointB.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointB.y)} stroke={COLOR_B} strokeWidth={2} strokeDasharray="6 3" />
-          <line x1={toSvgX(pointA.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointB.y)} stroke={COLOR_C} strokeWidth={2.5} />
+          <line x1={toSvgX(pointA.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointA.y)} stroke={THEME.colorA} strokeWidth={2} strokeDasharray="6 3" />
+          <line x1={toSvgX(pointB.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointB.y)} stroke={THEME.colorB} strokeWidth={2} strokeDasharray="6 3" />
+          <line x1={toSvgX(pointA.x)} y1={toSvgY(pointA.y)} x2={toSvgX(pointB.x)} y2={toSvgY(pointB.y)} stroke={THEME.colorC} strokeWidth={2.5} />
 
-          <circle cx={toSvgX(pointA.x)} cy={toSvgY(pointA.y)} r={7} fill={COLOR_A} />
-          <circle cx={toSvgX(pointB.x)} cy={toSvgY(pointB.y)} r={7} fill={COLOR_C} />
-          <text x={toSvgX(pointA.x)} y={toSvgY(pointA.y) - 12} textAnchor={"middle" as const} fill={COLOR_A} fontSize={12} fontWeight="bold">
+          <circle cx={toSvgX(pointA.x)} cy={toSvgY(pointA.y)} r={7} fill={THEME.colorA} />
+          <circle cx={toSvgX(pointB.x)} cy={toSvgY(pointB.y)} r={7} fill={THEME.colorC} />
+          <text x={toSvgX(pointA.x)} y={toSvgY(pointA.y) - 12} textAnchor={"middle" as const} fill={THEME.colorA} fontSize={12} fontWeight="bold">
             {`A(${pointA.x},${pointA.y})`}
           </text>
-          <text x={toSvgX(pointB.x)} y={toSvgY(pointB.y) - 12} textAnchor={"middle" as const} fill={COLOR_C} fontSize={12} fontWeight="bold">
+          <text x={toSvgX(pointB.x)} y={toSvgY(pointB.y) - 12} textAnchor={"middle" as const} fill={THEME.colorC} fontSize={12} fontWeight="bold">
             {`B(${pointB.x},${pointB.y})`}
           </text>
 
-          <text x={(toSvgX(pointA.x) + toSvgX(pointB.x)) / 2} y={toSvgY(pointA.y) + 18} textAnchor={"middle" as const} fill={COLOR_A} fontSize={13} fontWeight="bold">
+          <text x={(toSvgX(pointA.x) + toSvgX(pointB.x)) / 2} y={toSvgY(pointA.y) + 18} textAnchor={"middle" as const} fill={THEME.colorA} fontSize={13} fontWeight="bold">
             {`|${dx}|`}
           </text>
-          <text x={toSvgX(pointB.x) + 18} y={(toSvgY(pointA.y) + toSvgY(pointB.y)) / 2 + 4} textAnchor={"middle" as const} fill={COLOR_B} fontSize={13} fontWeight="bold">
+          <text x={toSvgX(pointB.x) + 18} y={(toSvgY(pointA.y) + toSvgY(pointB.y)) / 2 + 4} textAnchor={"middle" as const} fill={THEME.colorB} fontSize={13} fontWeight="bold">
             {`|${dy}|`}
           </text>
         </svg>
 
         <div className="rounded-xl px-6 py-3 text-center" style={{ background: SURFACE }}>
           <p className="font-mono text-sm font-bold" style={{ color: TEXT }}>
-            <span style={{ color: COLOR_A }}>{`${Math.abs(dx)}\u00B2`}</span>
+            <span style={{ color: THEME.colorA }}>{`${Math.abs(dx)}\u00B2`}</span>
             {" + "}
-            <span style={{ color: COLOR_B }}>{`${Math.abs(dy)}\u00B2`}</span>
+            <span style={{ color: THEME.colorB }}>{`${Math.abs(dy)}\u00B2`}</span>
             {" = "}
             <span style={{ color: MUTED }}>{dx * dx + dy * dy}</span>
             {" "}{"\u2192"}{" "}
-            <span style={{ color: COLOR_C }}>{"d = "}{dist.toFixed(2)}</span>
+            <span style={{ color: THEME.colorC }}>{"d = "}{dist.toFixed(2)}</span>
           </p>
         </div>
+
+        <InteractionDots count={interactions} total={4} activeColor={PRIMARY} />
 
         {canContinue && <ContinueButton onClick={onContinue} />}
       </div>
@@ -396,11 +346,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   return (
     <StageWrapper>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <div className="flex gap-2">
-          {prompts.map((_, i) => (
-            <div key={i} className="h-2 w-8 rounded-full" style={{ background: i <= promptIdx ? PRIMARY : BORDER }} />
-          ))}
-        </div>
+        <InteractionDots count={promptIdx + 1} total={prompts.length} activeColor={PRIMARY} />
         <AnimatePresence mode="wait">
           <motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl p-6 text-center" style={{ background: SURFACE }}>
             <p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: TEXT }}>{current.text}</p>
@@ -414,25 +360,25 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               <line x1={30} y1={20 + i * 27} x2={270} y2={20 + i * 27} stroke={BORDER} strokeWidth={0.3} />
             </g>
           ))}
-          <line x1={110} y1={153} x2={230} y2={153} stroke={COLOR_A} strokeWidth={2} strokeDasharray="5 3" />
-          <line x1={230} y1={153} x2={230} y2={72} stroke={COLOR_B} strokeWidth={2} strokeDasharray="5 3" />
-          <line x1={110} y1={153} x2={230} y2={72} stroke={COLOR_C} strokeWidth={2.5} />
-          <circle cx={110} cy={153} r={5} fill={COLOR_A} />
-          <circle cx={230} cy={72} r={5} fill={COLOR_C} />
-          <text x={110} y={170} textAnchor={"middle" as const} fill={COLOR_A} fontSize={12} fontWeight="bold">A(2,1)</text>
-          <text x={230} y={64} textAnchor={"middle" as const} fill={COLOR_C} fontSize={12} fontWeight="bold">B(5,4)</text>
+          <line x1={110} y1={153} x2={230} y2={153} stroke={THEME.colorA} strokeWidth={2} strokeDasharray="5 3" />
+          <line x1={230} y1={153} x2={230} y2={72} stroke={THEME.colorB} strokeWidth={2} strokeDasharray="5 3" />
+          <line x1={110} y1={153} x2={230} y2={72} stroke={THEME.colorC} strokeWidth={2.5} />
+          <circle cx={110} cy={153} r={5} fill={THEME.colorA} />
+          <circle cx={230} cy={72} r={5} fill={THEME.colorC} />
+          <text x={110} y={170} textAnchor={"middle" as const} fill={THEME.colorA} fontSize={12} fontWeight="bold">A(2,1)</text>
+          <text x={230} y={64} textAnchor={"middle" as const} fill={THEME.colorC} fontSize={12} fontWeight="bold">B(5,4)</text>
           {promptIdx >= 1 && (
-            <motion.text x={170} y={172} textAnchor={"middle" as const} fill={COLOR_A} fontSize={11} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.text x={170} y={172} textAnchor={"middle" as const} fill={THEME.colorA} fontSize={11} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {"\u0394x = 3"}
             </motion.text>
           )}
           {promptIdx >= 1 && (
-            <motion.text x={252} y={117} textAnchor={"middle" as const} fill={COLOR_B} fontSize={11} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.text x={252} y={117} textAnchor={"middle" as const} fill={THEME.colorB} fontSize={11} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {"\u0394y = 3"}
             </motion.text>
           )}
           {promptIdx >= 2 && (
-            <motion.text x={150} y={105} textAnchor={"middle" as const} fill={COLOR_C} fontSize={11} fontWeight="bold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.text x={150} y={105} textAnchor={"middle" as const} fill={THEME.colorC} fontSize={11} fontWeight="bold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               {"d \u2248 4.24"}
             </motion.text>
           )}
@@ -465,7 +411,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   const formulas = [
     { text: "Distance between two points:", color: MUTED },
     { text: "d = \u221A((x\u2082 \u2212 x\u2081)\u00B2 + (y\u2082 \u2212 y\u2081)\u00B2)", color: PRIMARY },
-    { text: "Is it a right triangle? Check: a\u00B2 + b\u00B2 = c\u00B2", color: COLOR_C },
+    { text: "Is it a right triangle? Check: a\u00B2 + b\u00B2 = c\u00B2", color: THEME.colorC },
   ];
 
   return (
@@ -676,28 +622,20 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
 /* ================================================================== */
 
 export function PythagoreanAppsLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGES[stageIdx + 1];
-    if (next) { setStage(next); } else { onComplete?.(); }
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.3a Pythagorean Applications" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onContinue={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

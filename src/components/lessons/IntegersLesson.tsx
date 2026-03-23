@@ -1,11 +1,15 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { CompareToggle } from "@/components/lessons/ui/CompareToggle";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
   type ReactNode,
@@ -17,23 +21,24 @@ import { useDrag } from "@use-gesture/react";
    CONSTANTS & HELPERS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Lesson-specific semantic colors (aliases to shared tokens) ── */
 const COLOR = {
-  positive: "#34d399",
-  negative: "#60a5fa",
-  zero: "#fbbf24",
+  positive: colors.accent.emerald,
+  negative: colors.functional.info,
+  zero: colors.accent.amber,
   incorrect: "#ef4444",
-  accent: "#8b5cf6",
-  highlight: "#f472b6",
-  bgPrimary: "#0f172a",
-  bgCard: "#1e293b",
-  textPrimary: "#f1f5f9",
-  textSecondary: "#94a3b8",
-  textMuted: "#475569",
+  accent: colors.accent.violet,
+  highlight: colors.accent.rose,
+  bgPrimary: colors.bg.primary,
+  bgCard: colors.bg.secondary,
+  textPrimary: colors.text.primary,
+  textSecondary: colors.text.secondary,
+  textMuted: colors.bg.elevated,
 } as const;
 
-const SPRING_DEFAULT = { damping: 20, stiffness: 300 };
-const SPRING_BOUNCY = { damping: 15, stiffness: 300 };
-const SPRING_STIFF = { damping: 25, stiffness: 400 };
+const SPRING_DEFAULT = springs.default;
+const SPRING_BOUNCY = springs.pop;
+const SPRING_STIFF = springs.stiff;
 
 function integerColor(n: number): string {
   if (n < 0) return COLOR.negative;
@@ -45,8 +50,6 @@ function integerColor(n: number): string {
    LESSON STATE
    ═══════════════════════════════════════════════════════════════════════════ */
 
-type Stage = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
 interface ProblemResult {
   problemId: string;
   correct: boolean;
@@ -54,29 +57,6 @@ interface ProblemResult {
   hintsUsed: number;
   answer: string;
 }
-
-interface LessonState {
-  currentStage: Stage;
-  lessonComplete: boolean;
-}
-
-type Action =
-  | { type: "SET_STAGE"; stage: Stage }
-  | { type: "LESSON_COMPLETE" };
-
-function reducer(state: LessonState, action: Action): LessonState {
-  switch (action.type) {
-    case "SET_STAGE":
-      return { ...state, currentStage: action.stage };
-    case "LESSON_COMPLETE":
-      return { ...state, lessonComplete: true };
-  }
-}
-
-const initialState: LessonState = {
-  currentStage: 1,
-  lessonComplete: false,
-};
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SHARED UI COMPONENTS
@@ -106,7 +86,7 @@ function PillButton({
         cursor: disabled ? "not-allowed" : "pointer",
       }}
       whileTap={disabled ? undefined : { scale: 0.95 }}
-      transition={{ type: "spring", ...SPRING_STIFF }}
+      transition={SPRING_STIFF}
     >
       {children}
     </motion.button>
@@ -286,7 +266,7 @@ function NumberLineSVG({
             fill={h.color}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", ...SPRING_BOUNCY }}
+            transition={SPRING_BOUNCY}
           />
           {h.label && (
             <text
@@ -314,7 +294,7 @@ function NumberLineSVG({
           strokeWidth={2}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", ...SPRING_DEFAULT }}
+          transition={SPRING_DEFAULT}
         />
       )}
     </svg>
@@ -474,7 +454,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             y: 420 - mercuryHeight,
             fill: mercuryColor,
           }}
-          transition={{ type: "spring", ...SPRING_DEFAULT }}
+          transition={SPRING_DEFAULT}
         />
 
         {/* ── Bulb ── */}
@@ -568,7 +548,6 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 scale: {
                   duration: 0.5,
                   delay: i * 0.15,
-                  type: "spring",
                   ...SPRING_BOUNCY,
                 },
                 rotate: {
@@ -605,7 +584,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ type: "spring", ...SPRING_BOUNCY }}
+            transition={SPRING_BOUNCY}
           >
             What happens next?
           </motion.h2>
@@ -619,7 +598,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             className="absolute bottom-12 z-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", ...SPRING_BOUNCY }}
+            transition={SPRING_BOUNCY}
           >
             <PillButton onClick={onComplete} color="rgba(255,255,255,0.18)">
               <span style={{ color: "white" }}>Continue</span>
@@ -817,25 +796,16 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       {/* Compare toggle */}
-      <motion.button
-        className="absolute top-4 left-4 z-20 rounded-xl px-4 text-sm font-medium select-none"
-        style={{
-          minHeight: 44,
-          backgroundColor: compareMode
-            ? COLOR.accent
-            : "rgba(255,255,255,0.1)",
-          color: compareMode ? "white" : COLOR.textSecondary,
-          border: `1px solid ${compareMode ? COLOR.accent : "rgba(255,255,255,0.2)"}`,
-        }}
-        onClick={() => {
+      <CompareToggle
+        active={compareMode}
+        onToggle={() => {
           setCompareMode((m) => !m);
           setCompareFirst(null);
           setComparison(null);
         }}
-        whileTap={{ scale: 0.95 }}
-      >
-        {compareMode ? "Comparing..." : "Compare"}
-      </motion.button>
+        accentColor={COLOR.accent}
+        className="mb-1 z-10"
+      />
 
       {/* Compare instruction */}
       {compareMode && !comparison && (
@@ -1025,7 +995,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                     animate={
                       isHL || isCMP ? { scale: 1.3 } : { scale: 1 }
                     }
-                    transition={{ type: "spring", ...SPRING_BOUNCY }}
+                    transition={SPRING_BOUNCY}
                   >
                     {v}
                   </motion.text>
@@ -1041,7 +1011,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                     strokeWidth={2}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: "spring", ...SPRING_DEFAULT }}
+                    transition={SPRING_DEFAULT}
                   />
                 )}
               </g>
@@ -1208,7 +1178,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               }}
               stroke="white"
               strokeWidth={2.5}
-              transition={{ type: "spring", ...SPRING_DEFAULT }}
+              transition={SPRING_DEFAULT}
               style={{ pointerEvents: "none" }}
             />
           </g>
@@ -1256,7 +1226,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             animate={{
               width: `${Math.min((interactionCount / 10) * 100, 100)}%`,
             }}
-            transition={{ type: "spring", ...SPRING_DEFAULT }}
+            transition={SPRING_DEFAULT}
           />
         </div>
       </div>
@@ -1268,7 +1238,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             className="mt-6 z-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", ...SPRING_BOUNCY }}
+            transition={SPRING_BOUNCY}
           >
             <PillButton onClick={onComplete}>Continue</PillButton>
           </motion.div>
@@ -1617,7 +1587,6 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{
-                  type: "spring",
                   ...SPRING_BOUNCY,
                   delay: 0.3,
                 }}
@@ -1714,7 +1683,6 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{
                   delay: 0.3,
-                  type: "spring",
                   ...SPRING_BOUNCY,
                 }}
               >
@@ -2048,7 +2016,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             className="mt-6 z-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", ...SPRING_BOUNCY }}
+            transition={SPRING_BOUNCY}
           >
             <PillButton onClick={onComplete}>Continue</PillButton>
           </motion.div>
@@ -2516,7 +2484,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
     return (
       <StageContainer>
-        <motion.div className="z-10 text-center px-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", ...SPRING_BOUNCY }}>
+        <motion.div className="z-10 text-center px-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING_BOUNCY}>
           <h2 className="text-2xl font-bold mb-2" style={{ color: COLOR.textPrimary }}>Practice Complete!</h2>
           <div className="text-3xl mb-4" style={{ color: COLOR.zero }}>
             {Array.from({ length: 3 }, (_, i) => <span key={i} style={{ opacity: i < stars ? 1 : 0.2 }}>★</span>)}
@@ -2555,10 +2523,10 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           <p className="text-xs" style={{ color: COLOR.textMuted }}>{prob.layer}</p>
         </div>
         <div className="rounded-full overflow-hidden mb-6" style={{ height: 3, backgroundColor: `${COLOR.textPrimary}15` }}>
-          <motion.div className="h-full rounded-full" style={{ backgroundColor: COLOR.positive }} animate={{ width: `${((cur + 1) / 9) * 100}%` }} transition={{ type: "spring", ...SPRING_DEFAULT }} />
+          <motion.div className="h-full rounded-full" style={{ backgroundColor: COLOR.positive }} animate={{ width: `${((cur + 1) / 9) * 100}%` }} transition={SPRING_DEFAULT} />
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={cur} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ type: "spring", ...SPRING_DEFAULT }}>
+          <motion.div key={cur} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={SPRING_DEFAULT}>
             <Comp onCorrect={() => recordAndAdvance(true)} onIncorrect={() => recordAndAdvance(false)} />
           </motion.div>
         </AnimatePresence>
@@ -2599,13 +2567,13 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   if (showCompletion) {
     return (
       <StageContainer>
-        <motion.div className="z-10 text-center px-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", ...SPRING_BOUNCY }}>
+        <motion.div className="z-10 text-center px-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING_BOUNCY}>
           <h2 className="text-2xl font-bold mb-4" style={{ color: COLOR.textPrimary }}>Lesson Complete!</h2>
           <p className="text-lg mb-2" style={{ color: COLOR.textSecondary }}>NO-1.2: Integers</p>
           <div className="my-6">
             <NumberLineSVG min={-5} max={5} highlights={Array.from({ length: 11 }, (_, i) => ({ value: i - 5, color: integerColor(i - 5) }))} width={320} height={80} />
           </div>
-          <motion.p className="text-2xl font-bold mb-6" style={{ color: COLOR.positive }} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, type: "spring", ...SPRING_BOUNCY }}>+{score >= 4 ? 64 : score >= 3 ? 48 : 32} XP</motion.p>
+          <motion.p className="text-2xl font-bold mb-6" style={{ color: COLOR.positive }} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, ...SPRING_BOUNCY }}>+{score >= 4 ? 64 : score >= 3 ? 48 : 32} XP</motion.p>
           <p className="text-sm mb-8" style={{ color: COLOR.textSecondary }}>{"What's next: "}<strong style={{ color: COLOR.textPrimary }}>NO-1.2a: Integer Addition & Subtraction</strong></p>
           <PillButton onClick={onComplete} color={COLOR.accent}>Return to Map</PillButton>
         </motion.div>
@@ -2653,50 +2621,20 @@ interface IntegersLessonProps {
 }
 
 export function IntegersLesson({ onComplete }: IntegersLessonProps) {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  const advanceStage = useCallback((next: Stage) => {
-    dispatch({ type: "SET_STAGE", stage: next });
-  }, []);
-
-  const handleLessonComplete = useCallback(() => {
-    dispatch({ type: "LESSON_COMPLETE" });
-    onComplete?.();
-  }, [onComplete]);
-
   return (
-    <div className="relative min-h-screen" style={{ backgroundColor: COLOR.bgPrimary }}>
-      {/* Stage progress */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 pb-1" style={{ backgroundColor: `${COLOR.bgPrimary}e0`, backdropFilter: "blur(8px)" }}>
-        <div className="flex items-center gap-1.5 max-w-lg mx-auto">
-          {([1, 2, 3, 4, 5, 6, 7] as const).map((s) => (
-            <div key={s} className="flex-1 rounded-full overflow-hidden" style={{ height: 3, backgroundColor: `${COLOR.textPrimary}15` }}>
-              <motion.div className="h-full rounded-full" style={{ backgroundColor: s < state.currentStage ? COLOR.positive : s === state.currentStage ? COLOR.zero : "transparent" }} animate={{ width: s < state.currentStage ? "100%" : s === state.currentStage ? "50%" : "0%" }} transition={{ type: "spring", ...SPRING_DEFAULT }} />
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-xs mt-1" style={{ color: COLOR.textMuted }}>
-          {state.currentStage === 1 && "Hook"}
-          {state.currentStage === 2 && "Explore"}
-          {state.currentStage === 3 && "Discover"}
-          {state.currentStage === 4 && "Symbols"}
-          {state.currentStage === 5 && "Real World"}
-          {state.currentStage === 6 && "Practice"}
-          {state.currentStage === 7 && "Reflect"}
-        </p>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div key={state.currentStage} initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -60 }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="pt-12">
-          {state.currentStage === 1 && <HookStage onComplete={() => advanceStage(2)} />}
-          {state.currentStage === 2 && <SpatialStage onComplete={() => advanceStage(3)} />}
-          {state.currentStage === 3 && <DiscoveryStage onComplete={() => advanceStage(4)} />}
-          {state.currentStage === 4 && <SymbolBridgeStage onComplete={() => advanceStage(5)} />}
-          {state.currentStage === 5 && <RealWorldStage onComplete={() => advanceStage(6)} />}
-          {state.currentStage === 6 && <PracticeStage onComplete={() => advanceStage(7)} />}
-          {state.currentStage === 7 && <ReflectionStage onComplete={handleLessonComplete} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-1.3 Integers" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

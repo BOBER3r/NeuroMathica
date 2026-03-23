@@ -1,43 +1,46 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const COLORS = {
-  box: "#34d399",
+/* ── Lesson-specific semantic colors ── */
+const THEME = {
+  box: colors.accent.emerald,
   boxFill: "#34d39933",
   median: "#f59e0b",
-  whisker: "#94a3b8",
-  dots: "#818cf8",
+  whisker: colors.text.secondary,
+  dots: colors.accent.indigo,
   dotsFill: "#818cf880",
-  quartile: "#60a5fa",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  bgElevated: "#334155",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  success: "#34d399",
-  error: "#f87171",
-  primary: "#8b5cf6",
+  quartile: colors.functional.info,
 } as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const SURFACE = colors.bg.secondary;
+const ELEVATED = colors.bg.surface;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+const PRIMARY = colors.accent.violet;
+
+const SPRING = springs.default;
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
 
 interface FiveNumberSummary {
   min: number;
@@ -161,35 +164,6 @@ function valueToX(value: number, minVal: number, maxVal: number, lineLeft: numbe
 }
 
 // ---------------------------------------------------------------------------
-// Shared micro-components
-// ---------------------------------------------------------------------------
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: {
-  onClick: () => void; label?: string; delay?: number;
-}) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut", delay }}
-      className="w-full flex justify-center pt-4 pb-8">
-      <Button size="lg" onClick={onClick} className="min-w-[160px]"
-        style={{ backgroundColor: COLORS.primary }}>{label}</Button>
-    </motion.div>
-  );
-}
-
-function InteractionDots({ count, total }: { count: number; total: number }) {
-  return (
-    <div className="flex items-center gap-1 justify-center">
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} className="rounded-full transition-colors duration-200"
-          style={{ width: 6, height: 6,
-            backgroundColor: i < count ? COLORS.primary : COLORS.bgElevated }} />
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Box plot SVG component
 // ---------------------------------------------------------------------------
 
@@ -222,11 +196,11 @@ function BoxPlotSVG({ data, rangeMin, rangeMax }: { data: number[]; rangeMin: nu
   return (
     <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-md" aria-label="Box plot">
       {/* Number line */}
-      <line x1={lineLeft} y1={lineY} x2={lineRight} y2={lineY} stroke={COLORS.whisker} strokeWidth={1} />
+      <line x1={lineLeft} y1={lineY} x2={lineRight} y2={lineY} stroke={THEME.whisker} strokeWidth={1} />
       {tickValues.map((v) => (
         <g key={v}>
-          <line x1={toX(v)} y1={lineY - 4} x2={toX(v)} y2={lineY + 4} stroke={COLORS.whisker} strokeWidth={1} />
-          <text x={toX(v)} y={lineY + 16} textAnchor={"middle" as const} fill={COLORS.textMuted} fontSize={9}>
+          <line x1={toX(v)} y1={lineY - 4} x2={toX(v)} y2={lineY + 4} stroke={THEME.whisker} strokeWidth={1} />
+          <text x={toX(v)} y={lineY + 16} textAnchor={"middle" as const} fill={MUTED} fontSize={9}>
             {v}
           </text>
         </g>
@@ -235,7 +209,7 @@ function BoxPlotSVG({ data, rangeMin, rangeMax }: { data: number[]; rangeMin: nu
       {/* Data dots */}
       {data.map((v, i) => (
         <motion.circle key={i} cx={toX(v)} cy={dotY} r={4}
-          fill={COLORS.dotsFill} stroke={COLORS.dots} strokeWidth={1}
+          fill={THEME.dotsFill} stroke={THEME.dots} strokeWidth={1}
           initial={{ opacity: 0, cy: dotY + 20 }}
           animate={{ opacity: 1, cy: dotY }}
           transition={{ delay: i * 0.05, ...SPRING }} />
@@ -243,25 +217,25 @@ function BoxPlotSVG({ data, rangeMin, rangeMax }: { data: number[]; rangeMin: nu
 
       {/* Whiskers */}
       <motion.line x1={toX(fns.min)} y1={(boxTop + boxBottom) / 2} x2={toX(fns.q1)} y2={(boxTop + boxBottom) / 2}
-        stroke={COLORS.whisker} strokeWidth={2}
+        stroke={THEME.whisker} strokeWidth={2}
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.5 }} />
       <motion.line x1={toX(fns.q3)} y1={(boxTop + boxBottom) / 2} x2={toX(fns.max)} y2={(boxTop + boxBottom) / 2}
-        stroke={COLORS.whisker} strokeWidth={2}
+        stroke={THEME.whisker} strokeWidth={2}
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.5 }} />
 
       {/* Whisker end caps */}
-      <line x1={toX(fns.min)} y1={boxTop + 10} x2={toX(fns.min)} y2={boxBottom - 10} stroke={COLORS.whisker} strokeWidth={2} />
-      <line x1={toX(fns.max)} y1={boxTop + 10} x2={toX(fns.max)} y2={boxBottom - 10} stroke={COLORS.whisker} strokeWidth={2} />
+      <line x1={toX(fns.min)} y1={boxTop + 10} x2={toX(fns.min)} y2={boxBottom - 10} stroke={THEME.whisker} strokeWidth={2} />
+      <line x1={toX(fns.max)} y1={boxTop + 10} x2={toX(fns.max)} y2={boxBottom - 10} stroke={THEME.whisker} strokeWidth={2} />
 
       {/* Box */}
       <motion.rect x={toX(fns.q1)} y={boxTop} width={toX(fns.q3) - toX(fns.q1)} height={boxH}
-        fill={COLORS.boxFill} stroke={COLORS.box} strokeWidth={2} rx={2}
+        fill={THEME.boxFill} stroke={THEME.box} strokeWidth={2} rx={2}
         initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }}
         transition={{ delay: 0.3, ...SPRING }} />
 
       {/* Median line */}
       <motion.line x1={toX(fns.median)} y1={boxTop} x2={toX(fns.median)} y2={boxBottom}
-        stroke={COLORS.median} strokeWidth={3}
+        stroke={THEME.median} strokeWidth={3}
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
         transition={{ duration: 0.4, delay: 0.8 }} />
     </svg>
@@ -272,8 +246,8 @@ function BoxPlotSVG({ data, rangeMin, rangeMax }: { data: number[]; rangeMin: nu
 // STAGE 1: HOOK
 // ===========================================================================
 
-function HookStage({ onComplete }: { onComplete: () => void }) {
-  return <VideoHook src="/videos/BoxPlotsHook.webm" onComplete={onComplete} />;
+function HookStage({ onContinue }: { onContinue: () => void }) {
+  return <VideoHook src="/videos/BoxPlotsHook.webm" onComplete={onContinue} />;
 
   const [phase, setPhase] = useState(0);
 
@@ -292,8 +266,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   const hookData = [55, 60, 62, 65, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 95, 98];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
 
       {phase >= 1 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md">
@@ -305,7 +278,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 3 && (
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="text-center mt-4 font-bold"
-            style={{ color: COLORS.primary, fontSize: "clamp(18px, 4.5vw, 28px)" }}>
+            style={{ color: PRIMARY, fontSize: "clamp(18px, 4.5vw, 28px)" }}>
             20 numbers. 5 landmarks. 1 picture.
           </motion.p>
         )}
@@ -315,13 +288,13 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 4 && (
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="text-center mt-2 font-medium"
-            style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             This is a box plot.
           </motion.p>
         )}
       </AnimatePresence>
 
-      {phase >= 5 && <ContinueButton onClick={onComplete} delay={0.3} />}
+      {phase >= 5 && <ContinueButton onClick={onContinue} delay={0.3} />}
     </section>
   );
 }
@@ -330,7 +303,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 2: SPATIAL
 // ===========================================================================
 
-function SpatialStage({ onComplete }: { onComplete: () => void }) {
+function SpatialStage({ onContinue }: { onContinue: () => void }) {
   const [datasetKey, setDatasetKey] = useState<string>("A");
   const [interactions, setInteractions] = useState(0);
   const canContinue = interactions >= 8;
@@ -341,10 +314,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const interact = useCallback(() => { setInteractions((i) => i + 1); }, []);
 
   return (
-    <section className="flex flex-1 flex-col items-center px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center px-4 pt-4 bg-nm-bg-primary" aria-live="polite">
       <p className="text-center mb-2 font-medium"
-        style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+        style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
         Switch datasets to see how the box plot changes
       </p>
 
@@ -354,8 +326,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           <button key={key} onClick={() => { setDatasetKey(key); interact(); }}
             className="rounded-lg px-4 py-1 font-medium transition-colors min-h-[44px] min-w-[44px]"
             style={{
-              backgroundColor: datasetKey === key ? COLORS.primary : COLORS.bgSurface,
-              color: COLORS.textPrimary,
+              backgroundColor: datasetKey === key ? PRIMARY : SURFACE,
+              color: TEXT,
             }}>
             Set {key}
           </button>
@@ -368,20 +340,20 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </motion.div>
 
       {/* Five number summary */}
-      <div className="rounded-xl p-3 w-full max-w-xs mt-2" style={{ backgroundColor: COLORS.bgSurface }}>
-        <p className="text-xs font-medium mb-2 text-center" style={{ color: COLORS.textMuted }}>
+      <div className="rounded-xl p-3 w-full max-w-xs mt-2 bg-nm-bg-secondary">
+        <p className="text-xs font-medium mb-2 text-center" style={{ color: MUTED }}>
           Five-Number Summary
         </p>
         <div className="grid grid-cols-5 gap-1 text-center text-xs">
           {[
-            { label: "Min", value: fns.min, color: COLORS.whisker },
-            { label: "Q1", value: fns.q1, color: COLORS.quartile },
-            { label: "Med", value: fns.median, color: COLORS.median },
-            { label: "Q3", value: fns.q3, color: COLORS.quartile },
-            { label: "Max", value: fns.max, color: COLORS.whisker },
+            { label: "Min", value: fns.min, color: THEME.whisker },
+            { label: "Q1", value: fns.q1, color: THEME.quartile },
+            { label: "Med", value: fns.median, color: THEME.median },
+            { label: "Q3", value: fns.q3, color: THEME.quartile },
+            { label: "Max", value: fns.max, color: THEME.whisker },
           ].map((item) => (
             <div key={item.label}>
-              <p style={{ color: COLORS.textMuted }}>{item.label}</p>
+              <p style={{ color: MUTED }}>{item.label}</p>
               <p className="font-mono font-bold tabular-nums" style={{ color: item.color }}>{item.value}</p>
             </div>
           ))}
@@ -391,7 +363,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <div className="mt-3">
         <InteractionDots count={Math.min(interactions, 8)} total={8} />
       </div>
-      {canContinue && <ContinueButton onClick={onComplete} />}
+      {canContinue && <ContinueButton onClick={onContinue} />}
     </section>
   );
 }
@@ -400,7 +372,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 3: DISCOVERY
 // ===========================================================================
 
-function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
+function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   const [step, setStep] = useState(0);
 
   const prompts = useMemo(() => [
@@ -412,8 +384,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   const current = prompts[step];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
 
       <div className="w-full max-w-md mb-6">
         <BoxPlotSVG data={DATASETS["A"]!} rangeMin={50} rangeMax={100} />
@@ -423,12 +394,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={SPRING} className="max-w-md text-center px-4">
           <p className="font-medium mb-4"
-            style={{ color: COLORS.textPrimary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             {current.text}
           </p>
           <Button size="lg"
-            onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onComplete(); }}
-            className="min-w-[140px]" style={{ backgroundColor: COLORS.primary }}>
+            onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onContinue(); }}
+            className="min-w-[140px]" style={{ backgroundColor: PRIMARY }}>
             {current.btn}
           </Button>
         </motion.div>
@@ -441,7 +412,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 4: SYMBOL BRIDGE
 // ===========================================================================
 
-function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
+function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   const [revealed, setRevealed] = useState(0);
 
   useEffect(() => {
@@ -456,19 +427,18 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const notations = [
-    { formula: "Min = smallest value", desc: "Left whisker tip", color: COLORS.whisker },
-    { formula: "Q1 = 25th percentile", desc: "Left edge of the box", color: COLORS.quartile },
-    { formula: "Median = 50th percentile", desc: "Line inside the box", color: COLORS.median },
-    { formula: "Q3 = 75th percentile", desc: "Right edge of the box", color: COLORS.quartile },
-    { formula: "Max = largest value", desc: "Right whisker tip", color: COLORS.whisker },
-    { formula: "IQR = Q3 \u2212 Q1", desc: "Width of the box", color: COLORS.box },
+    { formula: "Min = smallest value", desc: "Left whisker tip", color: THEME.whisker },
+    { formula: "Q1 = 25th percentile", desc: "Left edge of the box", color: THEME.quartile },
+    { formula: "Median = 50th percentile", desc: "Line inside the box", color: THEME.median },
+    { formula: "Q3 = 75th percentile", desc: "Right edge of the box", color: THEME.quartile },
+    { formula: "Max = largest value", desc: "Right whisker tip", color: THEME.whisker },
+    { formula: "IQR = Q3 \u2212 Q1", desc: "Width of the box", color: THEME.box },
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <h2 className="text-center font-bold mb-6"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Five-Number Summary
       </h2>
       <div className="space-y-4 w-full max-w-md">
@@ -476,16 +446,16 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
           <AnimatePresence key={i}>
             {revealed > i && (
               <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING}
-                className="rounded-xl p-3"
-                style={{ backgroundColor: COLORS.bgSurface, borderLeft: `4px solid ${n.color}` }}>
+                className="rounded-xl p-3 bg-nm-bg-secondary"
+                style={{ borderLeft: `4px solid ${n.color}` }}>
                 <p className="font-bold font-mono" style={{ color: n.color }}>{n.formula}</p>
-                <p className="text-xs mt-0.5" style={{ color: COLORS.textMuted }}>{n.desc}</p>
+                <p className="text-xs mt-0.5" style={{ color: MUTED }}>{n.desc}</p>
               </motion.div>
             )}
           </AnimatePresence>
         ))}
       </div>
-      {revealed >= 6 && <ContinueButton onClick={onComplete} delay={0.5} />}
+      {revealed >= 6 && <ContinueButton onClick={onContinue} delay={0.5} />}
     </section>
   );
 }
@@ -494,7 +464,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 5: REAL WORLD
 // ===========================================================================
 
-function RealWorldStage({ onComplete }: { onComplete: () => void }) {
+function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   const scenarios = [
     { icon: "\u{1F4CB}", title: "Test Scores", desc: "Compare two classes' test results with box plots.", math: "Side-by-side comparison" },
     { icon: "\u{1F321}\u{FE0F}", title: "Daily Temperatures", desc: "A month of temperatures at a glance.", math: "Spread and center" },
@@ -502,28 +472,26 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <h2 className="text-center font-bold mb-6"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Real World Connections
       </h2>
       <div className="space-y-4 w-full max-w-md">
         {scenarios.map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, ...SPRING }}
-            className="rounded-xl p-4 flex gap-3 items-start"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            className="rounded-xl p-4 flex gap-3 items-start bg-nm-bg-secondary">
             <span className="text-2xl" role="img" aria-hidden="true">{s.icon}</span>
             <div>
-              <p className="font-semibold" style={{ color: COLORS.textPrimary }}>{s.title}</p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{s.desc}</p>
-              <p className="text-xs font-mono mt-1" style={{ color: COLORS.primary }}>{s.math}</p>
+              <p className="font-semibold" style={{ color: TEXT }}>{s.title}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{s.desc}</p>
+              <p className="text-xs font-mono mt-1" style={{ color: PRIMARY }}>{s.math}</p>
             </div>
           </motion.div>
         ))}
       </div>
-      <ContinueButton onClick={onComplete} delay={0.3} />
+      <ContinueButton onClick={onContinue} delay={0.3} />
     </section>
   );
 }
@@ -532,7 +500,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 6: PRACTICE
 // ===========================================================================
 
-function PracticeStage({ onComplete }: { onComplete: () => void }) {
+function PracticeStage({ onContinue }: { onContinue: () => void }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
@@ -551,48 +519,47 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   }, [userAnswer, currentQ, problem.correctAnswer]);
 
   const handleNext = useCallback(() => {
-    if (isLast) { onComplete(); return; }
+    if (isLast) { onContinue(); return; }
     setCurrentQ((q) => q + 1); setSelected(null); setInputValue(""); setSubmitted(false);
-  }, [isLast, onComplete]);
+  }, [isLast, onContinue]);
 
   return (
-    <section className="flex flex-1 flex-col px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col px-4 pt-4 bg-nm-bg-primary" aria-live="polite">
       <div className="flex items-center gap-1.5 justify-center mb-4">
         {PRACTICE_PROBLEMS.map((_, i) => {
           const r = results[i];
-          let bg: string = COLORS.bgElevated;
-          if (r === true) bg = COLORS.success;
-          else if (r === false) bg = COLORS.error;
+          let bg: string = ELEVATED;
+          if (r === true) bg = SUCCESS;
+          else if (r === false) bg = ERROR;
           return <div key={i} className="rounded-full transition-colors duration-200"
             style={{ width: 10, height: 10, backgroundColor: bg,
-              border: i === currentQ ? `2px solid ${COLORS.primary}` : "none" }} />;
+              border: i === currentQ ? `2px solid ${PRIMARY}` : "none" }} />;
         })}
       </div>
 
       <motion.div key={currentQ} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
         transition={SPRING} className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: COLORS.textMuted }}>
+        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: MUTED }}>
           {problem.layer} {"\u2022"} {currentQ + 1}/{PRACTICE_PROBLEMS.length}
         </p>
         <p className="text-center font-medium mb-6"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
+          style={{ color: TEXT, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
           {problem.prompt}
         </p>
 
         {problem.type === "multiple-choice" && problem.options && (
           <div className="space-y-2 w-full">
             {problem.options.map((opt) => {
-              let bg: string = COLORS.bgSurface; let border: string = COLORS.bgElevated;
+              let bg: string = SURFACE; let border: string = ELEVATED;
               if (submitted) {
-                if (opt === problem.correctAnswer) { bg = "#34d39933"; border = COLORS.success; }
-                else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = COLORS.error; }
-              } else if (opt === selected) { bg = "#8b5cf633"; border = COLORS.primary; }
+                if (opt === problem.correctAnswer) { bg = "#34d39933"; border = SUCCESS; }
+                else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = ERROR; }
+              } else if (opt === selected) { bg = "#8b5cf633"; border = PRIMARY; }
               return (
                 <button key={opt} onClick={() => { if (!submitted) setSelected(opt); }}
                   disabled={submitted}
                   className="w-full text-left rounded-xl px-4 py-3 transition-colors min-h-[44px]"
-                  style={{ backgroundColor: bg, border: `2px solid ${border}`, color: COLORS.textPrimary }}>
+                  style={{ backgroundColor: bg, border: `2px solid ${border}`, color: TEXT }}>
                   {opt}
                 </button>
               );
@@ -605,8 +572,8 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             onChange={(e) => { if (!submitted) setInputValue(e.target.value); }}
             disabled={submitted} placeholder="Enter your answer"
             className="w-full rounded-xl px-4 py-3 text-center text-lg font-mono min-h-[44px]"
-            style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary,
-              border: `2px solid ${submitted ? (isCorrect ? COLORS.success : COLORS.error) : COLORS.bgElevated}`,
+            style={{ backgroundColor: SURFACE, color: TEXT,
+              border: `2px solid ${submitted ? (isCorrect ? SUCCESS : ERROR) : ELEVATED}`,
               outline: "none" }} />
         )}
 
@@ -615,11 +582,11 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}
               className="mt-4 rounded-xl p-4 w-full"
               style={{ backgroundColor: isCorrect ? "#34d39920" : "#f8717120",
-                border: `1px solid ${isCorrect ? COLORS.success : COLORS.error}` }}>
-              <p className="font-bold mb-1" style={{ color: isCorrect ? COLORS.success : COLORS.error }}>
+                border: `1px solid ${isCorrect ? SUCCESS : ERROR}` }}>
+              <p className="font-bold mb-1" style={{ color: isCorrect ? SUCCESS : ERROR }}>
                 {isCorrect ? "Correct!" : "Not quite"}
               </p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{problem.feedback}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{problem.feedback}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -627,11 +594,11 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
         <div className="w-full mt-4 pb-8">
           {!submitted ? (
             <Button size="lg" onClick={handleSubmit} disabled={!userAnswer} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: userAnswer ? 1 : 0.4 }}>
+              style={{ backgroundColor: PRIMARY, opacity: userAnswer ? 1 : 0.4 }}>
               Check Answer
             </Button>
           ) : (
-            <Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: PRIMARY }}>
               {isLast ? "Continue" : "Next \u2192"}
             </Button>
           )}
@@ -645,7 +612,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 // STAGE 7: REFLECTION
 // ===========================================================================
 
-function ReflectionStage({ onComplete }: { onComplete: () => void }) {
+function ReflectionStage({ onComplete }: { onComplete?: () => void }) {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const canSubmit = text.trim().length >= 20;
@@ -654,14 +621,13 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const handleSkip = useCallback(() => { setSubmitted(true); }, []);
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={SPRING} className="w-full max-w-md">
         <h2 className="text-center font-bold mb-2"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
+          style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
         <p className="text-center mb-6"
-          style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+          style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
           Why might a box plot be more useful than just listing all the numbers? When would you want to see the full data instead?
         </p>
 
@@ -670,20 +636,19 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <textarea value={text} onChange={(e) => setText(e.target.value)}
               placeholder="Type your explanation here..." rows={4}
               className="w-full rounded-xl px-4 py-3 resize-none min-h-[120px]"
-              style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary,
-                border: `2px solid ${COLORS.bgElevated}`, outline: "none" }} />
+              style={{ backgroundColor: SURFACE, color: TEXT,
+                border: `2px solid ${ELEVATED}`, outline: "none" }} />
             <p className="text-xs mt-1 text-right"
-              style={{ color: text.trim().length >= 20 ? COLORS.success : COLORS.textMuted }}>
+              style={{ color: text.trim().length >= 20 ? SUCCESS : MUTED }}>
               {text.trim().length}/20 characters minimum
             </p>
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            transition={SPRING} className="rounded-xl p-6 text-center"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            transition={SPRING} className="rounded-xl p-6 text-center bg-nm-bg-secondary">
             <p className="text-2xl mb-2" role="img" aria-label="Star">{"\u2B50"}</p>
-            <p className="font-bold" style={{ color: COLORS.success }}>Great thinking!</p>
-            <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+            <p className="font-bold" style={{ color: SUCCESS }}>Great thinking!</p>
+            <p className="text-sm mt-1" style={{ color: TEXT_SEC }}>
               Reflecting on concepts deepens your understanding.
             </p>
           </motion.div>
@@ -694,17 +659,17 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         {!submitted ? (
           <>
             <Button size="lg" onClick={handleSubmit} disabled={!canSubmit} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: canSubmit ? 1 : 0.4 }}>
+              style={{ backgroundColor: PRIMARY, opacity: canSubmit ? 1 : 0.4 }}>
               Submit Reflection
             </Button>
             <button onClick={handleSkip} className="w-full text-center py-2 min-h-[44px]"
-              style={{ color: "#64748b", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
+              style={{ color: MUTED, fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
               Skip
             </button>
           </>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-            <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <Button size="lg" onClick={onComplete ?? (() => {})} className="w-full" style={{ backgroundColor: PRIMARY }}>
               Complete Lesson
             </Button>
           </motion.div>
@@ -719,40 +684,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ===========================================================================
 
 export function BoxPlotsLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const stage = STAGES[stageIdx] ?? ("hook" as Stage);
-
-  const advanceStage = useCallback(() => {
-    setStageIdx((i) => { const next = i + 1; if (next >= STAGES.length) { onComplete?.(); return i; } return next; });
-  }, [onComplete]);
-
-  const handleReflectionComplete = useCallback(() => { onComplete?.(); }, [onComplete]);
-  const stageProgress = ((stageIdx + 1) / STAGES.length) * 100;
-
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: COLORS.bgPrimary }}>
-      <div className="sticky top-0 z-10 backdrop-blur-sm px-4 py-2"
-        style={{ backgroundColor: `${COLORS.bgPrimary}e6`, borderBottom: `1px solid ${COLORS.bgSurface}` }}>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium" style={{ color: COLORS.textMuted }}>SP-5.3 Box Plots</span>
-          <span className="text-xs tabular-nums" style={{ color: "#475569" }}>{stageIdx + 1}/{STAGES.length}</span>
-        </div>
-        <ProgressBar value={stageProgress} variant="xp" size="sm" />
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }} transition={SPRING_GENTLE}>
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={handleReflectionComplete} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="SP-5.3 Box Plots" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

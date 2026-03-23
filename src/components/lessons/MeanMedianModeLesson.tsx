@@ -10,39 +10,48 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 // ---------------------------------------------------------------------------
-// Constants & Color Palette
+// Shared token aliases
 // ---------------------------------------------------------------------------
 
-const COLORS = {
+const TEXT_PRIMARY = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const TEXT_MUTED = colors.text.muted;
+const SURFACE = colors.bg.secondary;
+const SURFACE_DEEP = colors.bg.primary;
+const ELEVATED = colors.bg.surface;
+
+const SPRING = springs.default;
+const SPRING_GENTLE = springs.gentle;
+
+// ---------------------------------------------------------------------------
+// Lesson-specific theme
+// ---------------------------------------------------------------------------
+
+const THEME = {
   mean: "#f59e0b",
   meanFill: "#f59e0b33",
   median: "#8b5cf6",
   medianFill: "#8b5cf633",
   mode: "#06b6d4",
   modeFill: "#06b6d433",
-  dots: "#818cf8",
   dotsFill: "#818cf880",
   dotStroke: "#6366f1",
   outlier: "#fbbf24",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  bgElevated: "#334155",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  success: "#34d399",
-  error: "#f87171",
   primary: "#8b5cf6",
-  primaryHover: "#7c3aed",
-  rose: "#fb7185",
-  indigo: "#818cf8",
+  rose: colors.accent.rose,
+  indigo: colors.accent.indigo,
+  success: colors.functional.success,
+  error: colors.functional.error,
 } as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+// Fulcrum spring — slightly different from default
 const SPRING_FULCRUM = { type: "spring" as const, damping: 22, stiffness: 250 };
 
 const INITIAL_DATA = [2, 3, 3, 5, 5, 5, 7, 8];
@@ -58,25 +67,6 @@ const MIN_INTERACTIONS = 10;
 interface MeanMedianModeLessonProps {
   onComplete?: () => void;
 }
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
 
 interface Dot {
   id: string;
@@ -180,11 +170,11 @@ function StageProgressDots({
     <div className="flex items-center gap-1.5 justify-center">
       {Array.from({ length: total }, (_, i) => {
         const result = results?.[i];
-        let bg: string = COLORS.bgElevated;
+        let bg: string = ELEVATED;
         let borderColor: string = "transparent";
-        if (result === true) bg = COLORS.success;
-        else if (result === false) bg = COLORS.error;
-        if (i === current) borderColor = COLORS.primary;
+        if (result === true) bg = THEME.success;
+        else if (result === false) bg = THEME.error;
+        if (i === current) borderColor = THEME.primary;
         return (
           <div
             key={i}
@@ -199,34 +189,6 @@ function StageProgressDots({
         );
       })}
     </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  delay = 0,
-}: {
-  onClick: () => void;
-  label?: string;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut", delay }}
-      className="w-full flex justify-center pt-4 pb-8"
-    >
-      <Button
-        size="lg"
-        onClick={onClick}
-        className="min-w-[160px]"
-        style={{ backgroundColor: COLORS.primary }}
-      >
-        {label}
-      </Button>
-    </motion.div>
   );
 }
 
@@ -248,8 +210,8 @@ function MeasureIcon({
       >
         <polygon
           points="8,2 14,14 2,14"
-          fill={COLORS.mean}
-          stroke={COLORS.mean}
+          fill={THEME.mean}
+          stroke={THEME.mean}
           strokeWidth="1"
         />
       </svg>
@@ -269,7 +231,7 @@ function MeasureIcon({
           y="3"
           width="10"
           height="10"
-          fill={COLORS.median}
+          fill={THEME.median}
           transform="rotate(45 8 8)"
         />
       </svg>
@@ -283,9 +245,9 @@ function MeasureIcon({
       viewBox="0 0 16 16"
       aria-hidden="true"
     >
-      <circle cx="8" cy="13" r="2.5" fill={COLORS.mode} />
-      <circle cx="8" cy="7" r="2.5" fill={COLORS.mode} />
-      <circle cx="8" cy="1" r="2.5" fill={COLORS.mode} opacity="0.5" />
+      <circle cx="8" cy="13" r="2.5" fill={THEME.mode} />
+      <circle cx="8" cy="7" r="2.5" fill={THEME.mode} />
+      <circle cx="8" cy="1" r="2.5" fill={THEME.mode} opacity="0.5" />
     </svg>
   );
 }
@@ -313,17 +275,16 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const players = [
-    { height: 120, label: '6\'0"', color: COLORS.textMuted },
-    { height: 123, label: '6\'1"', color: COLORS.textMuted },
-    { height: 126, label: '6\'2"', color: COLORS.textMuted },
-    { height: 129, label: '6\'3"', color: COLORS.textMuted },
-    { height: 190, label: '7\'6"', color: COLORS.outlier },
+    { height: 120, label: '6\'0"', color: TEXT_MUTED },
+    { height: 123, label: '6\'1"', color: TEXT_MUTED },
+    { height: 126, label: '6\'2"', color: TEXT_MUTED },
+    { height: 129, label: '6\'3"', color: TEXT_MUTED },
+    { height: 190, label: '7\'6"', color: THEME.outlier },
   ];
 
   return (
     <section
-      className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
       aria-live="polite"
     >
       {/* Title */}
@@ -335,7 +296,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 0.3 }}
             className="text-center mb-6 font-medium"
             style={{
-              color: COLORS.textSecondary,
+              color: TEXT_SEC,
               fontSize: "clamp(14px, 3.5vw, 18px)",
             }}
           >
@@ -375,7 +336,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 className="font-mono font-semibold tabular-nums mb-1"
                 style={{
                   fontSize: "clamp(12px, 3vw, 16px)",
-                  color: p.color === COLORS.outlier ? COLORS.outlier : COLORS.textPrimary,
+                  color: p.color === THEME.outlier ? THEME.outlier : TEXT_PRIMARY,
                 }}
               >
                 {p.label}
@@ -383,7 +344,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               {isOutlier && (
                 <span
                   className="text-xs italic mb-1"
-                  style={{ color: COLORS.outlier }}
+                  style={{ color: THEME.outlier }}
                 >
                   Yao Ming!
                 </span>
@@ -451,7 +412,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           width: "80%",
           maxWidth: 500,
           height: 1,
-          backgroundColor: COLORS.bgElevated,
+          backgroundColor: ELEVATED,
         }}
       />
 
@@ -470,14 +431,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 width: "70%",
                 maxWidth: 400,
                 height: 2,
-                backgroundColor: COLORS.indigo,
+                backgroundColor: THEME.indigo,
                 borderRadius: 2,
               }}
             />
             <p
               className="mt-2 font-medium"
               style={{
-                color: COLORS.indigo,
+                color: THEME.indigo,
                 fontSize: "clamp(14px, 3vw, 18px)",
               }}
             >
@@ -489,7 +450,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               transition={{ type: "spring", damping: 15, stiffness: 400 }}
               className="font-extrabold"
               style={{
-                color: COLORS.indigo,
+                color: THEME.indigo,
                 fontSize: "clamp(32px, 7vw, 56px)",
                 textShadow: "0 0 20px #818cf860",
               }}
@@ -509,7 +470,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="mt-2 font-semibold italic text-center"
             style={{
-              color: COLORS.rose,
+              color: THEME.rose,
               fontSize: "clamp(14px, 3.5vw, 18px)",
             }}
           >
@@ -527,20 +488,20 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="mt-6 rounded-xl px-5 py-4 max-w-md text-center"
             style={{
-              backgroundColor: COLORS.bgSurface,
+              backgroundColor: SURFACE,
               lineHeight: 1.5,
             }}
           >
             <p
               style={{
-                color: COLORS.textSecondary,
+                color: TEXT_SEC,
                 fontSize: "clamp(14px, 3.5vw, 16px)",
               }}
             >
               Maybe &lsquo;
               <span
                 className="font-semibold"
-                style={{ color: COLORS.indigo }}
+                style={{ color: THEME.indigo }}
               >
                 average
               </span>
@@ -641,25 +602,24 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <section
-      className="flex flex-1 flex-col px-4 py-4"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col px-4 py-4 bg-nm-bg-primary"
     >
       {/* Measure readout */}
       <div className="flex justify-center gap-6 mb-4 flex-wrap">
-        <span style={{ color: COLORS.mean }} className="font-bold">
+        <span style={{ color: THEME.mean }} className="font-bold">
           Mean: {measures.mean.toFixed(1)}
         </span>
-        <span style={{ color: COLORS.median }} className="font-bold">
+        <span style={{ color: THEME.median }} className="font-bold">
           Median: {measures.median}
         </span>
-        <span style={{ color: COLORS.mode }} className="font-bold">
+        <span style={{ color: THEME.mode }} className="font-bold">
           Mode: {formatMode(measures.mode)}
         </span>
       </div>
 
       <p
         className="text-center text-sm mb-2"
-        style={{ color: COLORS.textSecondary }}
+        style={{ color: TEXT_SEC }}
       >
         Tap dots to move them. Add/remove dots to see how measures change.
       </p>
@@ -698,7 +658,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 x={valToX(i)}
                 y={LINE_Y + 20}
                 textAnchor="middle"
-                fill={COLORS.textMuted}
+                fill={TEXT_MUTED}
                 fontSize={11}
                 fontFamily="monospace"
               >
@@ -721,7 +681,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   width={(DOT_R + 4) * 2}
                   height={stackH + 4}
                   rx={4}
-                  fill={COLORS.modeFill}
+                  fill={THEME.modeFill}
                   stroke="#06b6d440"
                   strokeWidth={1}
                   initial={{ opacity: 0 }}
@@ -742,8 +702,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   cx={cx}
                   animate={{ cy }}
                   r={DOT_R}
-                  fill={COLORS.dotsFill}
-                  stroke={COLORS.dotStroke}
+                  fill={THEME.dotsFill}
+                  stroke={THEME.dotStroke}
                   strokeWidth={2}
                   style={{ cursor: "pointer" }}
                   transition={SPRING}
@@ -759,7 +719,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           {/* Mean fulcrum — amber triangle below the line */}
           <motion.polygon
             points={`${valToX(measures.mean)},${LINE_Y + 8} ${valToX(measures.mean) - 8},${LINE_Y + 22} ${valToX(measures.mean) + 8},${LINE_Y + 22}`}
-            fill={COLORS.mean}
+            fill={THEME.mean}
             stroke="#d97706"
             strokeWidth={1.5}
             animate={{
@@ -773,7 +733,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             animate={{ x: valToX(measures.mean) }}
             y={LINE_Y + 34}
             textAnchor={"middle" as const}
-            fill={COLORS.mean}
+            fill={THEME.mean}
             fontSize={10}
             fontWeight={600}
             transition={SPRING_FULCRUM}
@@ -784,7 +744,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           {/* Median diamond — purple diamond below the line */}
           <motion.polygon
             points={`${valToX(measures.median)},${LINE_Y + 10} ${valToX(measures.median) - 5},${LINE_Y + 16} ${valToX(measures.median)},${LINE_Y + 22} ${valToX(measures.median) + 5},${LINE_Y + 16}`}
-            fill={COLORS.median}
+            fill={THEME.median}
             animate={{
               points: `${valToX(measures.median)},${LINE_Y + 10} ${valToX(measures.median) - 5},${LINE_Y + 16} ${valToX(measures.median)},${LINE_Y + 22} ${valToX(measures.median) + 5},${LINE_Y + 16}`,
             }}
@@ -802,9 +762,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           style={{
             minWidth: 120,
             height: 48,
-            backgroundColor: COLORS.bgElevated,
+            backgroundColor: ELEVATED,
             border: "1px solid #475569",
-            color: COLORS.textPrimary,
+            color: TEXT_PRIMARY,
             fontSize: 14,
           }}
           aria-label="Add a data point"
@@ -818,9 +778,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           style={{
             minWidth: 120,
             height: 48,
-            backgroundColor: COLORS.bgElevated,
+            backgroundColor: ELEVATED,
             border: "1px solid #475569",
-            color: COLORS.textPrimary,
+            color: TEXT_PRIMARY,
             fontSize: 14,
             opacity: dots.length === 0 ? 0.3 : 1,
             pointerEvents: dots.length === 0 ? "none" : "auto",
@@ -837,7 +797,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             height: 40,
             backgroundColor: "transparent",
             border: "1px solid #475569",
-            color: COLORS.textMuted,
+            color: TEXT_MUTED,
             fontSize: 13,
           }}
           aria-label="Reset data points"
@@ -849,7 +809,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       {/* Interaction counter */}
       <p
         className="text-center text-xs mt-2"
-        style={{ color: COLORS.textMuted }}
+        style={{ color: TEXT_MUTED }}
       >
         Interactions: {interactionCount} / {MIN_INTERACTIONS}
       </p>
@@ -873,8 +833,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <section
-      className="flex flex-1 flex-col items-center justify-start px-4 py-6 overflow-y-auto"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col items-center justify-start px-4 py-6 overflow-y-auto bg-nm-bg-primary"
     >
       <AnimatePresence mode="wait">
         {promptIdx === 0 && (
@@ -950,7 +909,7 @@ function DiscoveryPrompt1({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-sm font-medium"
-            style={{ color: COLORS.mean }}
+            style={{ color: THEME.mean }}
           >
             Mean = 4.75 -- the balance point
           </motion.p>
@@ -960,7 +919,7 @@ function DiscoveryPrompt1({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-sm font-medium"
-            style={{ color: COLORS.median }}
+            style={{ color: THEME.median }}
           >
             Median = 5 -- the middle value
           </motion.p>
@@ -970,7 +929,7 @@ function DiscoveryPrompt1({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-sm font-medium"
-            style={{ color: COLORS.mode }}
+            style={{ color: THEME.mode }}
           >
             Mode = 5 -- the most common value
           </motion.p>
@@ -983,12 +942,12 @@ function DiscoveryPrompt1({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2 }}
         className="mt-6 rounded-xl p-4"
-        style={{ backgroundColor: COLORS.bgSurface }}
+        style={{ backgroundColor: SURFACE }}
       >
         <p
           className="leading-relaxed"
           style={{
-            color: COLORS.textSecondary,
+            color: TEXT_SEC,
             fontSize: 16,
           }}
         >
@@ -1062,7 +1021,7 @@ function DiscoveryPrompt2({
       <p
         className="text-center mb-4 font-medium"
         style={{
-          color: COLORS.textSecondary,
+          color: TEXT_SEC,
           fontSize: 15,
         }}
       >
@@ -1101,9 +1060,9 @@ function DiscoveryPrompt2({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 rounded-xl p-4 space-y-2"
-            style={{ backgroundColor: COLORS.bgSurface }}
+            style={{ backgroundColor: SURFACE }}
           >
-            <p style={{ color: COLORS.textSecondary, fontSize: 15 }}>
+            <p style={{ color: TEXT_SEC, fontSize: 15 }}>
               Look at that! You moved just ONE data point, and...
             </p>
             <motion.p
@@ -1111,7 +1070,7 @@ function DiscoveryPrompt2({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
               className="font-bold"
-              style={{ color: COLORS.mean }}
+              style={{ color: THEME.mean }}
             >
               The mean jumped from 4.75 to {measures.mean}!
             </motion.p>
@@ -1120,7 +1079,7 @@ function DiscoveryPrompt2({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
               className="font-bold"
-              style={{ color: COLORS.median }}
+              style={{ color: THEME.median }}
             >
               The median stayed right at {measures.median}.
             </motion.p>
@@ -1129,7 +1088,7 @@ function DiscoveryPrompt2({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9 }}
               className="font-bold"
-              style={{ color: COLORS.mode }}
+              style={{ color: THEME.mode }}
             >
               The mode didn&apos;t budge -- still{" "}
               {formatMode(measures.mode)}.
@@ -1166,18 +1125,18 @@ function DiscoveryPrompt3({
     >
       <div
         className="rounded-xl p-5 space-y-4"
-        style={{ backgroundColor: COLORS.bgSurface }}
+        style={{ backgroundColor: SURFACE }}
       >
         <p
           className="leading-relaxed"
           style={{
-            color: COLORS.textSecondary,
+            color: TEXT_SEC,
             fontSize: 16,
             lineHeight: 1.6,
           }}
         >
           The mean is like a seesaw&apos;s{" "}
-          <strong style={{ color: COLORS.mean }}>balance point</strong>.
+          <strong style={{ color: THEME.mean }}>balance point</strong>.
           One very heavy kid sitting far from the center can tip the whole
           seesaw -- even if there are lots of lighter kids on the other
           side.
@@ -1185,14 +1144,14 @@ function DiscoveryPrompt3({
         <p
           className="leading-relaxed"
           style={{
-            color: COLORS.textSecondary,
+            color: TEXT_SEC,
             fontSize: 16,
             lineHeight: 1.6,
           }}
         >
           The median doesn&apos;t care about extreme values. It only cares
           about{" "}
-          <strong style={{ color: COLORS.median }}>position</strong>:
+          <strong style={{ color: THEME.median }}>position</strong>:
           &ldquo;Am I the middle one when everyone lines up?&rdquo; Moving
           one person from the end of the line doesn&apos;t change who&apos;s
           in the middle.
@@ -1228,17 +1187,17 @@ function DiscoveryPrompt4({
     {
       key: "shoes",
       text: "What shoe size should a store stock the most of?",
-      borderColor: COLORS.mode,
+      borderColor: THEME.mode,
     },
     {
       key: "house",
       text: "What's a 'typical' home price in a neighborhood with one mansion?",
-      borderColor: COLORS.median,
+      borderColor: THEME.median,
     },
     {
       key: "scores",
       text: "A student's test scores: 88, 92, 85, 90, 91. What's their overall performance?",
-      borderColor: COLORS.mean,
+      borderColor: THEME.mean,
     },
   ];
 
@@ -1290,7 +1249,7 @@ function DiscoveryPrompt4({
       <p
         className="text-center mb-4 font-medium"
         style={{
-          color: COLORS.textSecondary,
+          color: TEXT_SEC,
           fontSize: 16,
         }}
       >
@@ -1298,7 +1257,7 @@ function DiscoveryPrompt4({
       </p>
       <p
         className="text-center mb-4 text-xs"
-        style={{ color: COLORS.textMuted }}
+        style={{ color: TEXT_MUTED }}
       >
         Tap a scenario, then tap the matching measure.
       </p>
@@ -1321,12 +1280,12 @@ function DiscoveryPrompt4({
               style={{
                 backgroundColor: matched
                   ? `${s.borderColor}20`
-                  : COLORS.bgSurface,
+                  : SURFACE,
                 borderLeft: `3px solid ${
                   matched
-                    ? COLORS.success
+                    ? THEME.success
                     : isActive
-                      ? COLORS.textPrimary
+                      ? TEXT_PRIMARY
                       : s.borderColor
                 }`,
                 opacity: matched && !isActive ? 0.7 : 1,
@@ -1336,7 +1295,7 @@ function DiscoveryPrompt4({
                 isWrong
                   ? {
                       x: [0, -6, 6, -4, 4, 0],
-                      borderColor: COLORS.error,
+                      borderColor: THEME.error,
                     }
                   : {}
               }
@@ -1346,7 +1305,7 @@ function DiscoveryPrompt4({
             >
               <span
                 style={{
-                  color: COLORS.textSecondary,
+                  color: TEXT_SEC,
                   fontSize: 14,
                 }}
               >
@@ -1355,7 +1314,7 @@ function DiscoveryPrompt4({
               {matched && (
                 <span
                   className="ml-2 font-bold text-xs uppercase"
-                  style={{ color: COLORS.success }}
+                  style={{ color: THEME.success }}
                 >
                   {matched}
                 </span>
@@ -1378,19 +1337,19 @@ function DiscoveryPrompt4({
               onClick={() => selectMeasure(m)}
               className="rounded-xl px-5 py-3 font-semibold uppercase text-sm"
               style={{
-                backgroundColor: COLORS.bgElevated,
+                backgroundColor: ELEVATED,
                 color:
                   m === "mean"
-                    ? COLORS.mean
+                    ? THEME.mean
                     : m === "median"
-                      ? COLORS.median
-                      : COLORS.mode,
+                      ? THEME.median
+                      : THEME.mode,
                 border: `2px dashed ${
                   m === "mean"
-                    ? `${COLORS.mean}60`
+                    ? `${THEME.mean}60`
                     : m === "median"
-                      ? `${COLORS.median}60`
-                      : `${COLORS.mode}60`
+                      ? `${THEME.median}60`
+                      : `${THEME.mode}60`
                 }`,
                 minHeight: 48,
                 minWidth: 90,
@@ -1413,13 +1372,13 @@ function DiscoveryPrompt4({
             className="rounded-xl p-4 mt-4"
             style={{
               backgroundColor: "#7c3aed20",
-              borderLeft: `4px solid ${COLORS.median}`,
+              borderLeft: `4px solid ${THEME.median}`,
             }}
           >
             <p
               className="font-medium leading-relaxed"
               style={{
-                color: COLORS.textSecondary,
+                color: TEXT_SEC,
                 fontSize: 15,
               }}
             >
@@ -1487,12 +1446,12 @@ function DiscoveryPrompt5({
     >
       <div
         className="rounded-xl p-5 mb-4"
-        style={{ backgroundColor: COLORS.bgSurface }}
+        style={{ backgroundColor: SURFACE }}
       >
         <p
           className="leading-relaxed"
           style={{
-            color: COLORS.textSecondary,
+            color: TEXT_SEC,
             fontSize: 15,
             lineHeight: 1.6,
           }}
@@ -1507,13 +1466,13 @@ function DiscoveryPrompt5({
         {(["Mean", "Median", "Mode"] as const).map((choice) => {
           const color =
             choice === "Mean"
-              ? COLORS.mean
+              ? THEME.mean
               : choice === "Median"
-                ? COLORS.median
-                : COLORS.mode;
-          let bg: string = COLORS.bgElevated;
+                ? THEME.median
+                : THEME.mode;
+          let bg: string = ELEVATED;
           if (feedback && selected === choice) {
-            bg = feedback.correct ? COLORS.success : COLORS.error;
+            bg = feedback.correct ? THEME.success : THEME.error;
           }
 
           return (
@@ -1526,7 +1485,7 @@ function DiscoveryPrompt5({
                 minHeight: 48,
                 backgroundColor: bg,
                 border: `2px solid ${color}40`,
-                color: COLORS.textPrimary,
+                color: TEXT_PRIMARY,
                 fontSize: 16,
                 opacity:
                   feedback && selected !== choice && !feedback.correct
@@ -1549,15 +1508,15 @@ function DiscoveryPrompt5({
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 rounded-xl p-4"
             style={{
-              backgroundColor: COLORS.bgSurface,
+              backgroundColor: SURFACE,
               borderLeft: `3px solid ${
-                feedback.correct ? COLORS.success : COLORS.error
+                feedback.correct ? THEME.success : THEME.error
               }`,
             }}
           >
             <p
               className="text-sm leading-relaxed"
-              style={{ color: COLORS.textSecondary }}
+              style={{ color: TEXT_SEC }}
             >
               {feedback.message}
             </p>
@@ -1642,7 +1601,7 @@ function MiniDotPlot({
                 className="absolute font-mono tabular-nums"
                 style={{
                   fontSize: 9,
-                  color: COLORS.textMuted,
+                  color: TEXT_MUTED,
                   bottom: -14,
                   left: "50%",
                   transform: "translateX(-50%)",
@@ -1666,8 +1625,8 @@ function MiniDotPlot({
                 width: 14,
                 height: 14,
                 borderRadius: "50%",
-                backgroundColor: COLORS.dotsFill,
-                border: `1.5px solid ${COLORS.dotStroke}`,
+                backgroundColor: THEME.dotsFill,
+                border: `1.5px solid ${THEME.dotStroke}`,
                 transform: "translateX(-50%)",
               }}
             />
@@ -1690,7 +1649,7 @@ function MiniDotPlot({
             <svg width={16} height={10} viewBox="0 0 16 10">
               <polygon
                 points="8,0 16,10 0,10"
-                fill={COLORS.mean}
+                fill={THEME.mean}
               />
             </svg>
           </motion.div>
@@ -1702,19 +1661,19 @@ function MiniDotPlot({
         <div className="flex gap-4 justify-center mt-1">
           <span
             className="text-xs font-mono font-bold tabular-nums"
-            style={{ color: COLORS.mean }}
+            style={{ color: THEME.mean }}
           >
             Mean: {measures.mean}
           </span>
           <span
             className="text-xs font-mono font-bold tabular-nums"
-            style={{ color: COLORS.median }}
+            style={{ color: THEME.median }}
           >
             Median: {measures.median}
           </span>
           <span
             className="text-xs font-mono font-bold tabular-nums"
-            style={{ color: COLORS.mode }}
+            style={{ color: THEME.mode }}
           >
             Mode: {formatMode(measures.mode)}
           </span>
@@ -1746,8 +1705,7 @@ function SymbolBridgeStage({
 
   return (
     <section
-      className="flex flex-1 flex-col items-center px-4 py-6 overflow-y-auto"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col items-center px-4 py-6 overflow-y-auto bg-nm-bg-primary"
     >
       {/* Mini dot plot */}
       <div className="w-full max-w-xl mb-6">
@@ -1764,15 +1722,15 @@ function SymbolBridgeStage({
               transition={{ duration: 0.5 }}
               className="rounded-lg p-4"
               style={{
-                backgroundColor: COLORS.meanFill,
-                borderLeft: `3px solid ${COLORS.mean}`,
+                backgroundColor: THEME.meanFill,
+                borderLeft: `3px solid ${THEME.mean}`,
               }}
               aria-label="Mean equals the sum of all values divided by the number of values. Equals 2 plus 3 plus 3 plus 5 plus 5 plus 5 plus 7 plus 8, divided by 8, equals 38 over 8, equals 4.75."
             >
               <p
                 className="uppercase font-bold text-xs mb-2"
                 style={{
-                  color: COLORS.mean,
+                  color: THEME.mean,
                   letterSpacing: "0.5px",
                 }}
               >
@@ -1780,19 +1738,19 @@ function SymbolBridgeStage({
               </p>
               <p
                 className="font-mono text-sm mb-1"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 Mean = Sum of all values / Number of values
               </p>
-              <p className="font-mono text-sm" style={{ color: COLORS.textPrimary }}>
+              <p className="font-mono text-sm" style={{ color: TEXT_PRIMARY }}>
                 ={" "}
-                <span style={{ color: COLORS.indigo }}>
+                <span style={{ color: THEME.indigo }}>
                   (2 + 3 + 3 + 5 + 5 + 5 + 7 + 8)
                 </span>{" "}
                 / 8 = 38 / 8 ={" "}
                 <span
                   className="font-bold"
-                  style={{ color: COLORS.mean }}
+                  style={{ color: THEME.mean }}
                 >
                   4.75
                 </span>
@@ -1810,15 +1768,15 @@ function SymbolBridgeStage({
               transition={{ duration: 0.5 }}
               className="rounded-lg p-4"
               style={{
-                backgroundColor: COLORS.medianFill,
-                borderLeft: `3px solid ${COLORS.median}`,
+                backgroundColor: THEME.medianFill,
+                borderLeft: `3px solid ${THEME.median}`,
               }}
               aria-label="Median: Sort values from least to greatest. 8 values, so the middle is between positions 4 and 5. Both are 5, so the median is 5."
             >
               <p
                 className="uppercase font-bold text-xs mb-2"
                 style={{
-                  color: COLORS.median,
+                  color: THEME.median,
                   letterSpacing: "0.5px",
                 }}
               >
@@ -1826,18 +1784,18 @@ function SymbolBridgeStage({
               </p>
               <p
                 className="text-sm mb-1"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 Step 1: Sort the values from least to greatest
               </p>
               <p
                 className="font-mono text-sm mb-1"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 2, 3, 3, 5,{" "}
                 <span
                   className="font-bold underline"
-                  style={{ color: COLORS.median }}
+                  style={{ color: THEME.median }}
                 >
                   5
                 </span>
@@ -1845,28 +1803,28 @@ function SymbolBridgeStage({
               </p>
               <p
                 className="text-sm mb-1"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 Step 2: Find the middle value
               </p>
               <p
                 className="font-mono text-sm mb-1"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 8 values -- middle is between positions 4 and 5
               </p>
-              <p className="font-mono text-sm" style={{ color: COLORS.textPrimary }}>
+              <p className="font-mono text-sm" style={{ color: TEXT_PRIMARY }}>
                 Median = (5 + 5) / 2 ={" "}
                 <span
                   className="font-bold"
-                  style={{ color: COLORS.median }}
+                  style={{ color: THEME.median }}
                 >
                   5
                 </span>
               </p>
               <p
                 className="text-xs italic mt-1"
-                style={{ color: COLORS.textMuted }}
+                style={{ color: TEXT_MUTED }}
               >
                 (With an even count, average the two middle values)
               </p>
@@ -1883,15 +1841,15 @@ function SymbolBridgeStage({
               transition={{ duration: 0.5 }}
               className="rounded-lg p-4"
               style={{
-                backgroundColor: COLORS.modeFill,
-                borderLeft: `3px solid ${COLORS.mode}`,
+                backgroundColor: THEME.modeFill,
+                borderLeft: `3px solid ${THEME.mode}`,
               }}
               aria-label="Mode equals 5, appearing 3 times, the most of any value."
             >
               <p
                 className="uppercase font-bold text-xs mb-2"
                 style={{
-                  color: COLORS.mode,
+                  color: THEME.mode,
                   letterSpacing: "0.5px",
                 }}
               >
@@ -1899,7 +1857,7 @@ function SymbolBridgeStage({
               </p>
               <p
                 className="text-sm mb-2"
-                style={{ color: COLORS.textPrimary }}
+                style={{ color: TEXT_PRIMARY }}
               >
                 The value that appears most often
               </p>
@@ -1915,7 +1873,7 @@ function SymbolBridgeStage({
                   <div key={item.v}>
                     <div
                       className="text-xs font-mono"
-                      style={{ color: COLORS.textMuted }}
+                      style={{ color: TEXT_MUTED }}
                     >
                       {item.v}
                     </div>
@@ -1924,8 +1882,8 @@ function SymbolBridgeStage({
                       style={{
                         color:
                           item.c === 3
-                            ? COLORS.mode
-                            : COLORS.textPrimary,
+                            ? THEME.mode
+                            : TEXT_PRIMARY,
                       }}
                     >
                       {item.c}
@@ -1934,11 +1892,11 @@ function SymbolBridgeStage({
                   </div>
                 ))}
               </div>
-              <p className="font-mono text-sm" style={{ color: COLORS.textPrimary }}>
+              <p className="font-mono text-sm" style={{ color: TEXT_PRIMARY }}>
                 Mode ={" "}
                 <span
                   className="font-bold"
-                  style={{ color: COLORS.mode }}
+                  style={{ color: THEME.mode }}
                 >
                   5
                 </span>{" "}
@@ -1956,14 +1914,14 @@ function SymbolBridgeStage({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="rounded-xl p-4 text-center"
-              style={{ backgroundColor: COLORS.bgSurface }}
+              style={{ backgroundColor: SURFACE }}
             >
               <div className="flex justify-center gap-6 mb-3">
                 <div className="flex items-center gap-1">
                   <MeasureIcon type="mean" />
                   <span
                     className="text-sm font-bold"
-                    style={{ color: COLORS.mean }}
+                    style={{ color: THEME.mean }}
                   >
                     Mean = 4.75
                   </span>
@@ -1972,7 +1930,7 @@ function SymbolBridgeStage({
                   <MeasureIcon type="median" />
                   <span
                     className="text-sm font-bold"
-                    style={{ color: COLORS.median }}
+                    style={{ color: THEME.median }}
                   >
                     Median = 5
                   </span>
@@ -1981,7 +1939,7 @@ function SymbolBridgeStage({
                   <MeasureIcon type="mode" />
                   <span
                     className="text-sm font-bold"
-                    style={{ color: COLORS.mode }}
+                    style={{ color: THEME.mode }}
                   >
                     Mode = 5
                   </span>
@@ -1989,7 +1947,7 @@ function SymbolBridgeStage({
               </div>
               <p
                 className="text-sm italic"
-                style={{ color: COLORS.textSecondary }}
+                style={{ color: TEXT_SEC }}
               >
                 All three are close here -- but add an outlier and watch
                 the mean fly away!
@@ -2024,36 +1982,35 @@ function RealWorldStage({
       title: "Why Job Sites Show Median Salary",
       body: "A company has 9 employees earning $50K each and a CEO earning $5 million. The mean salary is $545K -- making the company sound way richer than it is. The median is $50K -- much more honest. That's why salary websites report median income!",
       badge: "Median",
-      badgeColor: COLORS.median,
-      iconColor: COLORS.median,
+      badgeColor: THEME.median,
+      iconColor: THEME.median,
     },
     {
       title: "The Most Popular Shoe Size",
       body: "A shoe store needs to decide which sizes to stock the most. Mean shoe size is 8.3 -- but nobody wears size 8.3! The store really wants the mode -- size 9, the one bought most often. Mode is the best measure for 'what's most popular.'",
       badge: "Mode",
-      badgeColor: COLORS.mode,
-      iconColor: COLORS.mode,
+      badgeColor: THEME.mode,
+      iconColor: THEME.mode,
     },
     {
       title: "Your Gaming Average",
       body: "You play 5 rounds of a game and score: 120, 135, 128, 140, 132. No outliers, no repeats. Mean gives you the best summary: 131 points per round. When data is spread evenly without extreme values, mean is the most useful measure!",
       badge: "Mean",
-      badgeColor: COLORS.mean,
-      iconColor: COLORS.mean,
+      badgeColor: THEME.mean,
+      iconColor: THEME.mean,
     },
     {
       title: "What's the Class Favorite?",
       body: "You survey your class for their favorite color. Results: Blue (12), Red (7), Green (5), Purple (4). You can't calculate the mean or median of colors -- they're not numbers! The mode (Blue) is the only measure that works for categories.",
       badge: "Mode",
-      badgeColor: COLORS.mode,
-      iconColor: COLORS.mode,
+      badgeColor: THEME.mode,
+      iconColor: THEME.mode,
     },
   ];
 
   return (
     <section
-      className="flex flex-1 flex-col items-center px-4 py-6 overflow-y-auto"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col items-center px-4 py-6 overflow-y-auto bg-nm-bg-primary"
     >
       <div className="max-w-xl w-full space-y-4">
         {cards.map((card, i) => (
@@ -2067,7 +2024,7 @@ function RealWorldStage({
               delay: i * 0.2,
             }}
             className="rounded-2xl p-5 relative"
-            style={{ backgroundColor: COLORS.bgSurface }}
+            style={{ backgroundColor: SURFACE }}
             role="article"
           >
             <div className="flex items-start gap-3">
@@ -2093,14 +2050,14 @@ function RealWorldStage({
               <div className="flex-1">
                 <h3
                   className="font-bold text-lg mb-2"
-                  style={{ color: COLORS.textPrimary }}
+                  style={{ color: TEXT_PRIMARY }}
                 >
                   {card.title}
                 </h3>
                 <p
                   className="text-sm leading-relaxed"
                   style={{
-                    color: COLORS.textSecondary,
+                    color: TEXT_SEC,
                     lineHeight: 1.6,
                   }}
                 >
@@ -2131,12 +2088,6 @@ function RealWorldStage({
 // ===========================================================================
 // STAGE 6: PRACTICE
 // ===========================================================================
-
-interface PracticeProblem {
-  id: string;
-  layer: number;
-  type: "mc" | "numeric" | "tap" | "tf" | "two-part";
-}
 
 function PracticeStage({
   onComplete,
@@ -2172,8 +2123,7 @@ function PracticeStage({
     const correctCount = results.filter((r) => r === true).length;
     return (
       <section
-        className="flex flex-1 flex-col items-center justify-center px-4"
-        style={{ backgroundColor: COLORS.bgPrimary }}
+        className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -2182,13 +2132,13 @@ function PracticeStage({
         >
           <p
             className="text-3xl font-bold mb-2"
-            style={{ color: COLORS.textPrimary }}
+            style={{ color: TEXT_PRIMARY }}
           >
             {correctCount} / 9
           </p>
           <p
             className="text-sm mb-6"
-            style={{ color: COLORS.textSecondary }}
+            style={{ color: TEXT_SEC }}
           >
             {correctCount >= 7
               ? "Excellent work!"
@@ -2204,8 +2154,7 @@ function PracticeStage({
 
   return (
     <section
-      className="flex flex-1 flex-col items-center px-4 py-6"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col items-center px-4 py-6 bg-nm-bg-primary"
     >
       {/* Progress dots */}
       <div className="mb-4">
@@ -2216,7 +2165,7 @@ function PracticeStage({
         />
         <p
           className="text-center text-xs mt-2"
-          style={{ color: COLORS.textMuted }}
+          style={{ color: TEXT_MUTED }}
         >
           Problem {currentIdx + 1} of 9
         </p>
@@ -2282,13 +2231,13 @@ function ProblemShell({
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ backgroundColor: COLORS.bgSurface }}
+      style={{ backgroundColor: SURFACE }}
     >
       <span
         className="text-xs font-bold uppercase px-2 py-1 rounded-full mb-3 inline-block"
         style={{
-          backgroundColor: `${COLORS.primary}20`,
-          color: COLORS.primary,
+          backgroundColor: `${THEME.primary}20`,
+          color: THEME.primary,
           letterSpacing: "0.5px",
         }}
       >
@@ -2297,7 +2246,7 @@ function ProblemShell({
       <p
         className="font-medium mb-4 leading-relaxed"
         style={{
-          color: COLORS.textPrimary,
+          color: TEXT_PRIMARY,
           fontSize: 16,
         }}
       >
@@ -2315,9 +2264,9 @@ function ProblemShell({
             className="mt-4 rounded-lg p-3"
             style={{
               borderLeft: `3px solid ${
-                feedback.correct ? COLORS.success : COLORS.error
+                feedback.correct ? THEME.success : THEME.error
               }`,
-              backgroundColor: COLORS.bgPrimary,
+              backgroundColor: SURFACE_DEEP,
             }}
             aria-live="assertive"
           >
@@ -2325,8 +2274,8 @@ function ProblemShell({
               <span
                 style={{
                   color: feedback.correct
-                    ? COLORS.success
-                    : COLORS.error,
+                    ? THEME.success
+                    : THEME.error,
                   fontSize: 16,
                 }}
               >
@@ -2335,7 +2284,7 @@ function ProblemShell({
             </div>
             <p
               className="text-sm leading-relaxed mt-1"
-              style={{ color: COLORS.textSecondary }}
+              style={{ color: TEXT_SEC }}
               aria-live="polite"
             >
               {feedback.message}
@@ -2383,11 +2332,11 @@ function MCOptions({
       {options.map((opt, i) => {
         const letter = letters[i]!;
         const isSelected = selected === opt.label;
-        let bg: string = COLORS.bgElevated;
+        let bg: string = ELEVATED;
         if (feedback && isSelected) {
-          bg = feedback.correct ? COLORS.success : COLORS.error;
+          bg = feedback.correct ? THEME.success : THEME.error;
         } else if (feedback && opt.label === correctAnswer && !feedback.correct) {
-          bg = `${COLORS.success}40`;
+          bg = `${THEME.success}40`;
         }
 
         return (
@@ -2400,7 +2349,7 @@ function MCOptions({
               minHeight: 52,
               backgroundColor: bg,
               fontSize: 16,
-              color: COLORS.textPrimary,
+              color: TEXT_PRIMARY,
               opacity: feedback && !isSelected && opt.label !== correctAnswer ? 0.5 : 1,
             }}
             aria-label={`${letter}: ${opt.label}`}
@@ -2408,8 +2357,8 @@ function MCOptions({
             <span
               className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
               style={{
-                backgroundColor: `${COLORS.primary}30`,
-                color: COLORS.textPrimary,
+                backgroundColor: `${THEME.primary}30`,
+                color: TEXT_PRIMARY,
               }}
             >
               {letter}
@@ -2543,8 +2492,8 @@ function Problem2({
           let borderColor: string = "transparent";
           if (feedback && isTapped) {
             borderColor = feedback.correct
-              ? COLORS.success
-              : COLORS.error;
+              ? THEME.success
+              : THEME.error;
           }
 
           return (
@@ -2577,16 +2526,16 @@ function Problem2({
                     borderRadius: "50%",
                     backgroundColor:
                       feedback && isCorrect
-                        ? COLORS.modeFill
-                        : COLORS.dotsFill,
-                    border: `1.5px solid ${COLORS.dotStroke}`,
+                        ? THEME.modeFill
+                        : THEME.dotsFill,
+                    border: `1.5px solid ${THEME.dotStroke}`,
                     marginBottom: 2,
                   }}
                 />
               ))}
               <span
                 className="text-xs font-mono mt-1 tabular-nums"
-                style={{ color: COLORS.textMuted }}
+                style={{ color: TEXT_MUTED }}
               >
                 {value}
               </span>
@@ -2643,7 +2592,7 @@ function Problem3({
         <div className="text-center">
           <p
             className="text-xs mb-1"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Unsorted
           </p>
@@ -2653,8 +2602,8 @@ function Problem3({
                 key={i}
                 className="inline-block rounded-lg px-2 py-1 text-sm font-mono font-semibold"
                 style={{
-                  backgroundColor: COLORS.bgElevated,
-                  color: COLORS.textPrimary,
+                  backgroundColor: ELEVATED,
+                  color: TEXT_PRIMARY,
                 }}
               >
                 {n}
@@ -2662,13 +2611,13 @@ function Problem3({
             ))}
           </div>
         </div>
-        <span style={{ color: COLORS.textMuted, fontSize: 20 }}>
+        <span style={{ color: TEXT_MUTED, fontSize: 20 }}>
           ?
         </span>
         <div className="text-center">
           <p
             className="text-xs mb-1"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Sorted
           </p>
@@ -2679,11 +2628,11 @@ function Problem3({
                 className="inline-block rounded-lg px-2 py-1 text-sm font-mono font-semibold"
                 style={{
                   backgroundColor:
-                    n === 5 ? `${COLORS.median}40` : COLORS.bgElevated,
-                  color: COLORS.textPrimary,
+                    n === 5 ? `${THEME.median}40` : ELEVATED,
+                  color: TEXT_PRIMARY,
                   border:
                     n === 5
-                      ? `2px solid ${COLORS.median}`
+                      ? `2px solid ${THEME.median}`
                       : "none",
                 }}
               >
@@ -2697,9 +2646,9 @@ function Problem3({
       {/* Buttons */}
       <div className="flex gap-3 justify-center">
         {["TRUE", "FALSE"].map((choice) => {
-          let bg: string = COLORS.bgElevated;
+          let bg: string = ELEVATED;
           if (feedback && selected === choice) {
-            bg = feedback.correct ? COLORS.success : COLORS.error;
+            bg = feedback.correct ? THEME.success : THEME.error;
           }
           return (
             <button
@@ -2711,7 +2660,7 @@ function Problem3({
                 minHeight: 48,
                 minWidth: 140,
                 backgroundColor: bg,
-                color: COLORS.textPrimary,
+                color: TEXT_PRIMARY,
               }}
               aria-label={choice}
             >
@@ -2779,8 +2728,8 @@ function Problem4({
             key={i}
             className="inline-block rounded-lg px-3 py-1 font-mono font-semibold text-lg"
             style={{
-              backgroundColor: `${COLORS.indigo}20`,
-              color: COLORS.indigo,
+              backgroundColor: `${THEME.indigo}20`,
+              color: THEME.indigo,
             }}
           >
             {n}
@@ -2792,13 +2741,13 @@ function Problem4({
       <div
         className="text-sm font-mono mb-4 space-y-1 p-3 rounded-lg"
         style={{
-          backgroundColor: COLORS.bgPrimary,
-          color: COLORS.textMuted,
+          backgroundColor: SURFACE_DEEP,
+          color: TEXT_MUTED,
         }}
       >
-        <p>Sum: 4 + 7 + 10 + 3 + 6 = {feedback?.correct ? <strong style={{ color: COLORS.textPrimary }}>30</strong> : "___"}</p>
+        <p>Sum: 4 + 7 + 10 + 3 + 6 = {feedback?.correct ? <strong style={{ color: TEXT_PRIMARY }}>30</strong> : "___"}</p>
         <p>Count: 5 values</p>
-        <p>Mean: {feedback?.correct ? <><strong style={{ color: COLORS.textPrimary }}>30</strong> / <strong style={{ color: COLORS.textPrimary }}>5</strong> = <strong style={{ color: COLORS.mean }}>6</strong></> : "___ / 5 = ___"}</p>
+        <p>Mean: {feedback?.correct ? <><strong style={{ color: TEXT_PRIMARY }}>30</strong> / <strong style={{ color: TEXT_PRIMARY }}>5</strong> = <strong style={{ color: THEME.mean }}>6</strong></> : "___ / 5 = ___"}</p>
       </div>
 
       {/* Input */}
@@ -2815,8 +2764,8 @@ function Problem4({
               width: 120,
               height: 52,
               border: `2px solid #475569`,
-              backgroundColor: COLORS.bgPrimary,
-              color: COLORS.textPrimary,
+              backgroundColor: SURFACE_DEEP,
+              color: TEXT_PRIMARY,
               outline: "none",
             }}
             aria-label="Enter the mean value"
@@ -2906,7 +2855,7 @@ function Problem5({
         <div className="mb-3">
           <p
             className="text-xs mb-2"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Tap values in order (least to greatest):
           </p>
@@ -2919,8 +2868,8 @@ function Problem5({
                 style={{
                   width: 56,
                   height: 48,
-                  backgroundColor: COLORS.bgElevated,
-                  color: COLORS.textPrimary,
+                  backgroundColor: ELEVATED,
+                  color: TEXT_PRIMARY,
                   minHeight: 44,
                   minWidth: 44,
                 }}
@@ -2957,18 +2906,18 @@ function Problem5({
                 backgroundColor: isFilled
                   ? feedback && tappedMedian === val
                     ? feedback.correct
-                      ? `${COLORS.success}40`
-                      : `${COLORS.error}40`
+                      ? `${THEME.success}40`
+                      : `${THEME.error}40`
                     : isMiddle
-                      ? `${COLORS.median}30`
-                      : COLORS.bgElevated
+                      ? `${THEME.median}30`
+                      : ELEVATED
                   : "transparent",
                 border: isFilled
                   ? isMiddle
-                    ? `2px solid ${COLORS.median}`
+                    ? `2px solid ${THEME.median}`
                     : `1px solid #475569`
                   : "2px dashed #475569",
-                color: COLORS.textPrimary,
+                color: TEXT_PRIMARY,
                 minHeight: 44,
                 minWidth: 44,
               }}
@@ -2987,7 +2936,7 @@ function Problem5({
       {sortCorrect && !feedback && (
         <p
           className="text-center text-sm font-medium mb-2"
-          style={{ color: COLORS.median }}
+          style={{ color: THEME.median }}
         >
           Now tap the middle value!
         </p>
@@ -3058,7 +3007,7 @@ function Problem6({
           >
             <span
               className="text-xs font-mono tabular-nums mb-1"
-              style={{ color: COLORS.textMuted }}
+              style={{ color: TEXT_MUTED }}
             >
               {item.count}
             </span>
@@ -3069,14 +3018,14 @@ function Problem6({
                 height: (item.count / 58) * 80,
                 backgroundColor:
                   item.count === 58
-                    ? `${COLORS.mode}60`
-                    : COLORS.dotsFill,
+                    ? `${THEME.mode}60`
+                    : THEME.dotsFill,
               }}
             />
             <span
               className="text-xs mt-1"
               style={{
-                color: COLORS.textMuted,
+                color: TEXT_MUTED,
                 fontSize: 10,
               }}
             >
@@ -3180,13 +3129,13 @@ function Problem7({
               height: 48,
               backgroundColor:
                 selectedOutlier === val
-                  ? `${COLORS.outlier}40`
-                  : COLORS.bgElevated,
+                  ? `${THEME.outlier}40`
+                  : ELEVATED,
               border:
                 selectedOutlier === val
-                  ? `2px solid ${COLORS.outlier}`
+                  ? `2px solid ${THEME.outlier}`
                   : "1px solid #475569",
-              color: COLORS.textPrimary,
+              color: TEXT_PRIMARY,
               minHeight: 44,
               minWidth: 44,
             }}
@@ -3205,7 +3154,7 @@ function Problem7({
         >
           <p
             className="text-sm mb-2 text-center"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Which measure does the outlier affect MOST?
           </p>
@@ -3277,7 +3226,7 @@ function Problem8({
           <div key={i} className="text-center">
             <span
               className="text-xs block mb-1"
-              style={{ color: COLORS.textMuted }}
+              style={{ color: TEXT_MUTED }}
             >
               {["1st", "2nd", "3rd", "4th"][i]}
             </span>
@@ -3286,12 +3235,12 @@ function Problem8({
               style={{
                 backgroundColor:
                   i === 1 || i === 2
-                    ? `${COLORS.median}30`
-                    : COLORS.bgElevated,
-                color: COLORS.textPrimary,
+                    ? `${THEME.median}30`
+                    : ELEVATED,
+                color: TEXT_PRIMARY,
                 border:
                   i === 1 || i === 2
-                    ? `2px solid ${COLORS.median}60`
+                    ? `2px solid ${THEME.median}60`
                     : "none",
               }}
             >
@@ -3304,7 +3253,7 @@ function Problem8({
       {/* Bracket hint */}
       <p
         className="text-center text-sm mb-3"
-        style={{ color: COLORS.median }}
+        style={{ color: THEME.median }}
       >
         Middle values: 7 and 9 -- what&apos;s between them?
       </p>
@@ -3323,8 +3272,8 @@ function Problem8({
               width: 120,
               height: 52,
               border: `2px solid #475569`,
-              backgroundColor: COLORS.bgPrimary,
-              color: COLORS.textPrimary,
+              backgroundColor: SURFACE_DEEP,
+              color: TEXT_PRIMARY,
               outline: "none",
             }}
             aria-label="Enter the median value"
@@ -3419,19 +3368,19 @@ function Problem9({
               style={{
                 width: 20,
                 height: 12,
-                backgroundColor: COLORS.dotsFill,
+                backgroundColor: THEME.dotsFill,
               }}
             />
             <span
               className="text-xs mt-0.5 font-mono"
-              style={{ color: COLORS.textMuted, fontSize: 8 }}
+              style={{ color: TEXT_MUTED, fontSize: 8 }}
             >
               ${v}K
             </span>
           </div>
         ))}
         <div className="flex flex-col items-center ml-4">
-          <div className="text-xs" style={{ color: COLORS.textMuted }}>
+          <div className="text-xs" style={{ color: TEXT_MUTED }}>
             //
           </div>
           <div
@@ -3439,12 +3388,12 @@ function Problem9({
             style={{
               width: 20,
               height: 60,
-              backgroundColor: `${COLORS.outlier}60`,
+              backgroundColor: `${THEME.outlier}60`,
             }}
           />
           <span
             className="text-xs mt-0.5 font-mono"
-            style={{ color: COLORS.outlier, fontSize: 8 }}
+            style={{ color: THEME.outlier, fontSize: 8 }}
           >
             $2B
           </span>
@@ -3453,7 +3402,7 @@ function Problem9({
 
       <p
         className="text-center text-sm font-bold mb-3"
-        style={{ color: COLORS.mean }}
+        style={{ color: THEME.mean }}
       >
         Reported &quot;average&quot;: $333,000,000
       </p>
@@ -3463,7 +3412,7 @@ function Problem9({
         <div className="space-y-2 mb-4">
           <p
             className="text-sm mb-2"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Is this a fair representation?
           </p>
@@ -3475,8 +3424,8 @@ function Problem9({
                 className="w-full rounded-xl px-4 py-3 text-left font-semibold"
                 style={{
                   minHeight: 48,
-                  backgroundColor: COLORS.bgElevated,
-                  color: COLORS.textPrimary,
+                  backgroundColor: ELEVATED,
+                  color: TEXT_PRIMARY,
                 }}
                 aria-label={choice}
               >
@@ -3495,7 +3444,7 @@ function Problem9({
         >
           <p
             className="text-sm mb-2"
-            style={{ color: COLORS.textMuted }}
+            style={{ color: TEXT_MUTED }}
           >
             Which measure should they use instead?
           </p>
@@ -3569,8 +3518,7 @@ function ReflectionStage({
 
   return (
     <section
-      className="flex flex-1 flex-col px-4 py-6"
-      style={{ backgroundColor: COLORS.bgPrimary }}
+      className="flex flex-1 flex-col px-4 py-6 bg-nm-bg-primary"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -3580,7 +3528,7 @@ function ReflectionStage({
         {/* Header */}
         <div
           className="rounded-2xl p-6"
-          style={{ backgroundColor: COLORS.bgSurface }}
+          style={{ backgroundColor: SURFACE }}
         >
           <span
             className="text-xs font-bold uppercase px-3 py-1 rounded-full inline-block mb-4"
@@ -3596,7 +3544,7 @@ function ReflectionStage({
           <p
             className="font-medium leading-relaxed mb-4"
             style={{
-              color: COLORS.textPrimary,
+              color: TEXT_PRIMARY,
               fontSize: 18,
               lineHeight: 1.6,
             }}
@@ -3619,10 +3567,10 @@ function ReflectionStage({
                   style={{
                     color:
                       type === "mean"
-                        ? COLORS.mean
+                        ? THEME.mean
                         : type === "median"
-                          ? COLORS.median
-                          : COLORS.mode,
+                          ? THEME.median
+                          : THEME.mode,
                   }}
                 >
                   {type}
@@ -3649,8 +3597,8 @@ function ReflectionStage({
             className="w-full rounded-xl px-4 py-3 text-base leading-relaxed resize-none"
             style={{
               border: "1px solid #475569",
-              backgroundColor: COLORS.bgPrimary,
-              color: COLORS.textSecondary,
+              backgroundColor: SURFACE_DEEP,
+              color: TEXT_SEC,
               outline: "none",
               minHeight: 120,
               maxHeight: 240,
@@ -3664,7 +3612,7 @@ function ReflectionStage({
             style={{
               color:
                 text.trim().length >= 20
-                  ? COLORS.success
+                  ? THEME.success
                   : "#64748b",
             }}
           >
@@ -3680,8 +3628,8 @@ function ReflectionStage({
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 rounded-lg p-4"
               style={{
-                borderLeft: `4px solid ${COLORS.median}`,
-                backgroundColor: COLORS.bgPrimary,
+                borderLeft: `4px solid ${THEME.median}`,
+                backgroundColor: SURFACE_DEEP,
               }}
               aria-live="polite"
             >
@@ -3707,7 +3655,7 @@ function ReflectionStage({
               <MiniDotPlot data={[5, 5, 6, 7, 7, 7, 8, 40]} showMeasures />
               <p
                 className="text-center text-sm italic mt-2"
-                style={{ color: COLORS.textSecondary }}
+                style={{ color: TEXT_SEC }}
               >
                 Same data, three stories. Choosing the right measure
                 matters!
@@ -3727,7 +3675,7 @@ function ReflectionStage({
               disabled={!canSubmit}
               className="w-full"
               style={{
-                backgroundColor: COLORS.primary,
+                backgroundColor: THEME.primary,
                 opacity: canSubmit ? 1 : 0.4,
               }}
             >
@@ -3757,7 +3705,7 @@ function ReflectionStage({
               size="lg"
               onClick={onComplete}
               className="w-full"
-              style={{ backgroundColor: COLORS.primary }}
+              style={{ backgroundColor: THEME.primary }}
             >
               Complete Lesson
             </Button>
@@ -3772,94 +3720,21 @@ function ReflectionStage({
 // ROOT COMPONENT
 // ===========================================================================
 
-export function MeanMedianModeLesson({
-  onComplete,
-}: MeanMedianModeLessonProps) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const stage = STAGES[stageIdx] ?? ("hook" as Stage);
-
-  const advanceStage = useCallback(() => {
-    setStageIdx((i) => {
-      const next = i + 1;
-      if (next >= STAGES.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
-  const handleReflectionComplete = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
-  const stageProgress = ((stageIdx + 1) / STAGES.length) * 100;
-
+export function MeanMedianModeLesson({ onComplete }: MeanMedianModeLessonProps) {
   return (
-    <div
-      className="flex min-h-screen flex-col"
-      style={{ backgroundColor: COLORS.bgPrimary }}
-    >
-      {/* Progress header */}
-      <div
-        className="sticky top-0 z-10 backdrop-blur-sm px-4 py-2"
-        style={{
-          backgroundColor: `${COLORS.bgPrimary}e6`,
-          borderBottom: `1px solid ${COLORS.bgSurface}`,
-        }}
-      >
-        <div className="flex items-center justify-between mb-1">
-          <span
-            className="text-xs font-medium"
-            style={{ color: COLORS.textMuted }}
-          >
-            SP-5.1 Mean, Median, Mode
-          </span>
-          <span
-            className="text-xs tabular-nums"
-            style={{ color: "#475569" }}
-          >
-            {stageIdx + 1}/{STAGES.length}
-          </span>
-        </div>
-        <ProgressBar value={stageProgress} variant="xp" size="sm" />
-      </div>
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={SPRING_GENTLE}
-        >
-          {stage === "hook" && (
-            <HookStage onComplete={advanceStage} />
-          )}
-          {stage === "spatial" && (
-            <SpatialStage onComplete={advanceStage} />
-          )}
-          {stage === "discovery" && (
-            <DiscoveryStage onComplete={advanceStage} />
-          )}
-          {stage === "symbol" && (
-            <SymbolBridgeStage onComplete={advanceStage} />
-          )}
-          {stage === "realWorld" && (
-            <RealWorldStage onComplete={advanceStage} />
-          )}
-          {stage === "practice" && (
-            <PracticeStage onComplete={advanceStage} />
-          )}
-          {stage === "reflection" && (
-            <ReflectionStage
-              onComplete={handleReflectionComplete}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="SP-5.1 Mean, Median, Mode" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

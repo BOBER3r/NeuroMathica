@@ -1,7 +1,13 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -12,130 +18,43 @@ interface TrianglesLessonProps {
   onComplete?: () => void;
 }
 
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SPRING & ANIMATION CONFIGS
+// SHARED TOKEN ALIASES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.surface;
+const ELEVATED = colors.bg.elevated;
+const PRIMARY = colors.accent.violet;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
+const THEME = {
   angleA: "#f87171",
   angleAFill: "#f8717133",
   angleB: "#60a5fa",
   angleBFill: "#60a5fa33",
   angleC: "#34d399",
   angleCFill: "#34d39933",
-  sides: "#a78bfa",
+  sides: colors.accent.violet,
   sidesFill: "#a78bfa33",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
   textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  success: "#34d399",
   successFill: "#34d39933",
-  error: "#f87171",
   errorFill: "#f8717133",
-  primary: "#8b5cf6",
   primaryHover: "#7c3aed",
-  border: "#334155",
-  borderLight: "#475569",
 } as const;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SHARED SMALL COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileHover={disabled ? {} : { backgroundColor: C.primaryHover }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TRIANGLE DATA
@@ -198,37 +117,21 @@ const TRIANGLE_PRESETS: readonly TrianglePreset[] = [
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function TrianglesLesson({ onComplete }: TrianglesLessonProps) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGE_ORDER.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGE_ORDER[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ backgroundColor: C.bgPrimary }}>
-      <StageProgressDots currentIndex={stageIdx} total={STAGE_ORDER.length} />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={FADE}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && <HookStage onComplete={advance} />}
-          {stage === "spatial" && <SpatialStage onComplete={advance} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advance} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advance} />}
-          {stage === "practice" && <PracticeStage onComplete={advance} />}
-          {stage === "reflection" && <ReflectionStage onComplete={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.2 Triangles" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }
 
@@ -270,7 +173,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 <motion.polygon
                   points="240,40 100,240 380,240"
                   fill="none"
-                  stroke={C.borderLight}
+                  stroke={ELEVATED}
                   strokeWidth={3}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -283,21 +186,21 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             {/* Angle dots at vertices */}
             {phase >= 1 && phase < 2 && (
               <>
-                <motion.circle cx={240} cy={60} r={14} fill={C.angleA} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_POP} />
-                <motion.circle cx={115} cy={225} r={14} fill={C.angleB} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...SPRING_POP, delay: 0.2 }} />
-                <motion.circle cx={365} cy={225} r={14} fill={C.angleC} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...SPRING_POP, delay: 0.4 }} />
+                <motion.circle cx={240} cy={60} r={14} fill={THEME.angleA} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING_POP} />
+                <motion.circle cx={115} cy={225} r={14} fill={THEME.angleB} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...SPRING_POP, delay: 0.2 }} />
+                <motion.circle cx={365} cy={225} r={14} fill={THEME.angleC} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...SPRING_POP, delay: 0.4 }} />
               </>
             )}
 
             {/* Corners tear off and align */}
             {phase >= 2 && phase < 4 && (
               <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <motion.circle cx={160} cy={270} r={14} fill={C.angleA} initial={{ x: 80, y: -210 }} animate={{ x: 0, y: 0 }} transition={SPRING} />
-                <motion.circle cx={240} cy={270} r={14} fill={C.angleB} initial={{ x: -125, y: -45 }} animate={{ x: 0, y: 0 }} transition={{ ...SPRING, delay: 0.2 }} />
-                <motion.circle cx={320} cy={270} r={14} fill={C.angleC} initial={{ x: 45, y: -45 }} animate={{ x: 0, y: 0 }} transition={{ ...SPRING, delay: 0.4 }} />
+                <motion.circle cx={160} cy={270} r={14} fill={THEME.angleA} initial={{ x: 80, y: -210 }} animate={{ x: 0, y: 0 }} transition={SPRING} />
+                <motion.circle cx={240} cy={270} r={14} fill={THEME.angleB} initial={{ x: -125, y: -45 }} animate={{ x: 0, y: 0 }} transition={{ ...SPRING, delay: 0.2 }} />
+                <motion.circle cx={320} cy={270} r={14} fill={THEME.angleC} initial={{ x: 45, y: -45 }} animate={{ x: 0, y: 0 }} transition={{ ...SPRING, delay: 0.4 }} />
                 <motion.line
                   x1={130} y1={270} x2={350} y2={270}
-                  stroke={C.textMuted} strokeWidth={2} strokeDasharray="4 4"
+                  stroke={TEXT_SEC} strokeWidth={2} strokeDasharray="4 4"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
                 />
               </motion.g>
@@ -309,7 +212,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 x={240} y={270}
                 textAnchor={"middle" as const}
                 dominantBaseline="central"
-                fill={C.textPrimary}
+                fill={TEXT}
                 fontSize={24}
                 fontWeight={700}
                 initial={{ opacity: 0, scale: 0 }}
@@ -330,7 +233,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               className="mb-4 text-center"
-              style={{ color: C.textPrimary, fontSize: "clamp(18px, 4.5vw, 28px)", fontWeight: 700 }}
+              style={{ color: TEXT, fontSize: "clamp(18px, 4.5vw, 28px)", fontWeight: 700 }}
             >
               Every triangle. Every time. 180{"\u00B0"}.
             </motion.p>
@@ -344,7 +247,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-8 text-center"
-              style={{ color: C.textSecondary, fontSize: "clamp(16px, 4vw, 22px)" }}
+              style={{ color: THEME.textSecondary, fontSize: "clamp(16px, 4vw, 22px)" }}
             >
               It&apos;s not a coincidence {"\u2014"} it&apos;s geometry.
             </motion.p>
@@ -352,9 +255,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         </AnimatePresence>
 
         {phase >= 6 && (
-          <div className="flex justify-center">
-            <ContinueButton onClick={onComplete} />
-          </div>
+          <ContinueButton onClick={onComplete} color={PRIMARY} />
         )}
       </div>
     </div>
@@ -383,7 +284,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const [vA, vB, vC] = preset.vertices;
-  const angleColors = [C.angleA, C.angleB, C.angleC] as const;
+  const angleColors = [THEME.angleA, THEME.angleB, THEME.angleC] as const;
 
   return (
     <div
@@ -391,7 +292,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
       {/* Angle readouts */}
-      <div className="mb-3 w-full rounded-xl p-4" style={{ backgroundColor: C.bgSurface }}>
+      <div className="mb-3 w-full rounded-xl bg-nm-bg-secondary p-4">
         <div className="mb-2 flex items-center justify-center gap-4">
           {preset.angles.map((angle, i) => (
             <div key={i} className="text-center">
@@ -404,7 +305,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm font-semibold" style={{ color: C.success }}>
+        <p className="text-center text-sm font-semibold" style={{ color: SUCCESS }}>
           Sum: {preset.angles[0]! + preset.angles[1]! + preset.angles[2]!}{"\u00B0"} (always 180{"\u00B0"})
         </p>
       </div>
@@ -419,8 +320,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <motion.polygon
           key={presetIdx}
           points={`${vA.x},${vA.y} ${vB.x},${vB.y} ${vC.x},${vC.y}`}
-          fill={`${C.sides}15`}
-          stroke={C.sides}
+          fill={`${THEME.sides}15`}
+          stroke={THEME.sides}
           strokeWidth={3}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -468,7 +369,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               y={my + dy}
               textAnchor={"middle" as const}
               dominantBaseline="central"
-              fill={C.textMuted}
+              fill={TEXT_SEC}
               fontSize={12}
               fontWeight={600}
             >
@@ -480,10 +381,10 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Classification */}
       <div className="mb-4 flex gap-3 justify-center">
-        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: C.sidesFill, color: C.sides }}>
+        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: THEME.sidesFill, color: THEME.sides }}>
           Sides: {preset.bySides}
         </span>
-        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: C.angleAFill, color: C.angleA }}>
+        <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: THEME.angleAFill, color: THEME.angleA }}>
           Angles: {preset.byAngles}
         </span>
       </div>
@@ -493,7 +394,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <motion.button
           onClick={handlePrevShape}
           className="min-h-[48px] min-w-[48px] rounded-xl px-4 py-3 text-sm font-semibold"
-          style={{ backgroundColor: C.bgSurface, border: `2px solid ${C.borderLight}`, color: C.textSecondary }}
+          style={{ backgroundColor: SURFACE, border: `2px solid ${ELEVATED}`, color: THEME.textSecondary }}
           whileTap={{ scale: 0.95 }}
           aria-label="Previous triangle shape"
         >
@@ -502,7 +403,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <motion.button
           onClick={handleNextShape}
           className="min-h-[48px] min-w-[120px] rounded-xl px-4 py-3 text-sm font-semibold"
-          style={{ backgroundColor: C.bgSurface, border: `2px solid ${C.borderLight}`, color: C.textSecondary }}
+          style={{ backgroundColor: SURFACE, border: `2px solid ${ELEVATED}`, color: THEME.textSecondary }}
           whileTap={{ scale: 0.95 }}
           aria-label="Next triangle shape"
         >
@@ -511,21 +412,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Progress */}
-      <div className="flex items-center gap-1 justify-center">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div
-            key={i}
-            className="rounded-full transition-colors duration-200"
-            style={{ width: 6, height: 6, backgroundColor: i < interactions ? C.primary : C.border }}
-          />
-        ))}
-      </div>
+      <InteractionDots count={interactions} total={6} activeColor={PRIMARY} />
 
-      {canContinue && (
-        <div className="mt-4 flex justify-center">
-          <ContinueButton onClick={onComplete} />
-        </div>
-      )}
+      {canContinue && <ContinueButton onClick={onComplete} color={PRIMARY} />}
     </div>
   );
 }
@@ -555,18 +444,18 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4" style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}>
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-4 flex items-center gap-1 justify-center">
           {DISCOVERY_PROMPTS.map((_, i) => (
-            <div key={i} className="rounded-full" style={{ width: 8, height: 8, backgroundColor: i <= promptIdx ? C.primary : C.border }} />
+            <div key={i} className="rounded-full" style={{ width: 8, height: 8, backgroundColor: i <= promptIdx ? PRIMARY : BORDER }} />
           ))}
         </div>
         <motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}>
-          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: C.textPrimary }}>{prompt.text}</p>
-          <p className="mb-6 rounded-lg px-4 py-3 font-mono text-sm" style={{ backgroundColor: C.bgPrimary, color: C.textSecondary }}>{prompt.detail}</p>
+          <p className="mb-3 text-lg font-medium leading-relaxed" style={{ color: TEXT }}>{prompt.text}</p>
+          <p className="mb-6 rounded-lg bg-nm-bg-primary px-4 py-3 font-mono text-sm" style={{ color: THEME.textSecondary }}>{prompt.detail}</p>
         </motion.div>
         <div className="flex justify-center">
-          <motion.button onClick={handleAck} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-base font-semibold text-white" style={{ backgroundColor: C.primary }} whileTap={{ scale: 0.95 }}>{prompt.button}</motion.button>
+          <motion.button onClick={handleAck} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-base font-semibold text-white" style={{ backgroundColor: PRIMARY }} whileTap={{ scale: 0.95 }}>{prompt.button}</motion.button>
         </div>
       </div>
     </div>
@@ -597,17 +486,17 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4" style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}>
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
-        <span className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: "#7c3aed20", color: C.sides }}>Symbol Bridge</span>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
+        <span className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: "#7c3aed20", color: THEME.sides }}>Symbol Bridge</span>
         <div className="space-y-3">
           {SYMBOL_STEPS.map((_, i) => {
             const step = SYMBOL_STEPS[i]!;
             return i < visibleCount ? (
-              <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ backgroundColor: C.bgPrimary, border: `1px solid ${C.border}` }}>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: C.primary, color: "#fff" }}>{i + 1}</span>
+              <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ backgroundColor: BG, border: `1px solid ${BORDER}` }}>
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: PRIMARY, color: "#fff" }}>{i + 1}</span>
                 <div>
-                  <p className="font-mono text-sm font-semibold" style={{ color: C.sides }}>{step.notation}</p>
-                  <p className="text-xs" style={{ color: C.textMuted }}>{step.description}</p>
+                  <p className="font-mono text-sm font-semibold" style={{ color: THEME.sides }}>{step.notation}</p>
+                  <p className="text-xs" style={{ color: MUTED }}>{step.description}</p>
                 </div>
               </motion.div>
             ) : null;
@@ -615,8 +504,8 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
         </div>
         {visibleCount >= SYMBOL_STEPS.length && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6">
-            <p className="mb-4 text-center text-sm font-semibold" style={{ color: C.textSecondary }}>Angles sum to 180{"\u00B0"}. Classify by sides and by angles.</p>
-            <div className="flex justify-center"><ContinueButton onClick={onComplete} /></div>
+            <p className="mb-4 text-center text-sm font-semibold" style={{ color: THEME.textSecondary }}>Angles sum to 180{"\u00B0"}. Classify by sides and by angles.</p>
+            <ContinueButton onClick={onComplete} color={PRIMARY} />
           </motion.div>
         )}
       </div>
@@ -638,18 +527,18 @@ const REAL_WORLD_CARDS = [
 function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4" style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}>
-      <span className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: C.textMuted }}>Real World Connections</span>
+      <span className="mb-4 text-xs font-semibold uppercase tracking-wider" style={{ color: MUTED }}>Real World Connections</span>
       <div className="mb-6 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
         {REAL_WORLD_CARDS.map((card, i) => (
-          <motion.div key={card.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: i * 0.15 }} className="rounded-xl p-4" style={{ backgroundColor: C.bgSurface, border: `1px solid ${C.border}` }}>
+          <motion.div key={card.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: i * 0.15 }} className="rounded-xl p-4" style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
             <p className="mb-1 text-lg">{card.icon}</p>
-            <p className="mb-1 text-sm font-semibold" style={{ color: C.textPrimary }}>{card.title}</p>
-            <p className="mb-2 text-xs" style={{ color: C.textSecondary }}>{card.example}</p>
-            <p className="font-mono text-xs" style={{ color: C.sides }}>{card.math}</p>
+            <p className="mb-1 text-sm font-semibold" style={{ color: TEXT }}>{card.title}</p>
+            <p className="mb-2 text-xs" style={{ color: THEME.textSecondary }}>{card.example}</p>
+            <p className="font-mono text-xs" style={{ color: THEME.sides }}>{card.math}</p>
           </motion.div>
         ))}
       </div>
-      <ContinueButton onClick={onComplete} />
+      <ContinueButton onClick={onComplete} color={PRIMARY} />
     </div>
   );
 }
@@ -713,48 +602,48 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4" style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}>
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
         <div className="mb-4 flex items-center justify-between">
-          <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase" style={{ backgroundColor: C.primary + "30", color: C.primary }}>{problem.layer}</span>
-          <span className="text-xs font-semibold" style={{ color: C.textMuted }}>{idx + 1}/{PRACTICE_PROBLEMS.length}</span>
+          <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase" style={{ backgroundColor: PRIMARY + "30", color: PRIMARY }}>{problem.layer}</span>
+          <span className="text-xs font-semibold" style={{ color: MUTED }}>{idx + 1}/{PRACTICE_PROBLEMS.length}</span>
         </div>
-        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>{problem.prompt}</p>
+        <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: TEXT }}>{problem.prompt}</p>
 
         {problem.type === "mc" || problem.type === "tf" ? (
           <div className="mb-4 space-y-2">
             {(problem.options ?? []).map((opt) => {
               const optCorrect = opt === problem.answer;
               const optSelected = opt === selected;
-              let bg: string = C.bgPrimary;
-              let border: string = C.border;
-              if (showFeedback && optSelected) { bg = optCorrect ? C.successFill : C.errorFill; border = optCorrect ? C.success : C.error; }
-              else if (showFeedback && optCorrect) { bg = C.successFill; border = C.success; }
+              let bg: string = BG;
+              let border: string = BORDER;
+              if (showFeedback && optSelected) { bg = optCorrect ? THEME.successFill : THEME.errorFill; border = optCorrect ? SUCCESS : ERROR; }
+              else if (showFeedback && optCorrect) { bg = THEME.successFill; border = SUCCESS; }
               return (
-                <motion.button key={opt} onClick={() => handleSelect(opt)} disabled={showFeedback} className="min-h-[44px] w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed" style={{ backgroundColor: bg, border: `2px solid ${border}`, color: C.textPrimary }} whileTap={showFeedback ? {} : { scale: 0.98 }}>{opt}</motion.button>
+                <motion.button key={opt} onClick={() => handleSelect(opt)} disabled={showFeedback} className="min-h-[44px] w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed" style={{ backgroundColor: bg, border: `2px solid ${border}`, color: TEXT }} whileTap={showFeedback ? {} : { scale: 0.98 }}>{opt}</motion.button>
               );
             })}
           </div>
         ) : (
           <div className="mb-4 flex gap-2">
-            <input type="text" inputMode="numeric" value={numericValue} onChange={(e) => setNumericValue(e.target.value)} disabled={showFeedback} className="min-h-[44px] flex-1 rounded-lg px-4 py-2 text-sm font-mono disabled:opacity-50" style={{ backgroundColor: C.bgPrimary, border: `2px solid ${C.border}`, color: C.textPrimary }} placeholder="Your answer" aria-label="Numeric answer input" />
+            <input type="text" inputMode="numeric" value={numericValue} onChange={(e) => setNumericValue(e.target.value)} disabled={showFeedback} className="min-h-[44px] flex-1 rounded-lg px-4 py-2 text-sm font-mono disabled:opacity-50" style={{ backgroundColor: BG, border: `2px solid ${BORDER}`, color: TEXT }} placeholder="Your answer" aria-label="Numeric answer input" />
             {!showFeedback && (
-              <motion.button onClick={handleNumericSubmit} className="min-h-[44px] min-w-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: C.primary }} whileTap={{ scale: 0.95 }} aria-label="Submit answer">Check</motion.button>
+              <motion.button onClick={handleNumericSubmit} className="min-h-[44px] min-w-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: PRIMARY }} whileTap={{ scale: 0.95 }} aria-label="Submit answer">Check</motion.button>
             )}
           </div>
         )}
 
         <AnimatePresence>
           {showFeedback && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: isCorrect ? C.successFill : C.errorFill, color: isCorrect ? C.success : C.error }}>
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: isCorrect ? THEME.successFill : THEME.errorFill, color: isCorrect ? SUCCESS : ERROR }}>
               <p className="mb-1 font-semibold">{isCorrect ? "Correct!" : `Incorrect. Answer: ${problem.answer}`}</p>
-              <p style={{ color: C.textSecondary }}>{problem.feedback}</p>
+              <p style={{ color: THEME.textSecondary }}>{problem.feedback}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
         {showFeedback && (
           <div className="flex justify-center">
-            <motion.button onClick={handleNext} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white" style={{ backgroundColor: C.primary }} whileTap={{ scale: 0.95 }}>{isLast ? "Complete" : "Next \u2192"}</motion.button>
+            <motion.button onClick={handleNext} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white" style={{ backgroundColor: PRIMARY }} whileTap={{ scale: 0.95 }}>{isLast ? "Complete" : "Next \u2192"}</motion.button>
           </div>
         )}
       </div>
@@ -776,26 +665,26 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4" style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}>
-      <div className="w-full rounded-2xl p-6" style={{ backgroundColor: C.bgSurface }}>
-        <span className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: "#7c3aed20", color: C.primary }}>Reflection</span>
+      <div className="w-full rounded-2xl bg-nm-bg-secondary p-6">
+        <span className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: "#7c3aed20", color: PRIMARY }}>Reflection</span>
 
         {!submitted ? (
           <>
-            <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+            <p className="mb-4 text-base font-medium leading-relaxed" style={{ color: TEXT }}>
               Imagine tearing off the three corners of any triangle and lining them up. Why do they always form a straight line (180{"\u00B0"})? What does this tell us about triangles?
             </p>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} className="mb-2 min-h-[100px] w-full rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: C.bgPrimary, border: `2px solid ${C.border}`, color: C.textPrimary, resize: "vertical" }} placeholder="Type your explanation..." aria-label="Reflection text" />
-            <p className="mb-4 text-xs" style={{ color: text.length >= 20 ? C.success : C.textMuted }}>{text.length}/20 characters minimum</p>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} className="mb-2 min-h-[100px] w-full rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: BG, border: `2px solid ${BORDER}`, color: TEXT, resize: "vertical" }} placeholder="Type your explanation..." aria-label="Reflection text" />
+            <p className="mb-4 text-xs" style={{ color: text.length >= 20 ? SUCCESS : MUTED }}>{text.length}/20 characters minimum</p>
             <div className="flex items-center justify-between">
-              <button onClick={onComplete} className="min-h-[44px] px-4 py-2 text-sm" style={{ color: C.textDim }} aria-label="Skip reflection">Skip</button>
-              <motion.button onClick={handleSubmit} disabled={text.length < 20} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed" style={{ backgroundColor: C.primary }} whileTap={text.length >= 20 ? { scale: 0.95 } : {}}>Submit</motion.button>
+              <button onClick={onComplete} className="min-h-[44px] px-4 py-2 text-sm" style={{ color: MUTED }} aria-label="Skip reflection">Skip</button>
+              <motion.button onClick={handleSubmit} disabled={text.length < 20} className="min-h-[48px] min-w-[140px] rounded-xl px-6 py-3 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed" style={{ backgroundColor: PRIMARY }} whileTap={text.length >= 20 ? { scale: 0.95 } : {}}>Submit</motion.button>
             </div>
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING}>
-            <p className="mb-4 text-lg font-semibold" style={{ color: C.success }}>Wonderful geometric thinking!</p>
-            <p className="mb-6 text-sm" style={{ color: C.textSecondary }}>The 180{"\u00B0"} angle sum is one of the most fundamental properties in geometry. It connects to parallel lines, polygon angle sums, and even the shape of the universe!</p>
-            <div className="flex justify-center"><ContinueButton onClick={onComplete} label="Complete Lesson" /></div>
+            <p className="mb-4 text-lg font-semibold" style={{ color: SUCCESS }}>Wonderful geometric thinking!</p>
+            <p className="mb-6 text-sm" style={{ color: THEME.textSecondary }}>The 180{"\u00B0"} angle sum is one of the most fundamental properties in geometry. It connects to parallel lines, polygon angle sums, and even the shape of the universe!</p>
+            <ContinueButton onClick={onComplete} label="Complete Lesson" color={PRIMARY} />
           </motion.div>
         )}
       </div>

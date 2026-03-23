@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -21,25 +27,6 @@ import { useDrag } from "@use-gesture/react";
 interface FractionsLessonProps {
   onComplete?: () => void;
 }
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
 
 interface Fraction {
   numerator: number;
@@ -67,33 +54,30 @@ interface PracticeProblem {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const SHADED = "#818cf8";
-const UNSHADED = "#334155";
-const CYAN = "#22d3ee";
-const BORDER = "#64748b";
-const TEXT = "#e2e8f0";
-const TEXT_SEC = "#94a3b8";
-const NUMER_HL = "#818cf8";
-const DENOM_HL = "#f59e0b";
-const CORRECT = "#34d399";
-const INCORRECT = "#f87171";
-const PIZZA_BASE = "#f59e0b";
-const PIZZA_STROKE = "#d97706";
-const PIZZA_CRUST = "#b45309";
-const CUT_LINE = "#fefce8";
-const SURFACE = "#1e293b";
-const BG = "#0f172a";
+/* ── Lesson-specific semantic colors (not in shared tokens) ── */
+const THEME = {
+  numerHL: colors.accent.indigo,
+  denomHL: "#f59e0b",
+  pizzaBase: "#f59e0b",
+  pizzaStroke: "#d97706",
+  pizzaCrust: "#b45309",
+  cutLine: "#fefce8",
+  incorrect: "#f87171",
+} as const;
 
-const SPRING: { type: "spring"; damping: number; stiffness: number } = {
-  type: "spring",
-  damping: 20,
-  stiffness: 300,
-};
-const SPRING_GENTLE: { type: "spring"; damping: number; stiffness: number } = {
-  type: "spring",
-  damping: 25,
-  stiffness: 200,
-};
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const SHADED = colors.accent.indigo;
+const UNSHADED = colors.bg.surface;
+const CYAN = colors.accent.cyan;
+const BORDER = colors.text.muted;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const CORRECT = colors.functional.success;
+const SURFACE = colors.bg.secondary;
+const BG = colors.bg.primary;
+
+const SPRING = springs.default;
+const SPRING_GENTLE = springs.gentle;
 const EASE: { type: "tween"; duration: number; ease: "easeInOut" } = {
   type: "tween",
   duration: 0.3,
@@ -153,62 +137,8 @@ function rangeSet(n: number): Set<number> {
 /*  Shared sub-components                                              */
 /* ------------------------------------------------------------------ */
 
-function ContinueButton({
-  onClick,
-  disabled = false,
-  children = "Continue" as ReactNode,
-  progress,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-  progress?: number;
-}) {
-  return (
-    <motion.button
-      className="relative inline-flex items-center justify-center gap-2 rounded-xl font-medium px-6 py-3 text-base select-none"
-      style={{
-        minHeight: 48,
-        minWidth: 48,
-        background: disabled ? `${SHADED}66` : SHADED,
-        color: "#fff",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onClick={disabled ? undefined : onClick}
-      whileHover={disabled ? undefined : { scale: 1.04 }}
-      whileTap={disabled ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", damping: 15, stiffness: 400 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: disabled ? 0.5 : 1, y: 0 }}
-    >
-      {progress !== undefined && progress < 1 && (
-        <svg
-          className="absolute -top-1 -right-1"
-          width={24}
-          height={24}
-          viewBox="0 0 24 24"
-        >
-          <circle cx={12} cy={12} r={10} fill="none" stroke={UNSHADED} strokeWidth={2} />
-          <motion.circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={SHADED}
-            strokeWidth={2}
-            strokeDasharray={62.83}
-            strokeLinecap="round"
-            transform="rotate(-90 12 12)"
-            animate={{ strokeDashoffset: 62.83 * (1 - progress) }}
-            transition={SPRING_GENTLE}
-          />
-        </svg>
-      )}
-      {children}
-    </motion.button>
-  );
-}
+/* ContinueButton is now imported from @/components/lessons/ui/ContinueButton */
+/* InteractionDots is now imported from @/components/lessons/ui/InteractionDots */
 
 /* ------------------------------------------------------------------ */
 /*  FractionBar                                                        */
@@ -330,9 +260,9 @@ function FractionBar({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
           >
-            <span style={{ color: NUMER_HL }}>{n}</span>
+            <span style={{ color: THEME.numerHL }}>{n}</span>
             <span style={{ color: TEXT_SEC }}>/</span>
-            <span style={{ color: DENOM_HL }}>{denominator}</span>
+            <span style={{ color: THEME.denomHL }}>{denominator}</span>
           </motion.div>
         </AnimatePresence>
       )}
@@ -445,9 +375,9 @@ function FractionCircle({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
           >
-            <span style={{ color: NUMER_HL }}>{n}</span>
+            <span style={{ color: THEME.numerHL }}>{n}</span>
             <span style={{ color: TEXT_SEC }}>/</span>
-            <span style={{ color: DENOM_HL }}>{denominator}</span>
+            <span style={{ color: THEME.denomHL }}>{denominator}</span>
           </motion.div>
         </AnimatePresence>
       )}
@@ -510,7 +440,7 @@ function DenominatorSlider({
         }}
         onClick={(e) => snap(e.clientX)}
       >
-        <div ref={trackRef} className="relative w-full h-1.5 rounded-full" style={{ background: "#1e293b" }}>
+        <div ref={trackRef} className="relative w-full h-1.5 rounded-full bg-nm-bg-secondary">
           <motion.div
             className="absolute top-0 left-0 h-full rounded-full"
             style={{ background: SHADED }}
@@ -534,7 +464,7 @@ function DenominatorSlider({
           }}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 1.1, cursor: "grabbing" }}
-          transition={{ type: "spring", damping: 15, stiffness: 400 }}
+          transition={springs.pop}
         />
       </div>
 
@@ -718,8 +648,8 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         transition={{ duration: 0.5 }}
       >
         {/* Base */}
-        <circle cx={cx} cy={cy} r={r} fill={PIZZA_BASE} stroke={PIZZA_STROKE} strokeWidth={2.5} />
-        <circle cx={cx} cy={cy} r={r} fill="transparent" stroke={PIZZA_CRUST} strokeWidth={6} />
+        <circle cx={cx} cy={cy} r={r} fill={THEME.pizzaBase} stroke={THEME.pizzaStroke} strokeWidth={2.5} />
+        <circle cx={cx} cy={cy} r={r} fill="transparent" stroke={THEME.pizzaCrust} strokeWidth={6} />
 
         {/* Shaded sector */}
         {shadedPath && (
@@ -741,7 +671,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             y1={l.y1}
             x2={l.x2}
             y2={l.y2}
-            stroke={CUT_LINE}
+            stroke={THEME.cutLine}
             strokeWidth={2}
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
@@ -926,7 +856,6 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     }
   }, [s.comparing, s.everFoundEquivalence, hint]);
 
-  const progress = Math.min(s.interactions / MIN_INTERACTIONS, 1);
   const ready = s.interactions >= MIN_INTERACTIONS;
 
   const fA: Fraction = { numerator: s.shaded.size, denominator: s.denominator };
@@ -965,7 +894,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       {s.shaded.size === s.denominator && s.denominator > 0 && (
         <motion.p
           className="text-sm font-medium"
-          style={{ color: DENOM_HL }}
+          style={{ color: THEME.denomHL }}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -984,8 +913,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         </button>
       ) : (
         <motion.div
-          className="flex flex-col items-center gap-4 w-full max-w-md rounded-xl p-4"
-          style={{ background: SURFACE }}
+          className="flex flex-col items-center gap-4 w-full max-w-md rounded-xl p-4 bg-nm-bg-secondary"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={SPRING_GENTLE}
@@ -1104,7 +1032,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         </motion.div>
       )}
 
-      <ContinueButton onClick={onComplete} disabled={!ready} progress={progress}>
+      <InteractionDots count={Math.min(s.interactions, MIN_INTERACTIONS)} total={MIN_INTERACTIONS} />
+
+      <ContinueButton onClick={onComplete} disabled={!ready}>
         Continue to Discovery
       </ContinueButton>
     </div>
@@ -1272,7 +1202,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           </div>
           <motion.p
             className="text-sm font-bold"
-            style={{ color: INCORRECT }}
+            style={{ color: THEME.incorrect }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
@@ -1336,7 +1266,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           exit={{ opacity: 0, x: -40 }}
           transition={SPRING_GENTLE}
         >
-          <div className="rounded-xl p-4 w-full" style={{ background: SURFACE }}>
+          <div className="rounded-xl p-4 w-full bg-nm-bg-secondary">
             <p className="text-base leading-relaxed" style={{ color: TEXT }}>
               {p.text}
             </p>
@@ -1347,10 +1277,9 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           {!submitted ? (
             <div className="w-full flex flex-col gap-3">
               <textarea
-                className="w-full p-3 rounded-lg text-sm resize-none focus:outline-none"
+                className="w-full p-3 rounded-lg text-sm resize-none focus:outline-none bg-nm-bg-primary"
                 style={{
                   minHeight: 80,
-                  background: BG,
                   border: `1px solid ${BORDER}`,
                   color: TEXT,
                 }}
@@ -1464,7 +1393,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
               <div className="flex flex-col items-center">
                 <motion.span
                   className="text-4xl font-bold"
-                  style={{ color: NUMER_HL }}
+                  style={{ color: THEME.numerHL }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
@@ -1474,7 +1403,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
                 <div className="w-12 h-0.5 my-1" style={{ background: TEXT }} />
                 <motion.span
                   className="text-4xl font-bold"
-                  style={{ color: DENOM_HL }}
+                  style={{ color: THEME.denomHL }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1 }}
@@ -1484,10 +1413,10 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
               </div>
 
               <div className="flex flex-col gap-2 text-sm">
-                <motion.p style={{ color: NUMER_HL }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>
+                <motion.p style={{ color: THEME.numerHL }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}>
                   3 parts shaded (numerator)
                 </motion.p>
-                <motion.p style={{ color: DENOM_HL }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.3 }}>
+                <motion.p style={{ color: THEME.denomHL }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.3 }}>
                   4 equal parts total (denominator)
                 </motion.p>
               </div>
@@ -1505,13 +1434,13 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             exit={{ opacity: 0, y: -20 }}
           >
             <p className="text-lg" style={{ color: TEXT }}>
-              <span style={{ color: NUMER_HL }}>a</span>
+              <span style={{ color: THEME.numerHL }}>a</span>
               <span style={{ color: TEXT_SEC }}> / </span>
-              <span style={{ color: DENOM_HL }}>b</span>
+              <span style={{ color: THEME.denomHL }}>b</span>
               <span style={{ color: TEXT_SEC }}> means: split into </span>
-              <span style={{ color: DENOM_HL }}>b</span>
+              <span style={{ color: THEME.denomHL }}>b</span>
               <span style={{ color: TEXT_SEC }}> parts, take </span>
-              <span style={{ color: NUMER_HL }}>a</span>
+              <span style={{ color: THEME.numerHL }}>a</span>
               <span style={{ color: TEXT_SEC }}> of them.</span>
             </p>
 
@@ -1544,17 +1473,17 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             </p>
 
             <div className="text-center text-xl font-bold">
-              <span style={{ color: NUMER_HL }}>a</span>
+              <span style={{ color: THEME.numerHL }}>a</span>
               <span style={{ color: TEXT_SEC }}>/</span>
-              <span style={{ color: DENOM_HL }}>b</span>
+              <span style={{ color: THEME.denomHL }}>b</span>
               <span style={{ color: TEXT_SEC }}> = </span>
-              <span style={{ color: NUMER_HL }}>(a</span>
+              <span style={{ color: THEME.numerHL }}>(a</span>
               <span style={{ color: CYAN }}> * n</span>
-              <span style={{ color: NUMER_HL }}>)</span>
+              <span style={{ color: THEME.numerHL }}>)</span>
               <span style={{ color: TEXT_SEC }}> / </span>
-              <span style={{ color: DENOM_HL }}>(b</span>
+              <span style={{ color: THEME.denomHL }}>(b</span>
               <span style={{ color: CYAN }}> * n</span>
-              <span style={{ color: DENOM_HL }}>)</span>
+              <span style={{ color: THEME.denomHL }}>)</span>
             </div>
 
             <motion.div
@@ -1601,7 +1530,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
               {!checked ? (
                 <FractionInput value={answer} onChange={setAnswer} />
               ) : (
-                <span style={{ color: correct ? CORRECT : INCORRECT }}>
+                <span style={{ color: correct ? CORRECT : THEME.incorrect }}>
                   {answer.numerator}/{answer.denominator || "?"}
                 </span>
               )}
@@ -1613,7 +1542,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
               </ContinueButton>
             ) : (
               <motion.div className="flex flex-col items-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <p className="text-sm text-center" style={{ color: correct ? CORRECT : INCORRECT }}>
+                <p className="text-sm text-center" style={{ color: correct ? CORRECT : THEME.incorrect }}>
                   {correct
                     ? "Correct! 2/6 simplified is 1/3. You divided both by 2."
                     : "The answer is 1/3. Divide both 2 and 6 by 2."}
@@ -1718,7 +1647,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             width={220}
             height={44}
             interactive={false}
-            shadedColor={INCORRECT}
+            shadedColor={THEME.incorrect}
           />
         );
       default:
@@ -2028,16 +1957,21 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Progress dots */}
       <div className="flex gap-1.5 flex-wrap justify-center">
-        {PROBLEMS.map((_, i) => (
-          <div
-            key={i}
-            className="w-2.5 h-2.5 rounded-full"
-            style={{
-              background:
-                i < results.length ? (results[i] ? CORRECT : INCORRECT) : i === pi ? SHADED : UNSHADED,
-            }}
-          />
-        ))}
+        {PROBLEMS.map((_, i) => {
+          let dotColor: string = UNSHADED;
+          if (i < results.length) {
+            dotColor = results[i] ? CORRECT : THEME.incorrect;
+          } else if (i === pi) {
+            dotColor = SHADED;
+          }
+          return (
+            <div
+              key={i}
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: dotColor }}
+            />
+          );
+        })}
       </div>
 
       <AnimatePresence mode="wait">
@@ -2064,38 +1998,41 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           {/* Multiple choice */}
           {prob.inputType === "multiple-choice" && prob.options && (
             <div className="flex flex-col gap-2">
-              {prob.options.map((o) => (
-                <button
-                  key={o.id}
-                  className="text-left px-4 py-3 rounded-lg text-sm border transition-colors"
-                  style={{
-                    minHeight: 44,
-                    background:
-                      submitted && o.correct
-                        ? `${CORRECT}22`
-                        : submitted && choice === o.id && !o.correct
-                          ? `${INCORRECT}22`
-                          : choice === o.id
-                            ? `${SHADED}22`
-                            : "transparent",
-                    borderColor: choice === o.id ? SHADED : UNSHADED,
-                    color: TEXT,
-                    cursor: submitted ? "default" : "pointer",
-                  }}
-                  onClick={() => !submitted && setChoice(o.id)}
-                  disabled={submitted}
-                >
-                  {o.text}
-                </button>
-              ))}
+              {prob.options.map((o) => {
+                let optBg: string = "transparent";
+                if (submitted && o.correct) {
+                  optBg = `${CORRECT}22`;
+                } else if (submitted && choice === o.id && !o.correct) {
+                  optBg = `${THEME.incorrect}22`;
+                } else if (choice === o.id) {
+                  optBg = `${SHADED}22`;
+                }
+                return (
+                  <button
+                    key={o.id}
+                    className="text-left px-4 py-3 rounded-lg text-sm border transition-colors"
+                    style={{
+                      minHeight: 44,
+                      background: optBg,
+                      borderColor: choice === o.id ? SHADED : UNSHADED,
+                      color: TEXT,
+                      cursor: submitted ? "default" : "pointer",
+                    }}
+                    onClick={() => !submitted && setChoice(o.id)}
+                    disabled={submitted}
+                  >
+                    {o.text}
+                  </button>
+                );
+              })}
             </div>
           )}
 
           {/* Free text */}
           {prob.inputType === "free-text" && (
             <textarea
-              className="w-full p-3 rounded-lg text-sm resize-none focus:outline-none"
-              style={{ minHeight: 80, background: BG, border: `1px solid ${BORDER}`, color: TEXT }}
+              className="w-full p-3 rounded-lg text-sm resize-none focus:outline-none bg-nm-bg-primary"
+              style={{ minHeight: 80, border: `1px solid ${BORDER}`, color: TEXT }}
               placeholder="Write your explanation..."
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -2131,7 +2068,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           {submitted && (
             <motion.div
               className="rounded-lg p-3 text-sm leading-relaxed"
-              style={{ background: `${BG}cc`, borderLeft: `3px solid ${ok ? CORRECT : INCORRECT}`, color: TEXT }}
+              style={{ background: `${BG}cc`, borderLeft: `3px solid ${ok ? CORRECT : THEME.incorrect}`, color: TEXT }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -2195,10 +2132,9 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         </p>
 
         <textarea
-          className="w-full p-3 rounded-lg text-sm resize-y focus:outline-none"
+          className="w-full p-3 rounded-lg text-sm resize-y focus:outline-none bg-nm-bg-primary"
           style={{
             minHeight: 120,
-            background: BG,
             border: `1px solid ${submitted ? SHADED : BORDER}`,
             color: TEXT,
           }}
@@ -2232,8 +2168,8 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 >
                   <path
                     d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    fill={i < score ? DENOM_HL : UNSHADED}
-                    stroke={i < score ? DENOM_HL : BORDER}
+                    fill={i < score ? THEME.denomHL : UNSHADED}
+                    stroke={i < score ? THEME.denomHL : BORDER}
                     strokeWidth={1}
                   />
                 </motion.svg>
@@ -2249,7 +2185,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 
             <motion.p
               className="text-center text-lg font-bold"
-              style={{ color: DENOM_HL }}
+              style={{ color: THEME.denomHL }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, ...SPRING }}
@@ -2270,63 +2206,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 /* ================================================================== */
 
 export function FractionsLesson({ onComplete }: FractionsLessonProps) {
-  const [si, setSi] = useState(0);
-  const stage = STAGES[si];
-
-  const advance = useCallback(() => {
-    if (si >= STAGES.length - 1) {
-      onComplete?.();
-      return;
-    }
-    setSi((i) => i + 1);
-  }, [si, onComplete]);
-
-  const stageView = useMemo((): ReactNode => {
-    switch (stage) {
-      case "hook":       return <HookStage onComplete={advance} />;
-      case "spatial":    return <SpatialStage onComplete={advance} />;
-      case "discovery":  return <DiscoveryStage onComplete={advance} />;
-      case "symbol":     return <SymbolStage onComplete={advance} />;
-      case "realWorld":  return <RealWorldStage onComplete={advance} />;
-      case "practice":   return <PracticeStage onComplete={advance} />;
-      case "reflection": return <ReflectionStage onComplete={advance} />;
-      default:           return null;
-    }
-  }, [stage, advance]);
-
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: BG }}>
-      {/* Progress nav */}
-      <nav className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3" style={{ background: SURFACE }}>
-        <span className="text-sm font-medium" style={{ color: TEXT_SEC }}>
-          {si + 1}/{STAGES.length}
-        </span>
-        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: UNSHADED }}>
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: SHADED }}
-            animate={{ width: `${((si + 1) / STAGES.length) * 100}%` }}
-            transition={SPRING_GENTLE}
-          />
-        </div>
-        <span className="text-xs capitalize" style={{ color: TEXT_SEC }}>
-          {stage === "realWorld" ? "real world" : stage}
-        </span>
-      </nav>
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={SPRING_GENTLE}
-        >
-          {stageView}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-2.1 Fractions" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={advance} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

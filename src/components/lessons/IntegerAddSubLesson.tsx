@@ -12,23 +12,27 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /* ───────────────────────────── constants ───────────────────────────── */
 
-const COLORS = {
-  positive: "#34d399",
+/** Lesson-specific color aliases that don't exist in the shared palette. */
+const THEME = {
+  positive: colors.accent.emerald,
   positiveBorder: "#10b981",
-  negative: "#fb7185",
+  negative: colors.accent.rose,
   negativeBorder: "#f43f5e",
-  zero: "#fbbf24",
-  walker: "#a78bfa",
+  zero: colors.accent.amber,
+  walker: colors.accent.violet,
   walkerOutline: "#7c3aed",
   surface: "rgba(15,23,42,0.85)",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  line: "#94a3b8",
-  tick: "#64748b",
+  line: colors.text.secondary,
+  tick: colors.text.muted,
   label: "#cbd5e1",
 } as const;
 
@@ -36,14 +40,6 @@ const STEP_DURATION_MS = 300;
 const STEP_PAUSE_MS = 100;
 
 type Direction = "right" | "left";
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
 
 interface IntegerAddSubLessonProps {
   onComplete?: () => void;
@@ -88,8 +84,8 @@ function WalkerSVG({ x, facing, unitWidth, lineY, animate = true }: WalkerSVGPro
       {/* Triangle head pointing right */}
       <polygon
         points={`${-size * 0.4},${-size * 0.5} ${size * 0.4},0 ${-size * 0.4},${size * 0.5}`}
-        fill={COLORS.walker}
-        stroke={COLORS.walkerOutline}
+        fill={THEME.walker}
+        stroke={THEME.walkerOutline}
         strokeWidth={size * 0.08}
       />
       {/* Stick body */}
@@ -98,7 +94,7 @@ function WalkerSVG({ x, facing, unitWidth, lineY, animate = true }: WalkerSVGPro
         y1={size * 0.5}
         x2={0}
         y2={size * 1.1}
-        stroke={COLORS.walkerOutline}
+        stroke={THEME.walkerOutline}
         strokeWidth={size * 0.06}
       />
       {/* Legs */}
@@ -107,7 +103,7 @@ function WalkerSVG({ x, facing, unitWidth, lineY, animate = true }: WalkerSVGPro
         y1={size * 1.1}
         x2={-size * 0.22}
         y2={size * 1.5}
-        stroke={COLORS.walkerOutline}
+        stroke={THEME.walkerOutline}
         strokeWidth={size * 0.06}
       />
       <line
@@ -115,7 +111,7 @@ function WalkerSVG({ x, facing, unitWidth, lineY, animate = true }: WalkerSVGPro
         y1={size * 1.1}
         x2={size * 0.22}
         y2={size * 1.5}
-        stroke={COLORS.walkerOutline}
+        stroke={THEME.walkerOutline}
         strokeWidth={size * 0.06}
       />
     </g>
@@ -210,18 +206,18 @@ function NumberLineSVGComponent({
         y1={lineY}
         x2={toX(rangeMax)}
         y2={lineY}
-        stroke={COLORS.line}
+        stroke={THEME.line}
         strokeWidth={2}
       />
 
       {/* Arrowheads */}
       <polygon
         points={`${toX(rangeMin)},${lineY} ${toX(rangeMin) + 8},${lineY - 4} ${toX(rangeMin) + 8},${lineY + 4}`}
-        fill={COLORS.line}
+        fill={THEME.line}
       />
       <polygon
         points={`${toX(rangeMax)},${lineY} ${toX(rangeMax) - 8},${lineY - 4} ${toX(rangeMax) - 8},${lineY + 4}`}
-        fill={COLORS.line}
+        fill={THEME.line}
       />
 
       {/* Ticks & labels */}
@@ -236,14 +232,14 @@ function NumberLineSVGComponent({
               y1={lineY - tickH / 2}
               x2={x}
               y2={lineY + tickH / 2}
-              stroke={isZero ? COLORS.zero : COLORS.tick}
+              stroke={isZero ? THEME.zero : THEME.tick}
               strokeWidth={isZero ? 2 : 1}
             />
             <text
               x={x}
               y={lineY + tickH / 2 + 14}
               textAnchor="middle"
-              fill={isZero ? COLORS.zero : COLORS.label}
+              fill={isZero ? THEME.zero : THEME.label}
               fontSize={isZero ? 13 : 11}
               fontWeight={isZero ? 700 : 400}
               fontFamily="system-ui, sans-serif"
@@ -261,7 +257,7 @@ function NumberLineSVGComponent({
           y1={lineY}
           x2={toX(trail.to)}
           y2={lineY}
-          stroke={trail.dir === "right" ? COLORS.positive : COLORS.negative}
+          stroke={trail.dir === "right" ? THEME.positive : THEME.negative}
           strokeWidth={4}
           opacity={0.5}
           strokeLinecap="round"
@@ -275,7 +271,7 @@ function NumberLineSVGComponent({
         const above = arc.dir === "right";
         const cy = above ? lineY - unitWidth * 1.2 : lineY + unitWidth * 1.2;
         const mx = (x1 + x2) / 2;
-        const color = arc.dir === "right" ? COLORS.positive : COLORS.negative;
+        const color = arc.dir === "right" ? THEME.positive : THEME.negative;
         return (
           <g key={`arc-${i}`}>
             <path
@@ -306,7 +302,7 @@ function NumberLineSVGComponent({
           cx={toX(pos)}
           cy={lineY}
           r={3}
-          fill={COLORS.walker}
+          fill={THEME.walker}
           opacity={0.25}
         />
       ))}
@@ -317,7 +313,7 @@ function NumberLineSVGComponent({
           cx={toX(0)}
           cy={lineY}
           r={0}
-          fill={COLORS.zero}
+          fill={THEME.zero}
           opacity={0.4}
           animate={{ r: [0, unitWidth * 1.5, unitWidth * 2], opacity: [0.4, 0.2, 0] }}
           transition={{ duration: 0.5 }}
@@ -341,7 +337,7 @@ function NumberLineSVGComponent({
           y1={lineY - unitWidth * 0.6 * 2.2 + unitWidth * 0.6 * 1.5}
           x2={toX(walkerPos)}
           y2={lineY}
-          stroke={COLORS.walker}
+          stroke={THEME.walker}
           strokeWidth={1}
           strokeDasharray="3 3"
           opacity={0.5}
@@ -368,13 +364,13 @@ function EquationDisplay({ parts, className }: EquationDisplayProps) {
         "backdrop-blur-md font-mono text-lg font-semibold",
         className,
       )}
-      style={{ background: COLORS.surface }}
+      style={{ background: THEME.surface }}
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
       {parts.map((p, i) => (
-        <span key={i} style={{ color: p.color ?? COLORS.textSecondary }}>
+        <span key={i} style={{ color: p.color ?? colors.text.secondary }}>
           {p.text}
         </span>
       ))}
@@ -382,54 +378,7 @@ function EquationDisplay({ parts, className }: EquationDisplayProps) {
   );
 }
 
-/* ───── Continue Button ───── */
-
-interface ContinueButtonProps {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}
-
-function ContinueButton({ onClick, label = "Continue", disabled = false }: ContinueButtonProps) {
-  return (
-    <motion.button
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "min-h-[48px] min-w-[200px] rounded-xl px-6 py-3 text-base font-semibold text-white",
-        "bg-gradient-to-br from-[#7c3aed] to-[#6d28d9]",
-        "hover:brightness-110 active:scale-[0.98] active:brightness-95",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        "transition-all duration-150",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7c3aed]",
-      )}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", damping: 20, stiffness: 200 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-/* ───── Section Container ───── */
-
-function StageContainer({ children, title }: { children: ReactNode; title?: string }) {
-  return (
-    <section className="flex flex-1 flex-col items-center px-4 py-6">
-      {title && (
-        <h2
-          className="mb-4 text-sm font-medium uppercase tracking-widest"
-          style={{ color: COLORS.textMuted }}
-        >
-          {title}
-        </h2>
-      )}
-      {children}
-    </section>
-  );
-}
+/* (local ContinueButton and StageContainer removed — using shared components) */
 
 /* ════════════════════════════════════════════════════════════════════════
    STAGE 1 — HOOK
@@ -494,10 +443,10 @@ function HookStage({ onComplete }: HookStageProps) {
       await animateWalk(0, 3, "right");
       setEquation([
         { text: "0" },
-        { text: " + ", color: COLORS.positive },
-        { text: "3", color: COLORS.positive },
+        { text: " + ", color: THEME.positive },
+        { text: "3", color: THEME.positive },
         { text: " = " },
-        { text: "3", color: COLORS.positive },
+        { text: "3", color: THEME.positive },
       ]);
       setTextOverlay("...you're at 3.");
 
@@ -510,10 +459,10 @@ function HookStage({ onComplete }: HookStageProps) {
       await animateWalk(3, 1, "left");
       setEquation([
         { text: "3" },
-        { text: " - ", color: COLORS.negative },
-        { text: "2", color: COLORS.negative },
+        { text: " - ", color: THEME.negative },
+        { text: "2", color: THEME.negative },
         { text: " = " },
-        { text: "1", color: COLORS.positive },
+        { text: "1", color: THEME.positive },
       ]);
       setTextOverlay("...you're at 1. Easy.");
 
@@ -538,10 +487,10 @@ function HookStage({ onComplete }: HookStageProps) {
       await animateWalk(0, -3, "left");
       setEquation([
         { text: "0" },
-        { text: " + ", color: COLORS.textSecondary },
-        { text: "(-3)", color: COLORS.negative },
+        { text: " + ", color: colors.text.secondary },
+        { text: "(-3)", color: THEME.negative },
         { text: " = " },
-        { text: "-3", color: COLORS.negative },
+        { text: "-3", color: THEME.negative },
       ]);
       setTextOverlay("...you're at negative 3.");
 
@@ -559,7 +508,7 @@ function HookStage({ onComplete }: HookStageProps) {
   }, [animateWalk]);
 
   return (
-    <StageContainer>
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
       <div className="flex w-full max-w-2xl flex-col items-center gap-4">
         {/* Equation */}
         {equation.length > 0 && <EquationDisplay parts={equation} />}
@@ -585,7 +534,7 @@ function HookStage({ onComplete }: HookStageProps) {
             <motion.p
               key={textOverlay}
               className="text-center text-base font-medium"
-              style={{ color: COLORS.textSecondary }}
+              style={{ color: colors.text.secondary }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -599,7 +548,7 @@ function HookStage({ onComplete }: HookStageProps) {
         {/* Continue */}
         {showContinue && <ContinueButton onClick={onComplete} />}
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -682,7 +631,7 @@ function ChipModel({ onInteraction }: ChipModelProps) {
             id: particleId.current++,
             x: mx,
             y: my,
-            color: j < 3 ? COLORS.positive : COLORS.negative,
+            color: j < 3 ? THEME.positive : THEME.negative,
             dx: Math.cos(angle) * 25,
             dy: Math.sin(angle) * 25,
           },
@@ -719,16 +668,16 @@ function ChipModel({ onInteraction }: ChipModelProps) {
   const total = posCount - negCount;
 
   return (
-    <div className="flex w-full max-w-md flex-col gap-3 rounded-xl p-4" style={{ background: COLORS.surface }}>
+    <div className="flex w-full max-w-md flex-col gap-3 rounded-xl p-4" style={{ background: THEME.surface }}>
       {/* Expression */}
-      <div className="text-center font-mono text-sm" style={{ color: COLORS.textSecondary }}>
-        <span style={{ color: COLORS.positive }}>+{posCount}</span>
+      <div className="text-center font-mono text-sm" style={{ color: colors.text.secondary }}>
+        <span style={{ color: THEME.positive }}>+{posCount}</span>
         {" and "}
-        <span style={{ color: COLORS.negative }}>-{negCount}</span>
+        <span style={{ color: THEME.negative }}>-{negCount}</span>
         {" = "}
         <span
           style={{
-            color: total > 0 ? COLORS.positive : total < 0 ? COLORS.negative : COLORS.zero,
+            color: total > 0 ? THEME.positive : total < 0 ? THEME.negative : THEME.zero,
             fontWeight: 700,
           }}
         >
@@ -738,8 +687,8 @@ function ChipModel({ onInteraction }: ChipModelProps) {
 
       {/* Workspace */}
       <div
-        className="relative overflow-hidden rounded-lg border border-white/10"
-        style={{ height: 200, background: "rgba(15,23,42,0.5)" }}
+        className="relative overflow-hidden rounded-lg border border-white/10 bg-nm-bg-primary/50"
+        style={{ height: 200 }}
       >
         <AnimatePresence>
           {alive.map((chip) => (
@@ -751,14 +700,14 @@ function ChipModel({ onInteraction }: ChipModelProps) {
                 height: 32,
                 left: chip.x,
                 top: chip.y,
-                background: chip.type === "positive" ? COLORS.positive : COLORS.negative,
-                border: `2px solid ${chip.type === "positive" ? COLORS.positiveBorder : COLORS.negativeBorder}`,
+                background: chip.type === "positive" ? THEME.positive : THEME.negative,
+                border: `2px solid ${chip.type === "positive" ? THEME.positiveBorder : THEME.negativeBorder}`,
                 boxShadow: `0 2px 6px ${chip.type === "positive" ? "rgba(16,185,129,0.3)" : "rgba(244,63,94,0.3)"}`,
               }}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              transition={springs.default}
             >
               {chip.type === "positive" ? "+" : "\u2212"}
             </motion.div>
@@ -788,7 +737,7 @@ function ChipModel({ onInteraction }: ChipModelProps) {
           <motion.span
             key={fz.id}
             className="absolute font-mono text-sm font-bold"
-            style={{ left: fz.x - 5, top: fz.y, color: COLORS.zero }}
+            style={{ left: fz.x - 5, top: fz.y, color: THEME.zero }}
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6 }}
@@ -803,7 +752,7 @@ function ChipModel({ onInteraction }: ChipModelProps) {
         <button
           onClick={() => addChip("positive")}
           className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white"
-          style={{ background: COLORS.positive }}
+          style={{ background: THEME.positive }}
           disabled={posCount >= 15}
           aria-label="Add positive chip"
         >
@@ -812,7 +761,7 @@ function ChipModel({ onInteraction }: ChipModelProps) {
         <button
           onClick={() => addChip("negative")}
           className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white"
-          style={{ background: COLORS.negative }}
+          style={{ background: THEME.negative }}
           disabled={negCount >= 15}
           aria-label="Add negative chip"
         >
@@ -840,7 +789,7 @@ function ChipModel({ onInteraction }: ChipModelProps) {
             "flex min-h-[44px] flex-1 items-center justify-center rounded-lg text-sm font-semibold",
             "border border-white/20",
           )}
-          style={{ color: COLORS.textMuted }}
+          style={{ color: colors.text.muted }}
           aria-label="Clear all chips"
         >
           Clear
@@ -891,13 +840,13 @@ function WalkingSimulator({
 
     // Build equation
     const op = dir === "right" ? "+" : "\u2212";
-    const opColor = dir === "right" ? COLORS.positive : COLORS.negative;
+    const opColor = dir === "right" ? THEME.positive : THEME.negative;
     setEquation([
       { text: `${from}` },
       { text: ` ${op} `, color: opColor },
       { text: `${steps}`, color: opColor },
       { text: " = " },
-      { text: "...", color: COLORS.textMuted },
+      { text: "...", color: colors.text.muted },
     ]);
 
     for (let i = 0; i < actualSteps; i++) {
@@ -915,7 +864,7 @@ function WalkingSimulator({
       await delay(STEP_DURATION_MS + STEP_PAUSE_MS);
     }
 
-    const resultColor = to > 0 ? COLORS.positive : to < 0 ? COLORS.negative : COLORS.zero;
+    const resultColor = to > 0 ? THEME.positive : to < 0 ? THEME.negative : THEME.zero;
     setEquation([
       { text: `${from}` },
       { text: ` ${op} `, color: opColor },
@@ -964,14 +913,14 @@ function WalkingSimulator({
       <div className="flex w-full max-w-md flex-wrap items-center justify-center gap-4">
         {/* Direction toggle */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-xs" style={{ color: COLORS.textMuted }}>
+          <span className="text-xs" style={{ color: colors.text.muted }}>
             Direction
           </span>
           <button
             onClick={() => setFacing((d) => (d === "right" ? "left" : "right"))}
             className="flex min-h-[44px] w-[120px] items-center justify-center rounded-full text-sm font-semibold text-white transition-colors"
             style={{
-              background: facing === "right" ? COLORS.positive : COLORS.negative,
+              background: facing === "right" ? THEME.positive : THEME.negative,
             }}
             aria-label={`Walking direction. Currently facing ${facing}`}
             role="switch"
@@ -983,7 +932,7 @@ function WalkingSimulator({
 
         {/* Steps slider */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-xs" style={{ color: COLORS.textMuted }}>
+          <span className="text-xs" style={{ color: colors.text.muted }}>
             Steps
           </span>
           <div className="flex items-center gap-2">
@@ -996,13 +945,13 @@ function WalkingSimulator({
               onChange={(e) => setSteps(Number(e.target.value))}
               className="h-2 w-32 cursor-pointer appearance-none rounded-full"
               style={{
-                background: `linear-gradient(to right, ${facing === "right" ? COLORS.positive : COLORS.negative} ${((steps - 1) / 8) * 100}%, #334155 ${((steps - 1) / 8) * 100}%)`,
+                background: `linear-gradient(to right, ${facing === "right" ? THEME.positive : THEME.negative} ${((steps - 1) / 8) * 100}%, #334155 ${((steps - 1) / 8) * 100}%)`,
               }}
               aria-label="Number of steps"
             />
             <span
               className="w-6 text-center text-xl font-bold"
-              style={{ color: COLORS.textPrimary }}
+              style={{ color: colors.text.primary }}
             >
               {steps}
             </span>
@@ -1036,7 +985,7 @@ function WalkingSimulator({
             "flex min-h-[48px] min-w-[120px] items-center justify-center gap-2 rounded-xl text-base font-semibold",
             "border border-white/20",
           )}
-          style={{ color: COLORS.textMuted }}
+          style={{ color: colors.text.muted }}
           aria-label="Reset walker to zero and clear all paths"
         >
           {"↺"} RESET
@@ -1075,9 +1024,12 @@ function SpatialStage({ onComplete }: SpatialStageProps) {
   }, []);
 
   return (
-    <StageContainer title="Explore: Spatial Experience">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Explore: Spatial Experience
+      </h2>
       {/* Tabs */}
-      <div className="mb-4 flex gap-1 rounded-lg p-1" style={{ background: "rgba(15,23,42,0.6)" }}>
+      <div className="mb-4 flex gap-1 rounded-lg bg-nm-bg-primary/60 p-1">
         {(["numberline", "chips"] as const).map((tab) => (
           <button
             key={tab}
@@ -1125,24 +1077,8 @@ function SpatialStage({ onComplete }: SpatialStageProps) {
 
       {/* Progress */}
       <div className="mt-4 flex flex-col items-center gap-2">
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <motion.div
-              key={i}
-              className="h-2 w-6 rounded-full"
-              style={{
-                background: i < total ? COLORS.positive : "#334155",
-              }}
-              animate={
-                i === total - 1 && total > 0
-                  ? { scale: [1, 1.3, 1] }
-                  : {}
-              }
-              transition={{ duration: 0.25 }}
-            />
-          ))}
-        </div>
-        <p className="text-xs" style={{ color: COLORS.textMuted }}>
+        <InteractionDots count={Math.min(total, 10)} total={10} activeColor={THEME.positive} />
+        <p className="text-xs" style={{ color: colors.text.muted }}>
           Interactions: {Math.min(total, 10)} / 10
           {interactions.numberline < 2 && " (try the number line)"}
           {interactions.numberline >= 2 && interactions.chips < 2 && " (try the chips)"}
@@ -1154,7 +1090,7 @@ function SpatialStage({ onComplete }: SpatialStageProps) {
           <ContinueButton onClick={onComplete} />
         </div>
       )}
-    </StageContainer>
+    </section>
   );
 }
 
@@ -1336,14 +1272,20 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
   // Special: autoplay rule summary (prompt 5)
   if (prompt.isAutoplay) {
     return (
-      <StageContainer title="Guided Discovery">
+      <section className="flex flex-1 flex-col items-center px-4 py-6">
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+          Guided Discovery
+        </h2>
         <RuleSummaryAutoplay onComplete={handleNextPrompt} />
-      </StageContainer>
+      </section>
     );
   }
 
   return (
-    <StageContainer title="Guided Discovery">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Guided Discovery
+      </h2>
       <div className="flex w-full max-w-2xl flex-col items-center gap-4">
         {/* Progress */}
         <div className="flex gap-1">
@@ -1352,7 +1294,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
               key={i}
               className="h-1.5 w-8 rounded-full"
               style={{
-                background: i < promptIdx ? COLORS.positive : i === promptIdx ? COLORS.walker : "#334155",
+                background: i < promptIdx ? THEME.positive : i === promptIdx ? THEME.walker : "#334155",
               }}
             />
           ))}
@@ -1361,7 +1303,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
         {/* Challenge text */}
         <motion.p
           className="max-w-md text-center text-base font-medium"
-          style={{ color: COLORS.textPrimary }}
+          style={{ color: colors.text.primary }}
           key={promptIdx}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1373,7 +1315,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
         {showHint && prompt.hint && (
           <motion.div
             className="rounded-lg px-4 py-2 text-center text-sm"
-            style={{ background: "rgba(167,139,250,0.15)", color: COLORS.walker }}
+            style={{ background: "rgba(167,139,250,0.15)", color: THEME.walker }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -1404,7 +1346,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
               <button
                 onClick={() => setFacing((d) => (d === "right" ? "left" : "right"))}
                 className="flex min-h-[44px] w-[100px] items-center justify-center rounded-full text-sm font-semibold text-white"
-                style={{ background: facing === "right" ? COLORS.positive : COLORS.negative }}
+                style={{ background: facing === "right" ? THEME.positive : THEME.negative }}
                 aria-label={`Direction: ${facing}`}
               >
                 {facing === "right" ? "\u2192 RIGHT" : "\u2190 LEFT"}
@@ -1425,7 +1367,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
               <button
                 onClick={() => setShowHint(true)}
                 className="min-h-[44px] rounded-lg border border-white/20 px-3 text-sm"
-                style={{ color: COLORS.textMuted }}
+                style={{ color: colors.text.muted }}
               >
                 Hint
               </button>
@@ -1440,7 +1382,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <span style={{ color: COLORS.textSecondary }}>Answer:</span>
+            <span style={{ color: colors.text.secondary }}>Answer:</span>
             <input
               type="number"
               value={answer}
@@ -1474,7 +1416,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
                   key={i}
                   className="text-center text-sm font-medium"
                   style={{
-                    color: isLast ? COLORS.zero : COLORS.textSecondary,
+                    color: isLast ? THEME.zero : colors.text.secondary,
                     fontWeight: isLast ? 700 : 500,
                   }}
                   initial={{ opacity: 0, y: 6 }}
@@ -1507,7 +1449,7 @@ function DiscoveryStage({ onComplete }: DiscoveryStageProps) {
           <ContinueButton onClick={handleNextPrompt} />
         )}
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -1533,7 +1475,7 @@ const MINI_WALKS: MiniWalkData[] = [
     from: 2,
     to: 6,
     dir: "right",
-    borderColor: COLORS.positive,
+    borderColor: THEME.positive,
   },
   {
     label: "a + (-b)",
@@ -1541,7 +1483,7 @@ const MINI_WALKS: MiniWalkData[] = [
     from: 3,
     to: -2,
     dir: "left",
-    borderColor: COLORS.negative,
+    borderColor: THEME.negative,
   },
   {
     label: "a - b",
@@ -1549,7 +1491,7 @@ const MINI_WALKS: MiniWalkData[] = [
     from: 5,
     to: 2,
     dir: "left",
-    borderColor: COLORS.negative,
+    borderColor: THEME.negative,
   },
   {
     label: "a - (-b)",
@@ -1557,7 +1499,7 @@ const MINI_WALKS: MiniWalkData[] = [
     from: -1,
     to: 5,
     dir: "right",
-    borderColor: COLORS.positive,
+    borderColor: THEME.positive,
   },
 ];
 
@@ -1585,14 +1527,14 @@ function RuleSummaryAutoplay({ onComplete }: RuleSummaryAutoplayProps) {
               key={i}
               className="flex flex-col items-center gap-1 rounded-xl p-3"
               style={{
-                background: COLORS.surface,
+                background: THEME.surface,
                 border: `2px solid ${isActive ? mw.borderColor : "transparent"}`,
                 opacity: isActive ? 1 : 0.3,
               }}
               animate={{ opacity: isActive ? 1 : 0.3 }}
               transition={{ duration: 0.4 }}
             >
-              <span className="font-mono text-sm font-bold" style={{ color: COLORS.textPrimary }}>
+              <span className="font-mono text-sm font-bold" style={{ color: colors.text.primary }}>
                 {mw.label}
               </span>
               <span className="text-xs" style={{ color: mw.borderColor }}>
@@ -1629,7 +1571,7 @@ function RuleSummaryAutoplay({ onComplete }: RuleSummaryAutoplayProps) {
       {activeIdx >= 3 && (
         <motion.p
           className="text-center text-sm font-medium"
-          style={{ color: COLORS.zero }}
+          style={{ color: THEME.zero }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
@@ -1711,34 +1653,37 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
 
   if (showCard) {
     return (
-      <StageContainer title="Symbol Bridge">
+      <section className="flex flex-1 flex-col items-center px-4 py-6">
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+          Symbol Bridge
+        </h2>
         <motion.div
           className="flex w-full max-w-md flex-col gap-3 rounded-xl p-5"
-          style={{ background: COLORS.surface, border: "1px solid rgba(255,255,255,0.1)" }}
+          style={{ background: THEME.surface, border: "1px solid rgba(255,255,255,0.1)" }}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <h3 className="text-center text-sm font-bold uppercase tracking-wide" style={{ color: COLORS.textPrimary }}>
+          <h3 className="text-center text-sm font-bold uppercase tracking-wide" style={{ color: colors.text.primary }}>
             Integer Addition & Subtraction
           </h3>
-          <div className="flex flex-col gap-2 text-sm" style={{ color: COLORS.textSecondary }}>
+          <div className="flex flex-col gap-2 text-sm" style={{ color: colors.text.secondary }}>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold" style={{ color: COLORS.positive }}>+ positive</span>
+              <span className="font-mono font-bold" style={{ color: THEME.positive }}>+ positive</span>
               <span>{"\u2192"} walk RIGHT</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold" style={{ color: COLORS.negative }}>{"\u2212"} positive</span>
+              <span className="font-mono font-bold" style={{ color: THEME.negative }}>{"\u2212"} positive</span>
               <span>{"\u2192"} walk LEFT</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold" style={{ color: COLORS.negative }}>+ negative</span>
+              <span className="font-mono font-bold" style={{ color: THEME.negative }}>+ negative</span>
               <span>{"\u2192"} walk LEFT (= sub)</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold" style={{ color: COLORS.positive }}>{"\u2212"} negative</span>
+              <span className="font-mono font-bold" style={{ color: THEME.positive }}>{"\u2212"} negative</span>
               <span>{"\u2192"} walk RIGHT (= add)</span>
             </div>
-            <div className="mt-2 border-t border-white/10 pt-2 text-center font-mono text-xs" style={{ color: COLORS.zero }}>
+            <div className="mt-2 border-t border-white/10 pt-2 text-center font-mono text-xs" style={{ color: THEME.zero }}>
               Remember: two negatives {"\u2192"} positive &nbsp; {"\u2212"}({"\u2212"}b) = +b
             </div>
           </div>
@@ -1746,14 +1691,17 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
         <div className="mt-4">
           <ContinueButton onClick={onComplete} />
         </div>
-      </StageContainer>
+      </section>
     );
   }
 
   if (!rule) return null;
 
   return (
-    <StageContainer title="Symbol Bridge">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Symbol Bridge
+      </h2>
       <div className="flex w-full max-w-2xl flex-col items-center gap-4">
         {/* Progress dots */}
         <div className="flex gap-2">
@@ -1761,7 +1709,7 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
             <div
               key={i}
               className="h-2 w-2 rounded-full"
-              style={{ background: i <= ruleIdx ? COLORS.walker : "#334155" }}
+              style={{ background: i <= ruleIdx ? THEME.walker : "#334155" }}
             />
           ))}
         </div>
@@ -1777,13 +1725,13 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
           >
             {/* Left: Rule expression */}
             <div className="flex flex-col items-center gap-2 md:w-2/5">
-              <span className="font-mono text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+              <span className="font-mono text-2xl font-bold" style={{ color: colors.text.primary }}>
                 {rule.expression}
               </span>
               {rule.equivalence && (
                 <motion.span
                   className="font-mono text-lg font-semibold"
-                  style={{ color: COLORS.zero }}
+                  style={{ color: THEME.zero }}
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
@@ -1791,7 +1739,7 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
                   {rule.equivalence}
                 </motion.span>
               )}
-              <p className="text-center text-sm" style={{ color: COLORS.textMuted }}>
+              <p className="text-center text-sm" style={{ color: colors.text.muted }}>
                 {rule.subtitle}
               </p>
             </div>
@@ -1833,7 +1781,7 @@ function SymbolBridgeStage({ onComplete }: SymbolBridgeStageProps) {
           label={isLast ? "See Rule Card" : "Next Rule"}
         />
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -1895,7 +1843,10 @@ function RealWorldStage({ onComplete }: RealWorldStageProps) {
   const isLast = scenarioIdx >= SCENARIOS.length - 1;
 
   return (
-    <StageContainer title="Real-World Anchor">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Real-World Anchor
+      </h2>
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
         {/* Navigation dots */}
         <div className="flex gap-2">
@@ -1905,7 +1856,7 @@ function RealWorldStage({ onComplete }: RealWorldStageProps) {
               onClick={() => setScenarioIdx(i)}
               className="h-3 w-3 rounded-full transition-colors"
               style={{
-                background: i === scenarioIdx ? COLORS.walker : "#334155",
+                background: i === scenarioIdx ? THEME.walker : "#334155",
               }}
               aria-label={`Scenario ${i + 1}`}
             />
@@ -1925,13 +1876,13 @@ function RealWorldStage({ onComplete }: RealWorldStageProps) {
               {/* Card */}
               <div
                 className="w-full rounded-xl p-5"
-                style={{ background: COLORS.surface, border: "1px solid rgba(255,255,255,0.1)" }}
+                style={{ background: THEME.surface, border: "1px solid rgba(255,255,255,0.1)" }}
               >
                 <div className="mb-2 text-2xl">{scenario.icon}</div>
-                <h3 className="mb-1 text-sm font-bold uppercase tracking-wide" style={{ color: COLORS.textMuted }}>
+                <h3 className="mb-1 text-sm font-bold uppercase tracking-wide" style={{ color: colors.text.muted }}>
                   {scenario.title}
                 </h3>
-                <p className="text-sm" style={{ color: COLORS.textSecondary }}>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
                   {scenario.description}
                 </p>
               </div>
@@ -1962,12 +1913,12 @@ function RealWorldStage({ onComplete }: RealWorldStageProps) {
               </div>
 
               {/* Equation */}
-              <p className="font-mono text-base font-bold" style={{ color: COLORS.textPrimary }}>
+              <p className="font-mono text-base font-bold" style={{ color: colors.text.primary }}>
                 {scenario.equation}
               </p>
 
               {/* Connection */}
-              <p className="text-center text-sm italic" style={{ color: COLORS.textMuted }}>
+              <p className="text-center text-sm italic" style={{ color: colors.text.muted }}>
                 {scenario.connection}
               </p>
             </motion.div>
@@ -1983,7 +1934,7 @@ function RealWorldStage({ onComplete }: RealWorldStageProps) {
           )}
         </div>
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -2157,7 +2108,10 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
   if (!problem) return null;
 
   return (
-    <StageContainer title="Practice">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Practice
+      </h2>
       <div className="flex w-full max-w-2xl flex-col items-center gap-4">
         {/* Progress bar */}
         <div className="flex w-full max-w-md items-center gap-1">
@@ -2168,15 +2122,15 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
               style={{
                 background:
                   i < problemIdx
-                    ? COLORS.positive
+                    ? THEME.positive
                     : i === problemIdx
-                      ? COLORS.walker
+                      ? THEME.walker
                       : "#334155",
               }}
             />
           ))}
         </div>
-        <p className="text-xs" style={{ color: COLORS.textMuted }}>
+        <p className="text-xs" style={{ color: colors.text.muted }}>
           Problem {problemIdx + 1} of {total} &middot; +{xpEarned} XP
         </p>
 
@@ -2185,12 +2139,12 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
           <motion.div
             key={problem.id}
             className="w-full rounded-xl p-5"
-            style={{ background: COLORS.surface }}
+            style={{ background: THEME.surface }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <p className="mb-4 text-center text-base font-medium" style={{ color: COLORS.textPrimary }}>
+            <p className="mb-4 text-center text-base font-medium" style={{ color: colors.text.primary }}>
               {problem.prompt}
             </p>
 
@@ -2252,10 +2206,10 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
                         style={{
                           background:
                             sign === "positive"
-                              ? COLORS.positive
+                              ? THEME.positive
                               : sign === "negative"
-                                ? COLORS.negative
-                                : COLORS.zero,
+                                ? THEME.negative
+                                : THEME.zero,
                         }}
                       >
                         {sign === "positive" ? "+" : sign === "negative" ? "\u2212" : "0"}
@@ -2290,17 +2244,17 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
                 animate={{ opacity: 1, y: 0 }}
               >
                 {feedback === "correct" ? (
-                  <span className="text-lg font-bold" style={{ color: COLORS.positive }}>
+                  <span className="text-lg font-bold" style={{ color: THEME.positive }}>
                     Correct!
                   </span>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg font-bold" style={{ color: COLORS.negative }}>
+                    <span className="text-lg font-bold" style={{ color: THEME.negative }}>
                       Not quite.
                     </span>
-                    <span className="text-sm" style={{ color: COLORS.textMuted }}>
+                    <span className="text-sm" style={{ color: colors.text.muted }}>
                       The answer is{" "}
-                      <span className="font-bold" style={{ color: COLORS.textPrimary }}>
+                      <span className="font-bold" style={{ color: colors.text.primary }}>
                         {Array.isArray(problem.expectedAnswer)
                           ? problem.expectedAnswer[0]
                           : problem.expectedAnswer}
@@ -2321,7 +2275,7 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
         <button
           onClick={() => setShowRuleCard((v) => !v)}
           className="min-h-[44px] rounded-lg border border-white/20 px-3 text-sm"
-          style={{ color: COLORS.textMuted }}
+          style={{ color: colors.text.muted }}
         >
           {showRuleCard ? "Hide Rules" : "? Show Rules"}
         </button>
@@ -2332,27 +2286,27 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
             <motion.div
               className="w-full max-w-sm rounded-xl p-4"
               style={{
-                background: COLORS.surface,
+                background: THEME.surface,
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
             >
-              <div className="flex flex-col gap-1 text-sm" style={{ color: COLORS.textSecondary }}>
+              <div className="flex flex-col gap-1 text-sm" style={{ color: colors.text.secondary }}>
                 <span>
-                  <span style={{ color: COLORS.positive }}>+ positive</span> = walk RIGHT
+                  <span style={{ color: THEME.positive }}>+ positive</span> = walk RIGHT
                 </span>
                 <span>
-                  <span style={{ color: COLORS.negative }}>{"\u2212"} positive</span> = walk LEFT
+                  <span style={{ color: THEME.negative }}>{"\u2212"} positive</span> = walk LEFT
                 </span>
                 <span>
-                  <span style={{ color: COLORS.negative }}>+ negative</span> = walk LEFT
+                  <span style={{ color: THEME.negative }}>+ negative</span> = walk LEFT
                 </span>
                 <span>
-                  <span style={{ color: COLORS.positive }}>{"\u2212"} negative</span> = walk RIGHT
+                  <span style={{ color: THEME.positive }}>{"\u2212"} negative</span> = walk RIGHT
                 </span>
-                <span className="mt-1 text-xs" style={{ color: COLORS.zero }}>
+                <span className="mt-1 text-xs" style={{ color: THEME.zero }}>
                   {"\u2212"}({"\u2212"}b) = +b
                 </span>
               </div>
@@ -2360,7 +2314,7 @@ function PracticeStage({ onComplete }: PracticeStageProps) {
           )}
         </AnimatePresence>
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -2406,12 +2360,15 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
   }, [text]);
 
   return (
-    <StageContainer title="Reflection">
+    <section className="flex flex-1 flex-col items-center px-4 py-6">
+      <h2 className="mb-4 text-sm font-medium uppercase tracking-widest text-nm-text-muted">
+        Reflection
+      </h2>
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
-        <p className="text-center text-base font-medium" style={{ color: COLORS.textPrimary }}>
+        <p className="text-center text-base font-medium" style={{ color: colors.text.primary }}>
           Why does subtracting a negative number give the same result as adding a positive?
         </p>
-        <p className="text-center text-sm" style={{ color: COLORS.textMuted }}>
+        <p className="text-center text-sm" style={{ color: colors.text.muted }}>
           Explain it as if teaching a friend who has never seen this before.
         </p>
 
@@ -2431,7 +2388,7 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
           aria-label="Reflection text"
         />
 
-        <p className="text-xs" style={{ color: text.length < minChars ? COLORS.zero : COLORS.textMuted }}>
+        <p className="text-xs" style={{ color: text.length < minChars ? THEME.zero : colors.text.muted }}>
           {text.length < minChars
             ? `${text.length} / ${minChars} minimum`
             : text.length > maxChars - 50
@@ -2458,12 +2415,12 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
           {feedbackText && (
             <motion.div
               className="w-full rounded-xl p-4"
-              style={{ background: COLORS.surface, border: "1px solid rgba(255,255,255,0.1)" }}
+              style={{ background: THEME.surface, border: "1px solid rgba(255,255,255,0.1)" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <p className="text-sm leading-relaxed" style={{ color: COLORS.textSecondary }}>
+              <p className="text-sm leading-relaxed" style={{ color: colors.text.secondary }}>
                 {feedbackText}
               </p>
             </motion.div>
@@ -2474,23 +2431,23 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
         {submitted && feedbackText && (
           <motion.div
             className="flex w-full flex-col items-center gap-3 rounded-xl p-5"
-            style={{ background: COLORS.surface, border: `2px solid ${COLORS.positive}` }}
+            style={{ background: THEME.surface, border: `2px solid ${THEME.positive}` }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8 }}
           >
-            <h3 className="text-lg font-bold" style={{ color: COLORS.textPrimary }}>
+            <h3 className="text-lg font-bold" style={{ color: colors.text.primary }}>
               LESSON COMPLETE!
             </h3>
-            <p className="text-sm" style={{ color: COLORS.textMuted }}>
+            <p className="text-sm" style={{ color: colors.text.muted }}>
               Integer Addition & Subtraction
             </p>
-            <div className="flex flex-col gap-1 text-sm" style={{ color: COLORS.textSecondary }}>
-              <span>Lesson completion: <span style={{ color: COLORS.positive }}>100 XP</span></span>
-              <span>Exploration bonus: <span style={{ color: COLORS.positive }}>30 XP</span></span>
-              <span>Reflection quality: <span style={{ color: COLORS.positive }}>48 XP</span></span>
+            <div className="flex flex-col gap-1 text-sm" style={{ color: colors.text.secondary }}>
+              <span>Lesson completion: <span style={{ color: THEME.positive }}>100 XP</span></span>
+              <span>Exploration bonus: <span style={{ color: THEME.positive }}>30 XP</span></span>
+              <span>Reflection quality: <span style={{ color: THEME.positive }}>48 XP</span></span>
             </div>
-            <div className="mt-1 border-t border-white/10 pt-2 text-center text-lg font-bold" style={{ color: COLORS.zero }}>
+            <div className="mt-1 border-t border-white/10 pt-2 text-center text-lg font-bold" style={{ color: THEME.zero }}>
               Total: 178 XP
             </div>
 
@@ -2498,7 +2455,7 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
           </motion.div>
         )}
       </div>
-    </StageContainer>
+    </section>
   );
 }
 
@@ -2506,96 +2463,33 @@ function ReflectionStage({ onComplete }: ReflectionStageProps) {
    MAIN LESSON COMPONENT
    ════════════════════════════════════════════════════════════════════════ */
 
-const STAGE_ORDER: NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
-
-const STAGE_LABELS: Record<NLSStage, string> = {
-  hook: "Hook",
-  spatial: "Explore",
-  discovery: "Discover",
-  symbol: "Symbols",
-  realWorld: "Real World",
-  practice: "Practice",
-  reflection: "Reflect",
-};
-
 export function IntegerAddSubLesson({ onComplete }: IntegerAddSubLessonProps) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const currentStage = STAGE_ORDER[stageIdx] ?? "hook";
-
-  const advance = useCallback(() => {
-    if (stageIdx >= STAGE_ORDER.length - 1) {
-      onComplete?.();
-      return;
-    }
-    setStageIdx((i) => i + 1);
-  }, [stageIdx, onComplete]);
-
   return (
-    <div
-      className="flex min-h-screen flex-col"
-      style={{ background: "#0f172a", color: COLORS.textPrimary }}
+    <LessonShell
+      title="Integer Add & Sub"
+      stages={[...NLS_STAGES]}
+      onComplete={onComplete}
     >
-      {/* Stage progress nav */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 px-4 py-2 backdrop-blur-md" style={{ background: "rgba(15,23,42,0.9)" }}>
-        <span className="text-sm font-semibold" style={{ color: COLORS.textPrimary }}>
-          Integer Add & Sub
-        </span>
-        <div className="flex items-center gap-1">
-          {STAGE_ORDER.map((s, i) => (
-            <div
-              key={s}
-              className="flex items-center gap-0.5"
-              title={STAGE_LABELS[s]}
-            >
-              <div
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: i === stageIdx ? 24 : 10,
-                  background:
-                    i < stageIdx
-                      ? COLORS.positive
-                      : i === stageIdx
-                        ? COLORS.walker
-                        : "#334155",
-                }}
-              />
-            </div>
-          ))}
-        </div>
-        <span className="text-xs" style={{ color: COLORS.textMuted }}>
-          {stageIdx + 1}/{STAGE_ORDER.length}
-        </span>
-      </nav>
-
-      {/* Stage content */}
-      <main className="flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStage}
-            className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          >
-            {currentStage === "hook" && <HookStage onComplete={advance} />}
-            {currentStage === "spatial" && <SpatialStage onComplete={advance} />}
-            {currentStage === "discovery" && <DiscoveryStage onComplete={advance} />}
-            {currentStage === "symbol" && <SymbolBridgeStage onComplete={advance} />}
-            {currentStage === "realWorld" && <RealWorldStage onComplete={advance} />}
-            {currentStage === "practice" && <PracticeStage onComplete={advance} />}
-            {currentStage === "reflection" && <ReflectionStage onComplete={advance} />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":
+            return <HookStage onComplete={advance} />;
+          case "spatial":
+            return <SpatialStage onComplete={advance} />;
+          case "discovery":
+            return <DiscoveryStage onComplete={advance} />;
+          case "symbol":
+            return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":
+            return <RealWorldStage onComplete={advance} />;
+          case "practice":
+            return <PracticeStage onComplete={advance} />;
+          case "reflection":
+            return <ReflectionStage onComplete={advance} />;
+          default:
+            return null;
+        }
+      }}
+    </LessonShell>
   );
 }

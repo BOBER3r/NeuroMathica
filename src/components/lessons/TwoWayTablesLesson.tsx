@@ -1,23 +1,33 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
-const COLORS = {
-  catA: "#60a5fa", catB: "#34d399", joint: "#f59e0b", marginal: "#818cf8",
-  bgPrimary: "#0f172a", bgSurface: "#1e293b", bgElevated: "#334155",
-  textPrimary: "#f8fafc", textSecondary: "#e2e8f0", textMuted: "#94a3b8",
-  success: "#34d399", error: "#f87171", primary: "#8b5cf6",
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONSTANTS & HELPERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Lesson-specific semantic colors (aliases to shared tokens) ── */
+const THEME = {
+  catA: colors.functional.info,
+  catB: colors.accent.emerald,
+  joint: "#f59e0b",
+  marginal: colors.accent.indigo,
 } as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+const SPRING = springs.default;
 
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRACTICE DATA
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 interface PracticeProblem { id: number; layer: string; type: "multiple-choice" | "numeric-input"; prompt: string; options?: string[]; correctAnswer: string; feedback: string; }
 
@@ -56,14 +66,9 @@ const PRACTICE_PROBLEMS: PracticeProblem[] = [
     correctAnswer: "No, it only shows association", feedback: "Association is not causation! Two-way tables show relationships, not causes." },
 ];
 
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, ease: "easeOut", delay }} className="w-full flex justify-center pt-4 pb-8">
-    <Button size="lg" onClick={onClick} className="min-w-[160px]" style={{ backgroundColor: COLORS.primary }}>{label}</Button></motion.div>);
-}
-function InteractionDots({ count, total }: { count: number; total: number }) {
-  return (<div className="flex items-center gap-1 justify-center">{Array.from({ length: total }, (_, i) => (
-    <div key={i} className="rounded-full transition-colors duration-200" style={{ width: 6, height: 6, backgroundColor: i < count ? COLORS.primary : COLORS.bgElevated }} />))}</div>);
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAGE COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 function HookStage({ onComplete }: { onComplete: () => void }) {
   return <VideoHook src="/videos/TwoWayTablesHook.webm" onComplete={onComplete} />;
@@ -75,35 +80,35 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
     t.push(setTimeout(() => setPhase((p) => Math.max(p, 4)), 4000));
     return () => t.forEach(clearTimeout); }, []);
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <div className="w-full max-w-md">
         {phase >= 1 && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}
-          className="rounded-xl overflow-hidden" style={{ backgroundColor: COLORS.bgSurface }}>
-          <table className="w-full text-sm" style={{ color: COLORS.textPrimary }}>
-            <thead><tr style={{ backgroundColor: COLORS.bgElevated }}>
-              <th className="p-3 text-left" style={{ color: COLORS.textMuted }}></th>
-              <th className="p-3 text-center" style={{ color: COLORS.catA }}>Pizza</th>
-              <th className="p-3 text-center" style={{ color: COLORS.catB }}>Tacos</th>
-              <th className="p-3 text-center" style={{ color: COLORS.marginal }}>Total</th>
+          className="rounded-xl overflow-hidden bg-nm-bg-secondary">
+          <table className="w-full text-sm" style={{ color: colors.text.primary }}>
+            <thead><tr className="bg-nm-bg-surface">
+              <th className="p-3 text-left" style={{ color: colors.text.secondary }}></th>
+              <th className="p-3 text-center" style={{ color: THEME.catA }}>Pizza</th>
+              <th className="p-3 text-center" style={{ color: THEME.catB }}>Tacos</th>
+              <th className="p-3 text-center" style={{ color: THEME.marginal }}>Total</th>
             </tr></thead>
             <tbody>
               <tr><td className="p-3 font-medium">Boys</td>
                 <td className="p-3 text-center font-mono">{phase >= 2 ? "15" : "?"}</td>
                 <td className="p-3 text-center font-mono">{phase >= 2 ? "10" : "?"}</td>
-                <td className="p-3 text-center font-mono font-bold" style={{ color: COLORS.marginal }}>{phase >= 2 ? "25" : "?"}</td></tr>
-              <tr style={{ backgroundColor: `${COLORS.bgElevated}44` }}><td className="p-3 font-medium">Girls</td>
+                <td className="p-3 text-center font-mono font-bold" style={{ color: THEME.marginal }}>{phase >= 2 ? "25" : "?"}</td></tr>
+              <tr style={{ backgroundColor: `${colors.bg.surface}44` }}><td className="p-3 font-medium">Girls</td>
                 <td className="p-3 text-center font-mono">{phase >= 2 ? "12" : "?"}</td>
                 <td className="p-3 text-center font-mono">{phase >= 2 ? "13" : "?"}</td>
-                <td className="p-3 text-center font-mono font-bold" style={{ color: COLORS.marginal }}>{phase >= 2 ? "25" : "?"}</td></tr>
-              <tr style={{ backgroundColor: COLORS.bgElevated }}><td className="p-3 font-bold" style={{ color: COLORS.marginal }}>Total</td>
-                <td className="p-3 text-center font-mono font-bold" style={{ color: COLORS.marginal }}>{phase >= 2 ? "27" : "?"}</td>
-                <td className="p-3 text-center font-mono font-bold" style={{ color: COLORS.marginal }}>{phase >= 2 ? "23" : "?"}</td>
-                <td className="p-3 text-center font-mono font-bold" style={{ color: COLORS.joint }}>{phase >= 2 ? "50" : "?"}</td></tr>
+                <td className="p-3 text-center font-mono font-bold" style={{ color: THEME.marginal }}>{phase >= 2 ? "25" : "?"}</td></tr>
+              <tr className="bg-nm-bg-surface"><td className="p-3 font-bold" style={{ color: THEME.marginal }}>Total</td>
+                <td className="p-3 text-center font-mono font-bold" style={{ color: THEME.marginal }}>{phase >= 2 ? "27" : "?"}</td>
+                <td className="p-3 text-center font-mono font-bold" style={{ color: THEME.marginal }}>{phase >= 2 ? "23" : "?"}</td>
+                <td className="p-3 text-center font-mono font-bold" style={{ color: THEME.joint }}>{phase >= 2 ? "50" : "?"}</td></tr>
             </tbody>
           </table>
         </motion.div>)}
         {phase >= 3 && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-center mt-4 font-medium" style={{ color: COLORS.textPrimary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+          className="text-center mt-4 font-medium" style={{ color: colors.text.primary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
           Two categories. One table. The whole story.
         </motion.p>)}
       </div>
@@ -119,57 +124,57 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const rowA = a + b; const rowB = c + d; const colA = a + c; const colB = b + d; const total = a + b + c + d;
 
   return (
-    <section className="flex flex-1 flex-col items-center px-4 pt-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
-      <p className="text-center mb-3 font-medium" style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+    <section className="flex flex-1 flex-col items-center px-4 pt-4 bg-nm-bg-primary" aria-live="polite">
+      <p className="text-center mb-3 font-medium" style={{ color: colors.text.secondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
         Change the cell values and watch the totals update
       </p>
-      <div className="rounded-xl overflow-hidden w-full max-w-sm" style={{ backgroundColor: COLORS.bgSurface }}>
-        <table className="w-full text-sm" style={{ color: COLORS.textPrimary }}>
-          <thead><tr style={{ backgroundColor: COLORS.bgElevated }}>
-            <th className="p-2"></th><th className="p-2 text-center" style={{ color: COLORS.catA }}>Cat A</th>
-            <th className="p-2 text-center" style={{ color: COLORS.catB }}>Cat B</th>
-            <th className="p-2 text-center" style={{ color: COLORS.marginal }}>Total</th>
+      <div className="rounded-xl overflow-hidden w-full max-w-sm bg-nm-bg-secondary">
+        <table className="w-full text-sm" style={{ color: colors.text.primary }}>
+          <thead><tr className="bg-nm-bg-surface">
+            <th className="p-2"></th><th className="p-2 text-center" style={{ color: THEME.catA }}>Cat A</th>
+            <th className="p-2 text-center" style={{ color: THEME.catB }}>Cat B</th>
+            <th className="p-2 text-center" style={{ color: THEME.marginal }}>Total</th>
           </tr></thead>
           <tbody>
             <tr><td className="p-2 font-medium">Group 1</td>
               <td className="p-2 text-center"><div className="flex items-center justify-center gap-1">
-                <button onClick={() => { if (a > 0) { setA(a - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>{"\u2212"}</button>
+                <button onClick={() => { if (a > 0) { setA(a - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">{"\u2212"}</button>
                 <span className="font-mono w-8 text-center">{a}</span>
-                <button onClick={() => { setA(a + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>+</button>
+                <button onClick={() => { setA(a + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">+</button>
               </div></td>
               <td className="p-2 text-center"><div className="flex items-center justify-center gap-1">
-                <button onClick={() => { if (b > 0) { setB(b - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>{"\u2212"}</button>
+                <button onClick={() => { if (b > 0) { setB(b - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">{"\u2212"}</button>
                 <span className="font-mono w-8 text-center">{b}</span>
-                <button onClick={() => { setB(b + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>+</button>
+                <button onClick={() => { setB(b + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">+</button>
               </div></td>
-              <td className="p-2 text-center font-bold font-mono" style={{ color: COLORS.marginal }}>{rowA}</td></tr>
+              <td className="p-2 text-center font-bold font-mono" style={{ color: THEME.marginal }}>{rowA}</td></tr>
             <tr><td className="p-2 font-medium">Group 2</td>
               <td className="p-2 text-center"><div className="flex items-center justify-center gap-1">
-                <button onClick={() => { if (c > 0) { setC(c - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>{"\u2212"}</button>
+                <button onClick={() => { if (c > 0) { setC(c - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">{"\u2212"}</button>
                 <span className="font-mono w-8 text-center">{c}</span>
-                <button onClick={() => { setC(c + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>+</button>
+                <button onClick={() => { setC(c + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">+</button>
               </div></td>
               <td className="p-2 text-center"><div className="flex items-center justify-center gap-1">
-                <button onClick={() => { if (d > 0) { setD(d - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>{"\u2212"}</button>
+                <button onClick={() => { if (d > 0) { setD(d - 1); interact(); } }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">{"\u2212"}</button>
                 <span className="font-mono w-8 text-center">{d}</span>
-                <button onClick={() => { setD(d + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded" style={{ backgroundColor: COLORS.bgElevated, color: COLORS.textPrimary }}>+</button>
+                <button onClick={() => { setD(d + 1); interact(); }} className="min-h-[44px] min-w-[44px] rounded bg-nm-bg-surface text-nm-text-primary">+</button>
               </div></td>
-              <td className="p-2 text-center font-bold font-mono" style={{ color: COLORS.marginal }}>{rowB}</td></tr>
-            <tr style={{ backgroundColor: COLORS.bgElevated }}><td className="p-2 font-bold" style={{ color: COLORS.marginal }}>Total</td>
-              <td className="p-2 text-center font-bold font-mono" style={{ color: COLORS.marginal }}>{colA}</td>
-              <td className="p-2 text-center font-bold font-mono" style={{ color: COLORS.marginal }}>{colB}</td>
-              <td className="p-2 text-center font-bold font-mono" style={{ color: COLORS.joint }}>{total}</td></tr>
+              <td className="p-2 text-center font-bold font-mono" style={{ color: THEME.marginal }}>{rowB}</td></tr>
+            <tr className="bg-nm-bg-surface"><td className="p-2 font-bold" style={{ color: THEME.marginal }}>Total</td>
+              <td className="p-2 text-center font-bold font-mono" style={{ color: THEME.marginal }}>{colA}</td>
+              <td className="p-2 text-center font-bold font-mono" style={{ color: THEME.marginal }}>{colB}</td>
+              <td className="p-2 text-center font-bold font-mono" style={{ color: THEME.joint }}>{total}</td></tr>
           </tbody>
         </table>
       </div>
-      <div className="rounded-xl p-3 w-full max-w-sm mt-3" style={{ backgroundColor: COLORS.bgSurface }}>
-        <p className="text-xs text-center" style={{ color: COLORS.textMuted }}>
-          Group 1 Cat A rate: <span className="font-mono font-bold" style={{ color: COLORS.catA }}>{rowA > 0 ? Math.round(a / rowA * 100) : 0}%</span>
-          {" | "}Group 2 Cat A rate: <span className="font-mono font-bold" style={{ color: COLORS.catA }}>{rowB > 0 ? Math.round(c / rowB * 100) : 0}%</span>
+      <div className="rounded-xl p-3 w-full max-w-sm mt-3 bg-nm-bg-secondary">
+        <p className="text-xs text-center" style={{ color: colors.text.muted }}>
+          Group 1 Cat A rate: <span className="font-mono font-bold" style={{ color: THEME.catA }}>{rowA > 0 ? Math.round(a / rowA * 100) : 0}%</span>
+          {" | "}Group 2 Cat A rate: <span className="font-mono font-bold" style={{ color: THEME.catA }}>{rowB > 0 ? Math.round(c / rowB * 100) : 0}%</span>
         </p>
       </div>
-      <div className="mt-3"><InteractionDots count={Math.min(interactions, 6)} total={6} /></div>
-      {canContinue && <ContinueButton onClick={onComplete} />}
+      <div className="mt-3"><InteractionDots count={Math.min(interactions, 6)} total={6} activeColor={colors.accent.violet} /></div>
+      {canContinue && <ContinueButton onClick={onComplete} color={colors.accent.violet} />}
     </section>);
 }
 
@@ -182,17 +187,17 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   ], []);
   const current = prompts[step];
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <svg viewBox="0 0 260 80" className="w-full max-w-[260px] mb-6">
-        <motion.text x={130} y={40} textAnchor={"middle" as const} fill={COLORS.joint} fontSize={14} fontWeight={700}
+        <motion.text x={130} y={40} textAnchor={"middle" as const} fill={THEME.joint} fontSize={14} fontWeight={700}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {step === 0 ? "Joint vs Marginal" : step === 1 ? "Counts \u2192 Percentages" : "Same rates = No association"}
         </motion.text>
       </svg>
       {current && (<motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} className="max-w-md text-center px-4">
-        <p className="font-medium mb-4" style={{ color: COLORS.textPrimary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>{current.text}</p>
+        <p className="font-medium mb-4" style={{ color: colors.text.primary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>{current.text}</p>
         <Button size="lg" onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onComplete(); }}
-          className="min-w-[140px]" style={{ backgroundColor: COLORS.primary }}>{current.btn}</Button>
+          className="min-w-[140px]" style={{ backgroundColor: colors.accent.violet }}>{current.btn}</Button>
       </motion.div>)}
     </section>);
 }
@@ -203,22 +208,22 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
     t.push(setTimeout(() => setRevealed(1), 1500)); t.push(setTimeout(() => setRevealed(2), 3000)); t.push(setTimeout(() => setRevealed(3), 4500));
     return () => t.forEach(clearTimeout); }, []);
   const notations = [
-    { formula: "Joint freq = cell count", desc: "How many share both categories", color: COLORS.joint },
-    { formula: "Marginal freq = row/column total", desc: "Total for one category across all of the other", color: COLORS.marginal },
-    { formula: "Relative freq = cell / grand total", desc: "Proportion or percentage of the whole", color: COLORS.catA },
+    { formula: "Joint freq = cell count", desc: "How many share both categories", color: THEME.joint },
+    { formula: "Marginal freq = row/column total", desc: "Total for one category across all of the other", color: THEME.marginal },
+    { formula: "Relative freq = cell / grand total", desc: "Proportion or percentage of the whole", color: THEME.catA },
   ];
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
-      <h2 className="text-center font-bold mb-8" style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Two-Way Table Terms</h2>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
+      <h2 className="text-center font-bold mb-8" style={{ color: colors.text.primary, fontSize: "clamp(20px, 5vw, 28px)" }}>Two-Way Table Terms</h2>
       <div className="space-y-4 w-full max-w-md">
         {notations.map((n, i) => (<AnimatePresence key={i}>{revealed > i && (
-          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl p-4"
-            style={{ backgroundColor: COLORS.bgSurface, borderLeft: `4px solid ${n.color}` }}>
+          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl p-4 bg-nm-bg-secondary"
+            style={{ borderLeft: `4px solid ${n.color}` }}>
             <p className="font-bold font-mono text-base" style={{ color: n.color }}>{n.formula}</p>
-            <p className="text-sm mt-1" style={{ color: COLORS.textMuted }}>{n.desc}</p>
+            <p className="text-sm mt-1" style={{ color: colors.text.muted }}>{n.desc}</p>
           </motion.div>)}</AnimatePresence>))}
       </div>
-      {revealed >= 3 && <ContinueButton onClick={onComplete} delay={0.5} />}
+      {revealed >= 3 && <ContinueButton onClick={onComplete} delay={0.5} color={colors.accent.violet} />}
     </section>);
 }
 
@@ -229,18 +234,18 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
     { icon: "\u{1F4F1}", title: "App Usage", desc: "Age group vs social media platform shows which demographics use what.", math: "Age \u00D7 Platform" },
   ];
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
-      <h2 className="text-center font-bold mb-6" style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Real World Connections</h2>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
+      <h2 className="text-center font-bold mb-6" style={{ color: colors.text.primary, fontSize: "clamp(20px, 5vw, 28px)" }}>Real World Connections</h2>
       <div className="space-y-4 w-full max-w-md">
         {scenarios.map((s, i) => (<motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl p-4 flex gap-3 items-start" style={{ backgroundColor: COLORS.bgSurface }}>
+          transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl p-4 flex gap-3 items-start bg-nm-bg-secondary">
           <span className="text-2xl" role="img" aria-hidden="true">{s.icon}</span>
-          <div><p className="font-semibold" style={{ color: COLORS.textPrimary }}>{s.title}</p>
-            <p className="text-sm" style={{ color: COLORS.textSecondary }}>{s.desc}</p>
-            <p className="text-xs font-mono mt-1" style={{ color: COLORS.primary }}>{s.math}</p></div>
+          <div><p className="font-semibold" style={{ color: colors.text.primary }}>{s.title}</p>
+            <p className="text-sm" style={{ color: colors.text.secondary }}>{s.desc}</p>
+            <p className="text-xs font-mono mt-1" style={{ color: colors.accent.violet }}>{s.math}</p></div>
         </motion.div>))}
       </div>
-      <ContinueButton onClick={onComplete} delay={0.3} />
+      <ContinueButton onClick={onComplete} delay={0.3} color={colors.accent.violet} />
     </section>);
 }
 
@@ -255,36 +260,36 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
     setResults((p) => { const n = [...p]; n[currentQ] = userAnswer === problem.correctAnswer; return n; }); }, [userAnswer, currentQ, problem.correctAnswer]);
   const handleNext = useCallback(() => { if (isLast) { onComplete(); return; } setCurrentQ((q) => q + 1); setSelected(null); setInputValue(""); setSubmitted(false); }, [isLast, onComplete]);
   return (
-    <section className="flex flex-1 flex-col px-4 pt-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col px-4 pt-4 bg-nm-bg-primary" aria-live="polite">
       <div className="flex items-center gap-1.5 justify-center mb-4">
-        {PRACTICE_PROBLEMS.map((_, i) => { const r = results[i]; let bg: string = COLORS.bgElevated;
-          if (r === true) bg = COLORS.success; else if (r === false) bg = COLORS.error;
-          return <div key={i} className="rounded-full transition-colors duration-200" style={{ width: 10, height: 10, backgroundColor: bg, border: i === currentQ ? `2px solid ${COLORS.primary}` : "none" }} />; })}
+        {PRACTICE_PROBLEMS.map((_, i) => { const r = results[i]; let bg: string = colors.bg.surface;
+          if (r === true) bg = colors.functional.success; else if (r === false) bg = colors.functional.error;
+          return <div key={i} className="rounded-full transition-colors duration-200" style={{ width: 10, height: 10, backgroundColor: bg, border: i === currentQ ? `2px solid ${colors.accent.violet}` : "none" }} />; })}
       </div>
       <motion.div key={currentQ} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={SPRING}
         className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: COLORS.textMuted }}>{problem.layer} {"\u2022"} {currentQ + 1}/{PRACTICE_PROBLEMS.length}</p>
-        <p className="text-center font-medium mb-6" style={{ color: COLORS.textPrimary, fontSize: "clamp(15px, 3.5vw, 18px)" }}>{problem.prompt}</p>
+        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: colors.text.muted }}>{problem.layer} {"\u2022"} {currentQ + 1}/{PRACTICE_PROBLEMS.length}</p>
+        <p className="text-center font-medium mb-6" style={{ color: colors.text.primary, fontSize: "clamp(15px, 3.5vw, 18px)" }}>{problem.prompt}</p>
         {problem.type === "multiple-choice" && problem.options && (<div className="space-y-2 w-full">{problem.options.map((opt) => {
-          let bg: string = COLORS.bgSurface; let border: string = COLORS.bgElevated;
-          if (submitted) { if (opt === problem.correctAnswer) { bg = "#34d39933"; border = COLORS.success; } else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = COLORS.error; } }
-          else if (opt === selected) { bg = "#8b5cf633"; border = COLORS.primary; }
+          let bg: string = colors.bg.secondary; let border: string = colors.bg.surface;
+          if (submitted) { if (opt === problem.correctAnswer) { bg = `${colors.functional.success}33`; border = colors.functional.success; } else if (opt === selected && opt !== problem.correctAnswer) { bg = `${colors.functional.error}33`; border = colors.functional.error; } }
+          else if (opt === selected) { bg = `${colors.accent.violet}33`; border = colors.accent.violet; }
           return (<button key={opt} onClick={() => { if (!submitted) setSelected(opt); }} disabled={submitted}
             className="w-full text-left rounded-xl px-4 py-3 transition-colors min-h-[44px]"
-            style={{ backgroundColor: bg, border: `2px solid ${border}`, color: COLORS.textPrimary }}>{opt}</button>); })}</div>)}
+            style={{ backgroundColor: bg, border: `2px solid ${border}`, color: colors.text.primary }}>{opt}</button>); })}</div>)}
         {problem.type === "numeric-input" && (
           <input type="number" value={inputValue} onChange={(e) => { if (!submitted) setInputValue(e.target.value); }}
             disabled={submitted} placeholder="Enter your answer" className="w-full rounded-xl px-4 py-3 text-center text-lg font-mono min-h-[44px]"
-            style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary, border: `2px solid ${submitted ? (isCorrect ? COLORS.success : COLORS.error) : COLORS.bgElevated}`, outline: "none" }} />)}
+            style={{ backgroundColor: colors.bg.secondary, color: colors.text.primary, border: `2px solid ${submitted ? (isCorrect ? colors.functional.success : colors.functional.error) : colors.bg.surface}`, outline: "none" }} />)}
         <AnimatePresence>{submitted && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} className="mt-4 rounded-xl p-4 w-full"
-            style={{ backgroundColor: isCorrect ? "#34d39920" : "#f8717120", border: `1px solid ${isCorrect ? COLORS.success : COLORS.error}` }}>
-            <p className="font-bold mb-1" style={{ color: isCorrect ? COLORS.success : COLORS.error }}>{isCorrect ? "Correct!" : "Not quite"}</p>
-            <p className="text-sm" style={{ color: COLORS.textSecondary }}>{problem.feedback}</p>
+            style={{ backgroundColor: isCorrect ? `${colors.functional.success}20` : `${colors.functional.error}20`, border: `1px solid ${isCorrect ? colors.functional.success : colors.functional.error}` }}>
+            <p className="font-bold mb-1" style={{ color: isCorrect ? colors.functional.success : colors.functional.error }}>{isCorrect ? "Correct!" : "Not quite"}</p>
+            <p className="text-sm" style={{ color: colors.text.secondary }}>{problem.feedback}</p>
           </motion.div>)}</AnimatePresence>
         <div className="w-full mt-4 pb-8">
-          {!submitted ? (<Button size="lg" onClick={handleSubmit} disabled={!userAnswer} className="w-full" style={{ backgroundColor: COLORS.primary, opacity: userAnswer ? 1 : 0.4 }}>Check Answer</Button>)
-            : (<Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: COLORS.primary }}>{isLast ? "Continue" : "Next \u2192"}</Button>)}
+          {!submitted ? (<Button size="lg" onClick={handleSubmit} disabled={!userAnswer} className="w-full" style={{ backgroundColor: colors.accent.violet, opacity: userAnswer ? 1 : 0.4 }}>Check Answer</Button>)
+            : (<Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: colors.accent.violet }}>{isLast ? "Continue" : "Next \u2192"}</Button>)}
         </div>
       </motion.div>
     </section>);
@@ -296,51 +301,50 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const handleSubmit = useCallback(() => { if (canSubmit) setSubmitted(true); }, [canSubmit]);
   const handleSkip = useCallback(() => { setSubmitted(true); }, []);
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4" style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary" aria-live="polite">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={SPRING} className="w-full max-w-md">
-        <h2 className="text-center font-bold mb-2" style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
-        <p className="text-center mb-6" style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+        <h2 className="text-center font-bold mb-2" style={{ color: colors.text.primary, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
+        <p className="text-center mb-6" style={{ color: colors.text.secondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
           Design a two-way table for a survey you would like to do at school. What two categories would you use?
         </p>
         {!submitted ? (<>
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your explanation here..." rows={4}
-            className="w-full rounded-xl px-4 py-3 resize-none min-h-[120px]"
-            style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary, border: `2px solid ${COLORS.bgElevated}`, outline: "none" }} />
-          <p className="text-xs mt-1 text-right" style={{ color: text.trim().length >= 20 ? COLORS.success : COLORS.textMuted }}>{text.trim().length}/20 characters minimum</p>
-        </>) : (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-xl p-6 text-center" style={{ backgroundColor: COLORS.bgSurface }}>
-          <p className="text-2xl mb-2" role="img" aria-label="Star">{"\u2B50"}</p><p className="font-bold" style={{ color: COLORS.success }}>Great thinking!</p>
-          <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>Reflecting on concepts deepens your understanding.</p></motion.div>)}
+            className="w-full rounded-xl px-4 py-3 resize-none min-h-[120px] bg-nm-bg-secondary"
+            style={{ color: colors.text.primary, border: `2px solid ${colors.bg.surface}`, outline: "none" }} />
+          <p className="text-xs mt-1 text-right" style={{ color: text.trim().length >= 20 ? colors.functional.success : colors.text.muted }}>{text.trim().length}/20 characters minimum</p>
+        </>) : (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-xl p-6 text-center bg-nm-bg-secondary">
+          <p className="text-2xl mb-2" role="img" aria-label="Star">{"\u2B50"}</p><p className="font-bold" style={{ color: colors.functional.success }}>Great thinking!</p>
+          <p className="text-sm mt-1" style={{ color: colors.text.secondary }}>Reflecting on concepts deepens your understanding.</p></motion.div>)}
       </motion.div>
       <div className="w-full max-w-md mx-auto pb-8 pt-4 space-y-2">
         {!submitted ? (<>
-          <Button size="lg" onClick={handleSubmit} disabled={!canSubmit} className="w-full" style={{ backgroundColor: COLORS.primary, opacity: canSubmit ? 1 : 0.4 }}>Submit Reflection</Button>
-          <button onClick={handleSkip} className="w-full text-center py-2 min-h-[44px]" style={{ color: "#64748b", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>Skip</button>
+          <Button size="lg" onClick={handleSubmit} disabled={!canSubmit} className="w-full" style={{ backgroundColor: colors.accent.violet, opacity: canSubmit ? 1 : 0.4 }}>Submit Reflection</Button>
+          <button onClick={handleSkip} className="w-full text-center py-2 min-h-[44px]" style={{ color: colors.text.muted, fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>Skip</button>
         </>) : (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-          <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: COLORS.primary }}>Complete Lesson</Button></motion.div>)}
+          <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: colors.accent.violet }}>Complete Lesson</Button></motion.div>)}
       </div>
     </section>);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN EXPORT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 export function TwoWayTablesLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stageIdx, setStageIdx] = useState(0); const stage = STAGES[stageIdx] ?? ("hook" as Stage);
-  const advanceStage = useCallback(() => { setStageIdx((i) => { const next = i + 1; if (next >= STAGES.length) { onComplete?.(); return i; } return next; }); }, [onComplete]);
-  const handleReflectionComplete = useCallback(() => { onComplete?.(); }, [onComplete]);
-  const stageProgress = ((stageIdx + 1) / STAGES.length) * 100;
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: COLORS.bgPrimary }}>
-      <div className="sticky top-0 z-10 backdrop-blur-sm px-4 py-2" style={{ backgroundColor: `${COLORS.bgPrimary}e6`, borderBottom: `1px solid ${COLORS.bgSurface}` }}>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium" style={{ color: COLORS.textMuted }}>SP-5.7 Two-Way Tables</span>
-          <span className="text-xs tabular-nums" style={{ color: "#475569" }}>{stageIdx + 1}/{STAGES.length}</span>
-        </div><ProgressBar value={stageProgress} variant="xp" size="sm" />
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex flex-1 flex-col" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -60 }} transition={SPRING_GENTLE}>
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}{stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}{stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}{stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={handleReflectionComplete} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>);
+    <LessonShell title="SP-5.7 Two-Way Tables" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
+  );
 }

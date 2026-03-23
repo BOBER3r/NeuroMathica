@@ -20,6 +20,12 @@ import { useDrag } from "@use-gesture/react";
 import katex from "katex";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 // ---------------------------------------------------------------------------
 // Constants & types
@@ -55,6 +61,43 @@ const PRESET_ANGLES: ReadonlyArray<{
 const DEG = Math.PI / 180;
 
 // ---------------------------------------------------------------------------
+// Shared token aliases
+// ---------------------------------------------------------------------------
+
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT_SECONDARY = colors.text.secondary;
+const BORDER = colors.bg.surface;
+const BORDER_LIGHT = colors.bg.elevated;
+const SUCCESS = colors.functional.success;
+const WARNING = colors.functional.warning;
+const INFO = colors.functional.info;
+
+const SPRING = springs.default;
+
+// ---------------------------------------------------------------------------
+// Lesson-specific theme
+// ---------------------------------------------------------------------------
+
+const THEME = {
+  primary: INFO,
+  acute: ANGLE_COLORS.acute,
+  right: ANGLE_COLORS.right,
+  obtuse: ANGLE_COLORS.obtuse,
+  straight: ANGLE_COLORS.straight,
+  reflex: ANGLE_COLORS.reflex,
+  textLight: "#e2e8f0",
+  vertex: "#f8fafc",
+  lineGray: TEXT_SECONDARY,
+  handleDefault: INFO,
+  handleHover: "#60a5fa",
+  handleActive: "#93c5fd",
+  handleStroke: "#60a5fa",
+  dividerHandle: colors.accent.violet,
+  dividerStroke: "#c4b5fd",
+};
+
+// ---------------------------------------------------------------------------
 // Pure math helpers
 // ---------------------------------------------------------------------------
 
@@ -81,7 +124,7 @@ function angleTypeName(t: AngleType | null): string {
 
 function angleColor(deg: number): string {
   const t = classifyAngle(deg);
-  if (!t) return "#94a3b8";
+  if (!t) return TEXT_SECONDARY;
   return ANGLE_COLORS[t];
 }
 
@@ -155,55 +198,12 @@ interface AnglesLessonProps {
 }
 
 // ---------------------------------------------------------------------------
-// NLS stage enum
+// NLS stages (shared)
 // ---------------------------------------------------------------------------
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
 
 // ===========================================================================
 // Shared micro-components
 // ===========================================================================
-
-function InteractionDots({
-  count,
-  total,
-}: {
-  count: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-1 justify-center">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-colors duration-200"
-          style={{
-            width: 6,
-            height: 6,
-            backgroundColor: i < count ? "#3b82f6" : "#334155",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 function Katex({
   tex,
@@ -373,7 +373,7 @@ function AngleMaker({
           markerHeight={4}
           orient="auto"
         >
-          <path d="M 0 0 L 10 5 L 0 10 Z" fill="#94a3b8" />
+          <path d="M 0 0 L 10 5 L 0 10 Z" fill={TEXT_SECONDARY} />
         </marker>
         <marker
           id="arrowWhite"
@@ -384,7 +384,7 @@ function AngleMaker({
           markerHeight={4}
           orient="auto"
         >
-          <path d="M 0 0 L 10 5 L 0 10 Z" fill="#f8fafc" />
+          <path d="M 0 0 L 10 5 L 0 10 Z" fill={THEME.vertex} />
         </marker>
       </defs>
 
@@ -471,7 +471,7 @@ function AngleMaker({
                   y1={0}
                   x2={dX}
                   y2={dY}
-                  stroke="#e2e8f0"
+                  stroke={THEME.textLight}
                   strokeWidth={0.15}
                 />
                 {/* Invisible touch target */}
@@ -488,8 +488,8 @@ function AngleMaker({
                   cx={dX}
                   cy={dY}
                   r={0.3}
-                  fill="#a78bfa"
-                  stroke="#c4b5fd"
+                  fill={THEME.dividerHandle}
+                  stroke={THEME.dividerStroke}
                   strokeWidth={0.08}
                 />
               </g>
@@ -507,7 +507,7 @@ function AngleMaker({
                 y1={0}
                 x2={bX}
                 y2={bY}
-                stroke="#94a3b8"
+                stroke={TEXT_SECONDARY}
                 strokeWidth={0.12}
                 strokeDasharray="0.3 0.2"
               />
@@ -555,7 +555,7 @@ function AngleMaker({
         y1={0}
         x2={rayLength}
         y2={0}
-        stroke="#94a3b8"
+        stroke={TEXT_SECONDARY}
         strokeWidth={0.12}
         markerEnd="url(#arrowGray)"
       />
@@ -567,7 +567,7 @@ function AngleMaker({
           y1={0}
           x2={rayX}
           y2={rayY}
-          stroke="#f8fafc"
+          stroke={THEME.vertex}
           strokeWidth={0.16}
           markerEnd="url(#arrowWhite)"
         />
@@ -578,8 +578,8 @@ function AngleMaker({
         cx={0}
         cy={0}
         r={0.2}
-        fill="#f8fafc"
-        stroke="#94a3b8"
+        fill={THEME.vertex}
+        stroke={TEXT_SECONDARY}
         strokeWidth={0.06}
         filter="url(#vertex-glow)"
       />
@@ -601,18 +601,14 @@ function AngleMaker({
             cy={rayY}
             r={0.4}
             fill={
-              dragging ? "#93c5fd" : hovering ? "#60a5fa" : "#3b82f6"
+              dragging ? THEME.handleActive : hovering ? THEME.handleHover : THEME.handleDefault
             }
-            stroke="#60a5fa"
+            stroke={THEME.handleStroke}
             strokeWidth={0.08}
             animate={{
               scale: dragging ? 1.25 : hovering ? 1.15 : 1,
             }}
-            transition={{
-              type: "spring",
-              damping: 15,
-              stiffness: 300,
-            }}
+            transition={SPRING}
             onPointerEnter={() => setHovering(true)}
             onPointerLeave={() => setHovering(false)}
           />
@@ -650,11 +646,7 @@ function AngleMaker({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{
-              type: "spring",
-              damping: 15,
-              stiffness: 300,
-            }}
+            transition={SPRING}
           >
             {typeName}!
           </motion.text>
@@ -753,10 +745,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   function sweepColor(): string {
     const d = Number(degText);
     if (d <= 0) return "transparent";
-    if (d <= 90) return "#34d39960";
-    if (d <= 180) return "#60a5fa60";
-    if (d <= 270) return "#818cf860";
-    return "#fb718560";
+    if (d <= 90) return `${THEME.acute}60`;
+    if (d <= 180) return `${THEME.obtuse}60`;
+    if (d <= 270) return `${THEME.straight}60`;
+    return `${THEME.reflex}60`;
   }
 
   const realLifeItems = [
@@ -783,7 +775,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   }, [phase]);
 
   return (
-    <section className="relative flex flex-1 flex-col items-center justify-center bg-[#020617] px-4">
+    <section className="relative flex flex-1 flex-col items-center justify-center bg-nm-bg-primary px-4">
       <div aria-live="polite" className="sr-only">
         A clock shows the minute hand sweeping from 12 to 3, forming a 90
         degree angle. The hand continues to 6 forming 180 degrees, to 9
@@ -795,7 +787,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         <motion.div
           className="flex flex-col items-center"
           animate={phase === 6 ? { scale: 0.5, x: -120 } : {}}
-          transition={{ type: "spring", damping: 20, stiffness: 300 }}
+          transition={SPRING}
         >
           <svg
             viewBox="-6 -6 12 12"
@@ -808,7 +800,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             <title>Clock showing angle rotation</title>
 
             {/* Clock face fill */}
-            <circle cx={0} cy={0} r={5} fill="#0f172a" />
+            <circle cx={0} cy={0} r={5} fill={BG} />
 
             {/* Border */}
             <motion.circle
@@ -816,7 +808,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               cy={0}
               r={5}
               fill="none"
-              stroke="#475569"
+              stroke={BORDER_LIGHT}
               strokeWidth={0.18}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -838,7 +830,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                     y1={-4.4 * Math.cos(a)}
                     x2={4.8 * Math.sin(a)}
                     y2={-4.8 * Math.cos(a)}
-                    stroke="#94a3b8"
+                    stroke={TEXT_SECONDARY}
                     strokeWidth={0.12}
                   />
                 );
@@ -886,7 +878,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               y1={0}
               x2={0}
               y2={-4}
-              stroke="#60a5fa"
+              stroke={THEME.primary}
               strokeWidth={0.22}
               strokeLinecap="round"
               style={{ transformOrigin: "0 0" }}
@@ -895,7 +887,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             />
 
             {/* Center dot */}
-            <circle cx={0} cy={0} r={0.25} fill="#fbbf24" />
+            <circle cx={0} cy={0} r={0.25} fill={WARNING} />
           </svg>
 
           {/* Degree counter */}
@@ -995,7 +987,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                           y1={0}
                           x2={len}
                           y2={0}
-                          stroke="#e2e8f0"
+                          stroke={THEME.textLight}
                           strokeWidth={0.12}
                         />
                         <line
@@ -1003,13 +995,13 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                           y1={0}
                           x2={len * Math.cos(r)}
                           y2={-len * Math.sin(r)}
-                          stroke="#e2e8f0"
+                          stroke={THEME.textLight}
                           strokeWidth={0.12}
                         />
                         <path
                           d={angleArcPath(0, item.angle, 1.2)}
                           fill="none"
-                          stroke="#34d399"
+                          stroke={SUCCESS}
                           strokeWidth={0.1}
                         />
                       </>
@@ -1037,7 +1029,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={onComplete}
           disabled={!showContinue}
-          className="w-full h-12 rounded-xl bg-[#3b82f6] text-white text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full h-12 rounded-xl bg-nm-domain-numbers text-white text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-label="Let's explore angles"
         >
           Let&apos;s explore angles
@@ -1096,10 +1088,10 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const totalPairAngle = mode === "complementary" ? 90 : 180;
 
   return (
-    <section className="relative flex flex-1 flex-col bg-[#020617] px-4">
+    <section className="relative flex flex-1 flex-col bg-nm-bg-primary px-4">
       {/* Interaction dots */}
       <div className="pt-3 pb-1">
-        <InteractionDots count={interactions} total={MIN_INTERACTIONS} />
+        <InteractionDots count={interactions} total={MIN_INTERACTIONS} activeColor={THEME.primary} />
       </div>
 
       {/* Equation for pair modes */}
@@ -1155,13 +1147,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             className="min-h-[40px] rounded-lg border-[1.5px] px-4 text-sm font-semibold transition-colors"
             style={{
               borderColor:
-                mode === "complementary" ? "#34d399" : "#475569",
+                mode === "complementary" ? SUCCESS : BORDER_LIGHT,
               backgroundColor:
                 mode === "complementary"
-                  ? "#34d39926"
+                  ? `${SUCCESS}26`
                   : "transparent",
               color:
-                mode === "complementary" ? "#34d399" : "#e2e8f0",
+                mode === "complementary" ? SUCCESS : THEME.textLight,
             }}
             role="switch"
             aria-checked={mode === "complementary"}
@@ -1174,13 +1166,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             className="min-h-[40px] rounded-lg border-[1.5px] px-4 text-sm font-semibold transition-colors"
             style={{
               borderColor:
-                mode === "supplementary" ? "#60a5fa" : "#475569",
+                mode === "supplementary" ? INFO : BORDER_LIGHT,
               backgroundColor:
                 mode === "supplementary"
-                  ? "#60a5fa26"
+                  ? `${INFO}26`
                   : "transparent",
               color:
-                mode === "supplementary" ? "#60a5fa" : "#e2e8f0",
+                mode === "supplementary" ? INFO : THEME.textLight,
             }}
             role="switch"
             aria-checked={mode === "supplementary"}
@@ -1191,24 +1183,11 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         </div>
 
         {/* Continue */}
-        <motion.div
-          className="w-full max-w-sm mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={
-            canContinue
-              ? { opacity: 1, y: 0 }
-              : { opacity: 0, y: 20 }
-          }
-        >
-          <Button
-            size="lg"
-            onClick={onComplete}
-            disabled={!canContinue}
-            className="w-full"
-          >
+        {canContinue && (
+          <ContinueButton onClick={onComplete} color={THEME.primary}>
             Continue
-          </Button>
-        </motion.div>
+          </ContinueButton>
+        )}
       </div>
     </section>
   );
@@ -1444,7 +1423,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   );
 
   return (
-    <section className="relative flex flex-1 flex-col bg-[#020617] px-4">
+    <section className="relative flex flex-1 flex-col bg-nm-bg-primary px-4">
       {/* Prompts */}
       <div className="pt-3 pb-2 space-y-2 max-h-[40%] overflow-y-auto">
         {prompts.slice(0, currentPromptIdx + 1).map((p, i) => (
@@ -1452,7 +1431,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             key={i}
             className="rounded-[10px] px-4 py-3 text-[15px] leading-relaxed flex items-start gap-2"
             style={{
-              background: "rgba(15, 23, 42, 0.9)",
+              background: `${BG}e6`,
               opacity: completed[i] ? 0.6 : 1,
             }}
             initial={{ opacity: 0, y: -8 }}
@@ -1469,7 +1448,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 height={16}
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#34d399"
+                stroke={SUCCESS}
                 strokeWidth={3}
                 className="flex-shrink-0 mt-1"
                 aria-label="Completed"
@@ -1503,13 +1482,13 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             className="min-h-[40px] rounded-lg border-[1.5px] px-3 text-sm font-semibold transition-colors"
             style={{
               borderColor:
-                mode === "complementary" ? "#34d399" : "#475569",
+                mode === "complementary" ? SUCCESS : BORDER_LIGHT,
               backgroundColor:
                 mode === "complementary"
-                  ? "#34d39926"
+                  ? `${SUCCESS}26`
                   : "transparent",
               color:
-                mode === "complementary" ? "#34d399" : "#e2e8f0",
+                mode === "complementary" ? SUCCESS : THEME.textLight,
             }}
             role="switch"
             aria-checked={mode === "complementary"}
@@ -1522,13 +1501,13 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             className="min-h-[40px] rounded-lg border-[1.5px] px-3 text-sm font-semibold transition-colors"
             style={{
               borderColor:
-                mode === "supplementary" ? "#60a5fa" : "#475569",
+                mode === "supplementary" ? INFO : BORDER_LIGHT,
               backgroundColor:
                 mode === "supplementary"
-                  ? "#60a5fa26"
+                  ? `${INFO}26`
                   : "transparent",
               color:
-                mode === "supplementary" ? "#60a5fa" : "#e2e8f0",
+                mode === "supplementary" ? INFO : THEME.textLight,
             }}
             role="switch"
             aria-checked={mode === "supplementary"}
@@ -1547,13 +1526,13 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="rounded-lg border-l-[3px] border-[#34d399] bg-[#1e293b] p-3 text-sm text-slate-200">
+            <div className="rounded-lg border-l-[3px] border-nm-accent-emerald bg-nm-bg-secondary p-3 text-sm text-slate-200">
               You&apos;ve discovered all the angle types! Let&apos;s
               put names to what you&apos;ve learned.
             </div>
-            <Button size="lg" onClick={onComplete} className="w-full">
+            <ContinueButton onClick={onComplete} color={THEME.primary}>
               Continue
-            </Button>
+            </ContinueButton>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1648,7 +1627,7 @@ function SymbolBridgeStage({
   }, [step, tableRows]);
 
   return (
-    <section className="relative flex flex-1 flex-col bg-[#020617] px-4 overflow-y-auto">
+    <section className="relative flex flex-1 flex-col bg-nm-bg-primary px-4 overflow-y-auto">
       <div className="flex flex-col gap-4 py-4 flex-1">
         {/* Notation introduction */}
         <motion.div
@@ -1732,11 +1711,11 @@ function SymbolBridgeStage({
             className="w-full"
           >
             <table
-              className="w-full rounded-[10px] overflow-hidden border border-[#1e293b] text-sm"
-              style={{ background: "#0f172a" }}
+              className="w-full rounded-[10px] overflow-hidden border border-nm-bg-secondary text-sm"
+              style={{ background: BG }}
             >
               <thead>
-                <tr style={{ background: "#1e293b" }}>
+                <tr style={{ background: SURFACE }}>
                   <th className="py-2 px-3 text-left text-xs text-slate-400 font-medium">
                     Type
                   </th>
@@ -1787,7 +1766,7 @@ function SymbolBridgeStage({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-3"
           >
-            <div className="rounded-lg bg-[#0f172a] border border-[#1e293b] p-3">
+            <div className="rounded-lg bg-nm-bg-primary border border-nm-bg-secondary p-3">
               <p className="text-xs text-slate-500 mb-1">
                 Complementary
               </p>
@@ -1796,7 +1775,7 @@ function SymbolBridgeStage({
                 className="text-base text-white"
               />
             </div>
-            <div className="rounded-lg bg-[#0f172a] border border-[#1e293b] p-3">
+            <div className="rounded-lg bg-nm-bg-primary border border-nm-bg-secondary p-3">
               <p className="text-xs text-slate-500 mb-1">
                 Supplementary
               </p>
@@ -1805,7 +1784,7 @@ function SymbolBridgeStage({
                 className="text-base text-white"
               />
             </div>
-            <div className="rounded-lg bg-[#0f172a] border-l-2 border-dashed border-[#475569] p-3">
+            <div className="rounded-lg bg-nm-bg-primary border-l-2 border-dashed border-nm-bg-elevated p-3">
               <p className="text-xs text-slate-600 mb-1">
                 Preview (next lesson!)
               </p>
@@ -1822,24 +1801,11 @@ function SymbolBridgeStage({
       </div>
 
       {/* Continue */}
-      <motion.div
-        className="w-full max-w-sm mx-auto pb-6 pt-2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={
-          step >= 5
-            ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 20 }
-        }
-      >
-        <Button
-          size="lg"
-          onClick={onComplete}
-          disabled={step < 5}
-          className="w-full"
-        >
+      {step >= 5 && (
+        <ContinueButton onClick={onComplete} color={THEME.primary}>
           See it in the real world
-        </Button>
-      </motion.div>
+        </ContinueButton>
+      )}
     </section>
   );
 }
@@ -1916,7 +1882,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   const card = cards[currentCard];
 
   return (
-    <section className="relative flex flex-1 flex-col bg-[#020617] px-4">
+    <section className="relative flex flex-1 flex-col bg-nm-bg-primary px-4">
       <div
         className="flex flex-1 items-center justify-center w-full py-4"
         style={{ touchAction: "pan-y" }}
@@ -1926,7 +1892,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           {card && (
             <motion.div
               key={currentCard}
-              className="w-full max-w-md rounded-xl border border-[#1e293b] bg-[#0f172a] p-5"
+              className="w-full max-w-md rounded-xl border border-nm-bg-secondary bg-nm-bg-primary p-5"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
@@ -1940,7 +1906,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
                     y1={0}
                     x2={3}
                     y2={0}
-                    stroke="#e2e8f0"
+                    stroke={THEME.textLight}
                     strokeWidth={0.1}
                   />
                   <line
@@ -1952,7 +1918,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
                     y2={
                       -3 * Math.sin(card.angle * DEG)
                     }
-                    stroke="#e2e8f0"
+                    stroke={THEME.textLight}
                     strokeWidth={0.1}
                   />
                   <path
@@ -1999,7 +1965,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={() => goToCard(currentCard - 1)}
           disabled={currentCard === 0}
-          className="min-h-[44px] min-w-[44px] rounded-full border border-[#334155] text-slate-400 disabled:opacity-30 flex items-center justify-center"
+          className="min-h-[44px] min-w-[44px] rounded-full border border-nm-bg-surface text-slate-400 disabled:opacity-30 flex items-center justify-center"
           aria-label="Previous card"
         >
           <svg
@@ -2022,7 +1988,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
                 width: 6,
                 height: 6,
                 backgroundColor:
-                  i === currentCard ? "#3b82f6" : "#475569",
+                  i === currentCard ? THEME.primary : BORDER_LIGHT,
               }}
             />
           ))}
@@ -2030,7 +1996,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={() => goToCard(currentCard + 1)}
           disabled={currentCard === cards.length - 1}
-          className="min-h-[44px] min-w-[44px] rounded-full border border-[#334155] text-slate-400 disabled:opacity-30 flex items-center justify-center"
+          className="min-h-[44px] min-w-[44px] rounded-full border border-nm-bg-surface text-slate-400 disabled:opacity-30 flex items-center justify-center"
           aria-label="Next card"
         >
           <svg
@@ -2047,24 +2013,11 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Continue */}
-      <motion.div
-        className="w-full max-w-sm mx-auto pb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={
-          canContinue
-            ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 20 }
-        }
-      >
-        <Button
-          size="lg"
-          onClick={onComplete}
-          disabled={!canContinue}
-          className="w-full"
-        >
+      {canContinue && (
+        <ContinueButton onClick={onComplete} color={THEME.primary}>
           Practice time
-        </Button>
-      </motion.div>
+        </ContinueButton>
+      )}
     </section>
   );
 }
@@ -2203,7 +2156,7 @@ function InteractiveTriangle({
                 .map((pt) => `${pt.x},${pt.y}`)
                 .join(" ")}
               fill="rgba(99, 102, 241, 0.08)"
-              stroke="#94a3b8"
+              stroke={TEXT_SECONDARY}
               strokeWidth={0.08}
             />
 
@@ -2265,7 +2218,7 @@ function InteractiveTriangle({
                       vertex.y -
                       0.9 * Math.sin(midAng)
                     }
-                    fill="#e2e8f0"
+                    fill={THEME.textLight}
                     fontSize={0.45}
                     textAnchor="middle"
                     dominantBaseline="central"
@@ -2296,8 +2249,8 @@ function InteractiveTriangle({
                   cx={vertex.x}
                   cy={vertex.y}
                   r={0.25}
-                  fill="#3b82f6"
-                  stroke="#60a5fa"
+                  fill={THEME.handleDefault}
+                  stroke={THEME.handleStroke}
                   strokeWidth={0.06}
                 />
               </g>
@@ -2312,7 +2265,7 @@ function InteractiveTriangle({
                 .map((pt) => `${pt.x},${pt.y}`)
                 .join(" ")}
               fill="none"
-              stroke="#334155"
+              stroke={BORDER}
               strokeWidth={0.04}
               strokeDasharray="0.15 0.1"
             />
@@ -2347,7 +2300,7 @@ function InteractiveTriangle({
                   <text
                     x={0}
                     y={-0.2}
-                    fill="#e2e8f0"
+                    fill={THEME.textLight}
                     fontSize={0.35}
                     textAnchor="middle"
                   >
@@ -2383,7 +2336,7 @@ function InteractiveTriangle({
                   <text
                     x={0}
                     y={-0.2}
-                    fill="#e2e8f0"
+                    fill={THEME.textLight}
                     fontSize={0.35}
                     textAnchor="middle"
                   >
@@ -2423,7 +2376,7 @@ function InteractiveTriangle({
                   <text
                     x={0}
                     y={-0.2}
-                    fill="#e2e8f0"
+                    fill={THEME.textLight}
                     fontSize={0.35}
                     textAnchor="middle"
                   >
@@ -2438,7 +2391,7 @@ function InteractiveTriangle({
                     y1={3}
                     x2={4}
                     y2={3}
-                    stroke="#818cf8"
+                    stroke={colors.accent.indigo}
                     strokeWidth={0.06}
                     strokeDasharray="0.15 0.1"
                     initial={{ opacity: 0 }}
@@ -2454,7 +2407,7 @@ function InteractiveTriangle({
               <motion.text
                 x={0}
                 y={4.2}
-                fill="#f8fafc"
+                fill={THEME.vertex}
                 fontSize={0.4}
                 textAnchor={"middle" as const}
                 fontWeight={600}
@@ -2612,7 +2565,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               cy={0}
               r={4}
               fill="none"
-              stroke="#334155"
+              stroke={BORDER}
               strokeWidth={0.08}
             />
             {/* Hour hand at 10 o'clock */}
@@ -2621,7 +2574,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               y1={0}
               x2={-1.25}
               y2={-2.17}
-              stroke="#1e293b"
+              stroke={SURFACE}
               strokeWidth={0.18}
               strokeLinecap="round"
             />
@@ -2631,15 +2584,15 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
               y1={0}
               x2={0}
               y2={-3.5}
-              stroke="#3b82f6"
+              stroke={THEME.primary}
               strokeWidth={0.12}
               strokeLinecap="round"
             />
-            <circle cx={0} cy={0} r={0.12} fill="#fbbf24" />
+            <circle cx={0} cy={0} r={0.12} fill={WARNING} />
             <path
               d={angleArcPath(90, 150, 1.5)}
               fill="none"
-              stroke="#34d399"
+              stroke={SUCCESS}
               strokeWidth={0.06}
             />
           </svg>
@@ -2702,9 +2655,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           "Why can a triangle NEVER have two obtuse angles?",
         type: "mc",
         options: [
-          { label: "Two obtuse angles would already exceed 180\u00B0, leaving no room for a third angle", color: "#34d399" },
-          { label: "Because obtuse angles are too wide to fit inside a triangle", color: "#60a5fa" },
-          { label: "Triangles can have two obtuse angles if they are very large", color: "#f59e0b" },
+          { label: "Two obtuse angles would already exceed 180\u00B0, leaving no room for a third angle", color: SUCCESS },
+          { label: "Because obtuse angles are too wide to fit inside a triangle", color: INFO },
+          { label: "Triangles can have two obtuse angles if they are very large", color: WARNING },
         ],
         correctAnswer: "Two obtuse angles would already exceed 180\u00B0, leaving no room for a third angle",
         feedbackCorrect:
@@ -2719,9 +2672,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           "Why do the angles in any triangle ALWAYS add to 180\u00B0?",
         type: "mc",
         options: [
-          { label: "It\u2019s just a rule you have to memorize", color: "#f59e0b" },
-          { label: "When you tear off the 3 corners and line them up, they form a straight line (180\u00B0)", color: "#34d399" },
-          { label: "Because all triangles have 3 sides", color: "#60a5fa" },
+          { label: "It\u2019s just a rule you have to memorize", color: WARNING },
+          { label: "When you tear off the 3 corners and line them up, they form a straight line (180\u00B0)", color: SUCCESS },
+          { label: "Because all triangles have 3 sides", color: INFO },
         ],
         correctAnswer: "When you tear off the 3 corners and line them up, they form a straight line (180\u00B0)",
         feedbackCorrect:
@@ -2802,7 +2755,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex flex-1 flex-col items-center justify-center bg-[#020617] px-4"
+        className="flex flex-1 flex-col items-center justify-center bg-nm-bg-primary px-4"
       >
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10">
           <svg
@@ -2810,7 +2763,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             height={40}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#34d399"
+            stroke={SUCCESS}
             strokeWidth={2.5}
           >
             <path d="M20 6 9 17l-5-5" />
@@ -2829,9 +2782,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             size="sm"
           />
         </div>
-        <Button size="lg" onClick={onComplete}>
+        <ContinueButton onClick={onComplete} color={THEME.primary}>
           Continue
-        </Button>
+        </ContinueButton>
       </motion.section>
     );
   }
@@ -2839,7 +2792,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   if (!problem) return null;
 
   return (
-    <section className="flex flex-1 flex-col bg-[#020617] px-4">
+    <section className="flex flex-1 flex-col bg-nm-bg-primary px-4">
       {/* Progress bar */}
       <div className="mb-3 mt-2">
         <div className="mb-2 flex justify-between text-xs text-slate-500">
@@ -2863,7 +2816,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
           exit={{ x: -30, opacity: 0 }}
           className="flex-1 flex flex-col"
         >
-          <div className="rounded-xl border border-[#1e293b] bg-[#0f172a] p-5 flex-1 flex flex-col">
+          <div className="rounded-xl border border-nm-bg-secondary bg-nm-bg-primary p-5 flex-1 flex flex-col">
             {/* Layer badge */}
             <span className="text-[10px] uppercase tracking-wider text-slate-600 mb-2">
               {
@@ -2911,7 +2864,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                       borderColor:
                         selectedOption === opt.label
                           ? opt.color
-                          : "#1e293b",
+                          : SURFACE,
                       backgroundColor:
                         selectedOption === opt.label
                           ? opt.color + "26"
@@ -2937,7 +2890,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   }
                   disabled={!!feedback}
                   placeholder="?"
-                  className="w-20 h-12 rounded-lg border border-[#334155] bg-[#1e293b] text-center text-xl text-white outline-none focus:border-[#3b82f6]"
+                  className="w-20 h-12 rounded-lg border border-nm-bg-surface bg-nm-bg-secondary text-center text-xl text-white outline-none focus:border-nm-domain-numbers"
                   style={{
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -2959,7 +2912,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   disabled={!!feedback}
                   placeholder="Type your explanation here..."
                   rows={3}
-                  className="w-full rounded-lg border border-[#334155] bg-[#1e293b] px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#3b82f6] resize-none"
+                  className="w-full rounded-lg border border-nm-bg-surface bg-nm-bg-secondary px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-nm-domain-numbers resize-none"
                   maxLength={500}
                 />
                 <p className="text-xs text-slate-600 mt-1">
@@ -2976,8 +2929,8 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   animate={{ opacity: 1, y: 0 }}
                   className="rounded-lg p-3 mb-4"
                   style={{
-                    borderLeft: `3px solid ${feedback.correct ? "#34d399" : "#fbbf24"}`,
-                    background: "#0f172a",
+                    borderLeft: `3px solid ${feedback.correct ? SUCCESS : WARNING}`,
+                    background: BG,
                   }}
                 >
                   <p className="text-sm text-slate-300">
@@ -3089,7 +3042,7 @@ function ReflectionStage({
   }, [text]);
 
   return (
-    <section className="flex flex-1 flex-col bg-[#020617] px-4">
+    <section className="flex flex-1 flex-col bg-nm-bg-primary px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -3110,7 +3063,7 @@ function ReflectionStage({
           disabled={submitted}
           placeholder="Type your thoughts..."
           rows={5}
-          className="w-full rounded-[10px] border-[1.5px] border-[#334155] bg-[#0f172a] px-4 py-3 text-[15px] leading-relaxed text-slate-200 placeholder-[#475569] outline-none focus:border-[#3b82f6] resize-none"
+          className="w-full rounded-[10px] border-[1.5px] border-nm-bg-surface bg-nm-bg-primary px-4 py-3 text-[15px] leading-relaxed text-slate-200 placeholder-nm-bg-elevated outline-none focus:border-nm-domain-numbers resize-none"
           maxLength={500}
         />
         <div className="flex justify-end mt-1">
@@ -3118,7 +3071,7 @@ function ReflectionStage({
             className="text-xs"
             style={{
               color:
-                text.length > 450 ? "#fbbf24" : "#475569",
+                text.length > 450 ? WARNING : BORDER_LIGHT,
             }}
           >
             {text.length}/500
@@ -3133,8 +3086,8 @@ function ReflectionStage({
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 rounded-lg p-3"
               style={{
-                borderLeft: "3px solid #3b82f6",
-                background: "#0f172a",
+                borderLeft: `3px solid ${INFO}`,
+                background: BG,
               }}
             >
               <p className="text-sm text-slate-300 leading-relaxed">
@@ -3145,26 +3098,15 @@ function ReflectionStage({
         </AnimatePresence>
       </motion.div>
 
-      <div className="w-full max-w-sm mx-auto pb-8 pt-4">
-        {!submitted ? (
-          <Button
-            size="lg"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="w-full"
-          >
-            Share my thinking
-          </Button>
-        ) : (
-          <Button
-            size="lg"
-            onClick={onComplete}
-            className="w-full"
-          >
-            Complete Lesson
-          </Button>
-        )}
-      </div>
+      {!submitted ? (
+        <ContinueButton onClick={handleSubmit} disabled={!canSubmit} color={THEME.primary}>
+          Share my thinking
+        </ContinueButton>
+      ) : (
+        <ContinueButton onClick={onComplete} color={THEME.primary}>
+          Complete Lesson
+        </ContinueButton>
+      )}
     </section>
   );
 }
@@ -3174,85 +3116,20 @@ function ReflectionStage({
 // ===========================================================================
 
 export function AnglesLesson({ onComplete }: AnglesLessonProps) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const stage = STAGES[stageIdx] ?? "hook";
-
-  const advanceStage = useCallback(() => {
-    setStageIdx((i) => {
-      const next = i + 1;
-      if (next >= STAGES.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
-  const handleReflectionComplete = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
-  const stageProgress =
-    ((stageIdx + 1) / STAGES.length) * 100;
-
   return (
-    <div className="flex min-h-screen flex-col bg-[#020617]">
-      {/* Progress header */}
-      <div className="sticky top-0 z-10 bg-[#020617]/90 backdrop-blur-sm border-b border-[#1e293b] px-4 py-2">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-slate-500 font-medium">
-            GE-4.1 Angles
-          </span>
-          <span className="text-xs text-slate-600 tabular-nums">
-            {stageIdx + 1}/{STAGES.length}
-          </span>
-        </div>
-        <ProgressBar
-          value={stageProgress}
-          variant="xp"
-          size="sm"
-        />
-      </div>
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={{
-            type: "spring",
-            damping: 25,
-            stiffness: 200,
-          }}
-        >
-          {stage === "hook" && (
-            <HookStage onComplete={advanceStage} />
-          )}
-          {stage === "spatial" && (
-            <SpatialStage onComplete={advanceStage} />
-          )}
-          {stage === "discovery" && (
-            <DiscoveryStage onComplete={advanceStage} />
-          )}
-          {stage === "symbol" && (
-            <SymbolBridgeStage onComplete={advanceStage} />
-          )}
-          {stage === "realWorld" && (
-            <RealWorldStage onComplete={advanceStage} />
-          )}
-          {stage === "practice" && (
-            <PracticeStage onComplete={advanceStage} />
-          )}
-          {stage === "reflection" && (
-            <ReflectionStage
-              onComplete={handleReflectionComplete}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.1 Angles" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

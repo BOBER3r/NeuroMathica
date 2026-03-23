@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /**
  * GE-4.5a Circle Measurements — Grade 7
@@ -20,91 +26,31 @@ import { VideoHook } from "@/components/lessons/VideoHook";
  *  7. Reflection
  */
 
-import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
+/* ── Lesson-specific semantic colors (circle measurements) ── */
+const THEME = {
+  circumference: colors.accent.cyan,       // "#22d3ee"
+  area: colors.accent.violet,              // "#a78bfa"
+  radius: colors.accent.rose,              // "#fb7185"  (closest to #f472b6)
+  diameter: colors.functional.info,        // "#60a5fa"
+} as const;
 
-const CIRCUM_COLOR = "#22d3ee"; // cyan
-const AREA_COLOR = "#a78bfa";   // purple
-const RADIUS_COLOR = "#f472b6"; // pink
-const DIAM_COLOR = "#60a5fa";   // blue
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const MUTED = colors.text.secondary;
+const BORDER = colors.bg.elevated;
+const PRIMARY = colors.accent.indigo;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection",
-];
-
-/* ------------------------------------------------------------------ */
-/*  Shared                                                             */
-/* ------------------------------------------------------------------ */
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="h-2 w-2 rounded-full transition-all duration-300"
-          style={{ background: i <= current ? PRIMARY : BORDER, transform: i === current ? "scale(1.4)" : "scale(1)" }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white hover:brightness-110 active:scale-[0.97]"
-      style={{ background: PRIMARY, minHeight: 48 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-function StageWrapper({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex min-h-dvh flex-col items-center justify-center px-4 py-12"
-      style={{ background: BG }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+const SPRING = springs.default;
 
 /* ================================================================== */
 /*  STAGE 1: Hook — Unrolling circle                                   */
@@ -133,8 +79,9 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
   const circumference = 2 * Math.PI * r;
 
   return (
-    <StageWrapper>
-      <div className="flex w-full max-w-lg flex-col items-center" aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary"
+      aria-live="polite">
+      <div className="flex w-full max-w-lg flex-col items-center">
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -152,7 +99,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               cy={cy}
               r={r}
               fill="none"
-              stroke={CIRCUM_COLOR}
+              stroke={THEME.circumference}
               strokeWidth={3}
               strokeDasharray={circumference}
               strokeDashoffset={phase >= 2 ? circumference : 0}
@@ -169,7 +116,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               y1={cy}
               x2={cx + r}
               y2={cy}
-              stroke={DIAM_COLOR}
+              stroke={THEME.diameter}
               strokeWidth={2}
               strokeDasharray="6 3"
               initial={{ pathLength: 0 }}
@@ -182,7 +129,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               x={cx}
               y={cy + 20}
               textAnchor={"middle" as const}
-              fill={DIAM_COLOR}
+              fill={THEME.diameter}
               fontSize={14}
               fontWeight="bold"
               initial={{ opacity: 0 }}
@@ -199,7 +146,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               y1={220}
               x2={40 + 3.14159 * 2 * r * 0.95}
               y2={220}
-              stroke={CIRCUM_COLOR}
+              stroke={THEME.circumference}
               strokeWidth={3}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -216,13 +163,13 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                 const segEnd = Math.min(segStart + 2 * r, 40 + 3.14159 * 2 * r * 0.95);
                 return (
                   <g key={i}>
-                    <line x1={segStart} y1={215} x2={segStart} y2={225} stroke={DIAM_COLOR} strokeWidth={2} />
+                    <line x1={segStart} y1={215} x2={segStart} y2={225} stroke={THEME.diameter} strokeWidth={2} />
                     {i < 3 && (
                       <text
                         x={(segStart + segEnd) / 2}
                         y={240}
                         textAnchor={"middle" as const}
-                        fill={DIAM_COLOR}
+                        fill={THEME.diameter}
                         fontSize={12}
                         fontWeight="bold"
                       >
@@ -232,7 +179,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                   </g>
                 );
               })}
-              <text x={40 + 3.14159 * 2 * r * 0.95 + 8} y={224} fill={CIRCUM_COLOR} fontSize={14} fontWeight="bold">
+              <text x={40 + 3.14159 * 2 * r * 0.95 + 8} y={224} fill={THEME.circumference} fontSize={14} fontWeight="bold">
                 {"= \u03C0d"}
               </text>
             </motion.g>
@@ -247,15 +194,15 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             style={{ color: TEXT }}
           >
             {"Circumference = "}
-            <span style={{ color: CIRCUM_COLOR }}>{"\u03C0"}</span>
+            <span style={{ color: THEME.circumference }}>{"\u03C0"}</span>
             {" \u00D7 "}
-            <span style={{ color: DIAM_COLOR }}>d</span>
+            <span style={{ color: THEME.diameter }}>d</span>
           </motion.p>
         )}
 
         {phase >= 4 && <ContinueButton onClick={onContinue} delay={0.3} />}
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -281,11 +228,13 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
         <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>
           Adjust the radius
         </h2>
+
+        <InteractionDots count={Math.min(interactions, 6)} total={6} activeColor={THEME.radius} />
 
         <svg viewBox="0 0 400 280" className="w-full max-w-md" aria-label="Circle with adjustable radius">
           {/* Filled area */}
@@ -293,8 +242,8 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             cx={cxSvg}
             cy={cySvg}
             r={svgR}
-            fill={`${AREA_COLOR}20`}
-            stroke={CIRCUM_COLOR}
+            fill={`${THEME.area}20`}
+            stroke={THEME.circumference}
             strokeWidth={2.5}
             transition={SPRING}
           />
@@ -305,7 +254,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             y1={cySvg}
             x2={cxSvg + svgR}
             y2={cySvg}
-            stroke={RADIUS_COLOR}
+            stroke={THEME.radius}
             strokeWidth={2}
             transition={SPRING}
           />
@@ -315,7 +264,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             x={cxSvg + svgR / 2}
             y={cySvg - 10}
             textAnchor={"middle" as const}
-            fill={RADIUS_COLOR}
+            fill={THEME.radius}
             fontSize={16}
             fontWeight="bold"
             transition={SPRING}
@@ -329,14 +278,14 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
 
         {/* Stats */}
         <div className="flex gap-4">
-          <div className="rounded-xl px-4 py-3 text-center" style={{ background: SURFACE }}>
-            <p className="text-xs font-semibold" style={{ color: CIRCUM_COLOR }}>Circumference</p>
+          <div className="rounded-xl px-4 py-3 text-center bg-nm-bg-secondary">
+            <p className="text-xs font-semibold" style={{ color: THEME.circumference }}>Circumference</p>
             <p className="font-mono text-lg font-bold tabular-nums" style={{ color: TEXT }}>
               {circumference.toFixed(1)}
             </p>
           </div>
-          <div className="rounded-xl px-4 py-3 text-center" style={{ background: SURFACE }}>
-            <p className="text-xs font-semibold" style={{ color: AREA_COLOR }}>Area</p>
+          <div className="rounded-xl px-4 py-3 text-center bg-nm-bg-secondary">
+            <p className="text-xs font-semibold" style={{ color: THEME.area }}>Area</p>
             <p className="font-mono text-lg font-bold tabular-nums" style={{ color: TEXT }}>
               {area.toFixed(1)}
             </p>
@@ -354,7 +303,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             value={radius}
             onChange={(e) => handleChange(Number(e.target.value))}
             className="flex-1"
-            style={{ accentColor: RADIUS_COLOR, minHeight: 44 }}
+            style={{ accentColor: THEME.radius, minHeight: 44 }}
             aria-label="Radius slider"
           />
           <span className="text-sm" style={{ color: MUTED }}>8</span>
@@ -362,7 +311,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
 
         {canContinue && <ContinueButton onClick={onContinue} />}
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -386,7 +335,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   }, [promptIdx, prompts.length, onContinue]);
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
         <div className="flex gap-2">
           {prompts.map((_, i) => (
@@ -400,8 +349,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="rounded-2xl p-6 text-center"
-            style={{ background: SURFACE }}
+            className="rounded-2xl p-6 text-center bg-nm-bg-secondary"
           >
             <p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: TEXT }}>
               {current.text}
@@ -414,15 +362,14 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="rounded-xl p-4"
-            style={{ background: SURFACE }}
+            className="rounded-xl p-4 bg-nm-bg-secondary"
           >
             <table className="text-sm" style={{ color: TEXT }}>
               <thead>
                 <tr>
                   <th className="px-3 py-1" style={{ color: MUTED }}>r</th>
-                  <th className="px-3 py-1" style={{ color: CIRCUM_COLOR }}>C</th>
-                  <th className="px-3 py-1" style={{ color: DIAM_COLOR }}>d</th>
+                  <th className="px-3 py-1" style={{ color: THEME.circumference }}>C</th>
+                  <th className="px-3 py-1" style={{ color: THEME.diameter }}>d</th>
                   <th className="px-3 py-1" style={{ color: PRIMARY }}>C/d</th>
                 </tr>
               </thead>
@@ -451,7 +398,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
           {current.button}
         </motion.button>
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -472,13 +419,13 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   const notations = [
-    { text: "C = 2\u03C0r", subtitle: "(or C = \u03C0d)", color: CIRCUM_COLOR },
-    { text: "A = \u03C0r\u00B2", subtitle: "", color: AREA_COLOR },
+    { text: "C = 2\u03C0r", subtitle: "(or C = \u03C0d)", color: THEME.circumference },
+    { text: "A = \u03C0r\u00B2", subtitle: "", color: THEME.area },
     { text: "\u03C0 \u2248 3.14159...", subtitle: "an irrational number!", color: PRIMARY },
   ];
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
         <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>
           Circle Formulas
@@ -491,8 +438,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={SPRING}
-              className="w-full rounded-xl px-6 py-4 text-center"
-              style={{ background: SURFACE }}
+              className="w-full rounded-xl px-6 py-4 text-center bg-nm-bg-secondary"
             >
               <p className="font-mono text-[clamp(20px,5vw,32px)] font-bold" style={{ color: n.color }}>
                 {n.text}
@@ -506,7 +452,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
 
         {step >= 3 && <ContinueButton onClick={onContinue} delay={0.5} />}
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -516,13 +462,13 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
 
 function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   const scenarios = [
-    { icon: "🍕", title: "Pizza Size", desc: "A 14-inch pizza has diameter 14. Area = \u03C0(7)\u00B2 \u2248 153.9 sq inches of deliciousness." },
-    { icon: "🚲", title: "Bike Wheel", desc: "A wheel with radius 13 inches rolls one circumference (2\u03C0 \u00D7 13 \u2248 81.7 in) per revolution." },
-    { icon: "🌻", title: "Circular Garden", desc: "A 5-meter radius garden needs 2\u03C0(5) \u2248 31.4 m of fencing around it." },
+    { icon: "\uD83C\uDF55", title: "Pizza Size", desc: "A 14-inch pizza has diameter 14. Area = \u03C0(7)\u00B2 \u2248 153.9 sq inches of deliciousness." },
+    { icon: "\uD83D\uDEB2", title: "Bike Wheel", desc: "A wheel with radius 13 inches rolls one circumference (2\u03C0 \u00D7 13 \u2248 81.7 in) per revolution." },
+    { icon: "\uD83C\uDF3B", title: "Circular Garden", desc: "A 5-meter radius garden needs 2\u03C0(5) \u2248 31.4 m of fencing around it." },
   ];
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
         <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>
           Circles in Real Life
@@ -533,8 +479,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, ...SPRING }}
-            className="w-full rounded-xl p-4"
-            style={{ background: SURFACE }}
+            className="w-full rounded-xl p-4 bg-nm-bg-secondary"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{s.icon}</span>
@@ -547,7 +492,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         ))}
         <ContinueButton onClick={onContinue} />
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -599,23 +544,23 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
 
   if (done || !problem) {
     return (
-      <StageWrapper>
+      <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
         <div className="flex flex-col items-center gap-4">
           <h2 className="text-[clamp(20px,5vw,28px)] font-bold" style={{ color: TEXT }}>Practice Complete!</h2>
           <p className="text-lg" style={{ color: MUTED }}>{score} out of {PROBLEMS.length} correct.</p>
           <ContinueButton onClick={onContinue} />
         </div>
-      </StageWrapper>
+      </section>
     );
   }
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
         <p className="text-sm font-semibold" style={{ color: MUTED }}>
           Problem {currentIdx + 1} of {PROBLEMS.length} ({problem.layer})
         </p>
-        <div className="w-full rounded-xl p-6" style={{ background: SURFACE }}>
+        <div className="w-full rounded-xl p-6 bg-nm-bg-secondary">
           <p className="text-center text-[clamp(16px,4vw,20px)] font-semibold leading-relaxed" style={{ color: TEXT }}>
             {problem.question}
           </p>
@@ -624,8 +569,8 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           {problem.options.map((opt, i) => {
             const isCorrect = i === problem.correctIndex;
             const isSelected = i === selected;
-            let bg = SURFACE;
-            let border = BORDER;
+            let bg: string = SURFACE;
+            let border: string = BORDER;
             if (answered) {
               if (isCorrect) { bg = `${SUCCESS}20`; border = SUCCESS; }
               else if (isSelected) { bg = `${ERROR}20`; border = ERROR; }
@@ -669,7 +614,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           </motion.button>
         )}
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -677,27 +622,27 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
 /*  STAGE 7: Reflection                                                */
 /* ================================================================== */
 
-function ReflectionStage({ onContinue }: { onContinue: () => void }) {
+function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   if (submitted) {
     return (
-      <StageWrapper>
+      <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
         <div className="flex flex-col items-center gap-4 text-center">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}>
-            <p className="text-4xl">🧠</p>
+            <p className="text-4xl">{"\uD83E\uDDE0"}</p>
             <h2 className="mt-2 text-xl font-bold" style={{ color: TEXT }}>Great reflection!</h2>
             <p className="mt-2 text-sm" style={{ color: MUTED }}>Self-explanation strengthens your understanding. +50 XP</p>
           </motion.div>
-          <ContinueButton onClick={onContinue} label="Complete Lesson" delay={0.5} />
+          <ContinueButton onClick={onComplete} label="Complete Lesson" delay={0.5} />
         </div>
-      </StageWrapper>
+      </section>
     );
   }
 
   return (
-    <StageWrapper>
+    <section className="flex flex-1 flex-col items-center justify-center px-4 py-12 bg-nm-bg-primary">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
         <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Reflect</h2>
         <p className="text-center text-sm" style={{ color: MUTED }}>
@@ -712,7 +657,7 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
           aria-label="Reflection text"
         />
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={onContinue} className="rounded-xl px-6 py-3 text-sm" style={{ background: SURFACE, color: MUTED, minHeight: 44 }}>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onComplete} className="rounded-xl px-6 py-3 text-sm" style={{ background: SURFACE, color: MUTED, minHeight: 44 }}>
             Skip
           </motion.button>
           <motion.button
@@ -729,7 +674,7 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
           {text.length < 20 ? `${20 - text.length} more characters needed` : "Ready to submit!"}
         </p>
       </div>
-    </StageWrapper>
+    </section>
   );
 }
 
@@ -738,29 +683,20 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
 /* ================================================================== */
 
 export function CircleMeasurementsLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-
-  const advance = useCallback(() => {
-    const next = STAGES[stageIdx + 1];
-    if (next) setStage(next);
-    else onComplete?.();
-  }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="GE-4.5a Circle Measurements" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

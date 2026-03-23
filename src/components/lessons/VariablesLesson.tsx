@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -22,132 +27,43 @@ interface VariablesLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SPRING CONFIGS
+// SHARED TOKEN ALIASES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-const SPRING_BOUNCY = { type: "spring" as const, damping: 12, stiffness: 400 };
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.surface;
+const ELEVATED = colors.bg.elevated;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+const WARNING = colors.functional.warning;
+
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
+const SPRING_BOUNCY = springs.bouncy;
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
-  variable: "#a78bfa",
+const THEME = {
+  variable: colors.accent.violet,
   variableFill: "#a78bfa33",
   coefficient: "#f59e0b",
   coefficientFill: "#f59e0b33",
-  constant: "#22d3ee",
+  constant: colors.accent.cyan,
   constantFill: "#22d3ee33",
-  output: "#34d399",
+  output: colors.accent.emerald,
   outputFill: "#34d39933",
-  machine: "#334155",
-  machineFill: "#33415533",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  success: "#34d399",
-  error: "#f87171",
-  warning: "#fbbf24",
   primary: "#8b5cf6",
   primaryHover: "#7c3aed",
-  border: "#334155",
-  borderLight: "#475569",
+  textPrimary: "#f8fafc",
+  textSecondary: "#e2e8f0",
 } as const;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SHARED SMALL COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileHover={disabled ? {} : { backgroundColor: C.primaryHover }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STAGE 1 — HOOK
@@ -193,7 +109,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               transition={{ duration: 0.8 }}
               className="mb-8 text-center italic"
               style={{
-                color: C.textPrimary,
+                color: THEME.textPrimary,
                 fontSize: "clamp(20px, 5vw, 32px)",
               }}
             >
@@ -247,7 +163,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   y={160}
                   textAnchor={"middle" as const}
                   dominantBaseline="central"
-                  fill={C.variable}
+                  fill={THEME.variable}
                   fontSize={48}
                   fontWeight={700}
                   initial={{ opacity: 0, scale: 0.5 }}
@@ -267,7 +183,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               y1={150}
               x2={260}
               y2={150}
-              stroke={C.textMuted}
+              stroke={MUTED}
               strokeWidth={2}
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
@@ -287,7 +203,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 cy={150}
                 r={28}
                 fill="#f59e0b20"
-                stroke={C.coefficient}
+                stroke={THEME.coefficient}
                 strokeWidth={2}
                 animate={{ rotate: 360 }}
                 transition={{
@@ -301,7 +217,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 y={150}
                 textAnchor={"middle" as const}
                 dominantBaseline="central"
-                fill={C.coefficient}
+                fill={THEME.coefficient}
                 fontSize={20}
                 fontWeight={700}
               >
@@ -317,7 +233,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               y1={150}
               x2={398}
               y2={150}
-              stroke={C.textMuted}
+              stroke={MUTED}
               strokeWidth={2}
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
@@ -337,7 +253,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 cy={150}
                 r={28}
                 fill="#22d3ee20"
-                stroke={C.constant}
+                stroke={THEME.constant}
                 strokeWidth={2}
                 animate={{ rotate: -360 }}
                 transition={{
@@ -351,7 +267,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 y={150}
                 textAnchor={"middle" as const}
                 dominantBaseline="central"
-                fill={C.constant}
+                fill={THEME.constant}
                 fontSize={20}
                 fontWeight={700}
               >
@@ -367,7 +283,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               y1={150}
               x2={536}
               y2={150}
-              stroke={C.textMuted}
+              stroke={MUTED}
               strokeWidth={2}
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
@@ -389,7 +305,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 height={60}
                 rx={12}
                 fill="#34d39920"
-                stroke={C.output}
+                stroke={THEME.output}
                 strokeWidth={2}
               />
               <motion.text
@@ -397,7 +313,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 y={150}
                 textAnchor={"middle" as const}
                 dominantBaseline="central"
-                fill={C.output}
+                fill={THEME.output}
                 fontSize={40}
                 fontWeight={700}
                 style={{ fontVariantNumeric: "tabular-nums" }}
@@ -418,7 +334,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 x={310}
                 y={108}
                 textAnchor={"middle" as const}
-                fill={C.coefficient}
+                fill={THEME.coefficient}
                 fontSize={14}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 1, 1, 0] }}
@@ -430,7 +346,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                 x={448}
                 y={108}
                 textAnchor={"middle" as const}
-                fill={C.constant}
+                fill={THEME.constant}
                 fontSize={14}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 0, 1, 1, 0] }}
@@ -454,7 +370,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={FADE}
               className="mt-4 text-center"
-              style={{ color: C.textSecondary, fontSize: 18 }}
+              style={{ color: THEME.textSecondary, fontSize: 18 }}
             >
               I double it and add 3, and I get 11.
             </motion.p>
@@ -469,7 +385,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={FADE}
               className="mt-2 text-center font-semibold"
-              style={{ color: C.textPrimary, fontSize: 20 }}
+              style={{ color: THEME.textPrimary, fontSize: 20 }}
             >
               What&apos;s my number?
             </motion.p>
@@ -484,7 +400,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={FADE}
               className="mt-3 text-center font-semibold"
-              style={{ color: C.success, fontSize: 18 }}
+              style={{ color: SUCCESS, fontSize: 18 }}
             >
               The mystery number was 4!
             </motion.p>
@@ -494,9 +410,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Continue */}
       {phase >= 11 && (
-        <div className="mt-8">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} />
       )}
     </div>
   );
@@ -546,11 +460,11 @@ const BUILDER_TILES: readonly BuilderTile[] = [
 function tileColor(kind: TileKind): string {
   switch (kind) {
     case "variable":
-      return C.primary;
+      return THEME.primary;
     case "number":
-      return C.output;
+      return THEME.output;
     case "operator":
-      return C.coefficient;
+      return THEME.coefficient;
   }
 }
 
@@ -770,13 +684,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
     >
       {/* History strip */}
       <div
-        className="mb-3 flex items-center gap-3 overflow-x-auto rounded-xl px-3 py-2"
-        style={{ backgroundColor: C.bgSurface }}
+        className="mb-3 flex items-center gap-3 overflow-x-auto rounded-xl bg-nm-bg-secondary px-3 py-2"
         aria-label="Input-output history"
       >
         <span
           className="whitespace-nowrap text-xs uppercase tracking-wider"
-          style={{ color: C.textDim }}
+          style={{ color: MUTED }}
         >
           In &rarr; Out
         </span>
@@ -789,12 +702,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             className="whitespace-nowrap text-sm font-mono"
             style={{ fontVariantNumeric: "tabular-nums" }}
           >
-            <span style={{ color: C.variable }}>{entry.input}</span>
-            <span style={{ color: C.textMuted }}> &rarr; </span>
+            <span style={{ color: THEME.variable }}>{entry.input}</span>
+            <span style={{ color: MUTED }}> &rarr; </span>
             <span
               style={{
                 color:
-                  entry.output < 0 ? C.error : C.output,
+                  entry.output < 0 ? ERROR : THEME.output,
               }}
             >
               {entry.output}
@@ -804,7 +717,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         {history.length === 0 && (
           <span
             className="text-xs italic"
-            style={{ color: C.textDim }}
+            style={{ color: MUTED }}
           >
             Drag a number into the machine!
           </span>
@@ -815,8 +728,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <div
         className="relative mx-auto flex flex-col items-center rounded-2xl p-4"
         style={{
-          backgroundColor: C.bgSurface,
-          border: `2px solid ${C.border}`,
+          backgroundColor: SURFACE,
+          border: `2px solid ${BORDER}`,
           maxWidth: 320,
           width: "100%",
         }}
@@ -829,7 +742,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             width: 120,
             height: 64,
             backgroundColor: "#8b5cf610",
-            border: `2px ${isProcessing ? "solid" : "dashed"} ${C.primary}`,
+            border: `2px ${isProcessing ? "solid" : "dashed"} ${THEME.primary}`,
             clipPath:
               "polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%)",
           }}
@@ -841,7 +754,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               animate={{ scale: 1, opacity: 1 }}
               transition={SPRING}
               className="text-2xl font-bold"
-              style={{ color: C.variable }}
+              style={{ color: THEME.variable }}
             >
               {procDisplay.input}
             </motion.span>
@@ -849,7 +762,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           {!isProcessing && (
             <span
               className="text-sm"
-              style={{ color: C.textDim }}
+              style={{ color: MUTED }}
             >
               Drop here
             </span>
@@ -862,7 +775,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             width: 8,
             height: 20,
             backgroundColor:
-              processingPhase >= 1 ? C.primary : C.borderLight,
+              processingPhase >= 1 ? THEME.primary : ELEVATED,
             borderRadius: 4,
             transition: "background-color 0.3s",
           }}
@@ -875,11 +788,11 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             width: 200,
             height: 64,
             backgroundColor: "#f59e0b10",
-            border: `2px solid ${processingPhase === 2 ? C.warning : C.coefficient}`,
+            border: `2px solid ${processingPhase === 2 ? WARNING : THEME.coefficient}`,
           }}
           animate={
             processingPhase === 2
-              ? { borderColor: [C.coefficient, C.warning, C.coefficient] }
+              ? { borderColor: [THEME.coefficient, WARNING, THEME.coefficient] }
               : {}
           }
           transition={{ duration: 0.6 }}
@@ -892,13 +805,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               duration: isProcessing ? 0.5 : 2,
               ease: "linear",
             }}
-            style={{ color: C.coefficient, fontSize: 24 }}
+            style={{ color: THEME.coefficient, fontSize: 24 }}
           >
             &#9881;
           </motion.div>
           <span
             className="text-lg font-bold"
-            style={{ color: C.coefficient }}
+            style={{ color: THEME.coefficient }}
           >
             &times; 2
           </span>
@@ -912,7 +825,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 className="absolute -right-2 -top-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold"
                 style={{
                   backgroundColor: "#f59e0b20",
-                  color: C.coefficient,
+                  color: THEME.coefficient,
                 }}
               >
                 {procDisplay.input} &times; 2 ={" "}
@@ -929,8 +842,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             height: 20,
             backgroundColor:
               processingPhase >= 2
-                ? C.coefficient
-                : C.borderLight,
+                ? THEME.coefficient
+                : ELEVATED,
             borderRadius: 4,
             transition: "background-color 0.3s",
           }}
@@ -943,11 +856,11 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             width: 200,
             height: 64,
             backgroundColor: "#22d3ee10",
-            border: `2px solid ${processingPhase === 3 ? "#67e8f9" : C.constant}`,
+            border: `2px solid ${processingPhase === 3 ? "#67e8f9" : THEME.constant}`,
           }}
           animate={
             processingPhase === 3
-              ? { borderColor: [C.constant, "#67e8f9", C.constant] }
+              ? { borderColor: [THEME.constant, "#67e8f9", THEME.constant] }
               : {}
           }
           transition={{ duration: 0.6 }}
@@ -960,13 +873,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               duration: isProcessing ? 0.5 : 2,
               ease: "linear",
             }}
-            style={{ color: C.constant, fontSize: 24 }}
+            style={{ color: THEME.constant, fontSize: 24 }}
           >
             &#9881;
           </motion.div>
           <span
             className="text-lg font-bold"
-            style={{ color: C.constant }}
+            style={{ color: THEME.constant }}
           >
             + 3
           </span>
@@ -979,7 +892,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 className="absolute -right-2 -top-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold"
                 style={{
                   backgroundColor: "#22d3ee20",
-                  color: C.constant,
+                  color: THEME.constant,
                 }}
               >
                 {procDisplay.intermediate} + 3 ={" "}
@@ -996,8 +909,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             height: 20,
             backgroundColor:
               processingPhase >= 3
-                ? C.constant
-                : C.borderLight,
+                ? THEME.constant
+                : ELEVATED,
             borderRadius: 4,
             transition: "background-color 0.3s",
           }}
@@ -1010,7 +923,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             width: 120,
             height: 56,
             backgroundColor: "#34d39915",
-            border: `2px solid ${C.output}`,
+            border: `2px solid ${THEME.output}`,
           }}
         >
           <AnimatePresence mode="wait">
@@ -1024,8 +937,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 style={{
                   color:
                     procDisplay.output < 0
-                      ? C.error
-                      : C.output,
+                      ? ERROR
+                      : THEME.output,
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
@@ -1039,7 +952,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 animate={{ opacity: 0.5 }}
                 className="text-lg"
                 style={{
-                  color: C.output,
+                  color: THEME.output,
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
@@ -1054,7 +967,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <div className="mt-4">
         <p
           className="mb-2 text-center text-xs uppercase tracking-wider"
-          style={{ color: C.textDim }}
+          style={{ color: MUTED }}
         >
           Tap or drag a number into the machine
         </p>
@@ -1071,9 +984,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 style={{
                   width: 52,
                   height: 52,
-                  backgroundColor: C.bgSurface,
-                  border: `1px solid ${C.borderLight}`,
-                  color: C.textPrimary,
+                  backgroundColor: SURFACE,
+                  border: `1px solid ${ELEVATED}`,
+                  color: THEME.textPrimary,
                 }}
                 aria-label={`Input number ${num}`}
               >
@@ -1082,8 +995,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   <span
                     className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-xs"
                     style={{
-                      backgroundColor: C.success,
-                      color: C.bgPrimary,
+                      backgroundColor: SUCCESS,
+                      color: BG,
                     }}
                   >
                     &#10003;
@@ -1104,13 +1017,13 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             transition={SPRING}
             className="mt-6 rounded-2xl p-4"
             style={{
-              backgroundColor: C.bgSurface,
-              border: `1px solid ${C.border}`,
+              backgroundColor: SURFACE,
+              border: `1px solid ${BORDER}`,
             }}
           >
             <p
               className="mb-3 text-sm italic"
-              style={{ color: C.textSecondary }}
+              style={{ color: THEME.textSecondary }}
             >
               Can you build the machine&apos;s rule?
             </p>
@@ -1169,14 +1082,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                       width: 56,
                       height: 56,
                       border: `2px ${slotContent ? "solid" : "dashed"} ${
-                        tile ? tileColor(tile.kind) : C.borderLight
+                        tile ? tileColor(tile.kind) : ELEVATED
                       }`,
                       backgroundColor: tile
                         ? tileColorFill(tile.kind)
                         : "transparent",
                       color: tile
                         ? tileColor(tile.kind)
-                        : C.textDim,
+                        : MUTED,
                     }}
                     aria-label={
                       tile
@@ -1201,9 +1114,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 style={{
                   color: builderChecked
                     ? builderCorrect
-                      ? C.success
-                      : C.error
-                    : C.textSecondary,
+                      ? SUCCESS
+                      : ERROR
+                    : THEME.textSecondary,
                 }}
               >
                 {builderSlots
@@ -1226,8 +1139,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   disabled={filledSlotCount < 3}
                   className="min-h-[44px] rounded-xl px-6 py-2 text-sm font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
-                    border: `2px solid ${C.coefficient}`,
-                    color: C.coefficient,
+                    border: `2px solid ${THEME.coefficient}`,
+                    color: THEME.coefficient,
                     backgroundColor: "transparent",
                   }}
                   whileTap={
@@ -1249,7 +1162,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                     {builderCorrect ? (
                       <p
                         className="text-sm font-semibold"
-                        style={{ color: C.success }}
+                        style={{ color: SUCCESS }}
                       >
                         That&apos;s the machine&apos;s rule! 2
                         times x, plus 3.
@@ -1258,7 +1171,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                       <div>
                         <p
                           className="mb-2 text-sm"
-                          style={{ color: C.error }}
+                          style={{ color: ERROR }}
                         >
                           Not quite. Try the machine with x = 1:
                           you get 5. Try different arrangements!
@@ -1269,8 +1182,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                           }}
                           className="min-h-[44px] rounded-xl px-4 py-2 text-sm font-semibold"
                           style={{
-                            color: C.textSecondary,
-                            backgroundColor: C.border,
+                            color: THEME.textSecondary,
+                            backgroundColor: BORDER,
                           }}
                         >
                           Try Again
@@ -1287,9 +1200,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Continue */}
       {canContinue && (
-        <div className="mt-6 flex justify-center">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} />
       )}
     </div>
   );
@@ -1354,33 +1265,32 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           >
             {/* Table */}
             <div
-              className="mb-4 overflow-hidden rounded-xl p-4"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-4 overflow-hidden rounded-xl bg-nm-bg-secondary p-4"
             >
               <table className="w-full text-center" aria-label="Input-output pattern table">
                 <thead>
                   <tr>
                     <th
                       className="pb-2 text-xs font-semibold uppercase"
-                      style={{ color: C.textMuted }}
+                      style={{ color: TEXT_SEC }}
                     >
                       Input (x)
                     </th>
                     <th
                       className="pb-2 text-xs font-semibold uppercase"
-                      style={{ color: C.coefficient }}
+                      style={{ color: THEME.coefficient }}
                     >
                       &times; 2
                     </th>
                     <th
                       className="pb-2 text-xs font-semibold uppercase"
-                      style={{ color: C.constant }}
+                      style={{ color: THEME.constant }}
                     >
                       + 3
                     </th>
                     <th
                       className="pb-2 text-xs font-semibold uppercase"
-                      style={{ color: C.output }}
+                      style={{ color: THEME.output }}
                     >
                       Output
                     </th>
@@ -1399,25 +1309,25 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                     >
                       <td
                         className="py-1.5 font-mono font-bold"
-                        style={{ color: C.variable }}
+                        style={{ color: THEME.variable }}
                       >
                         {row.input}
                       </td>
                       <td
                         className="py-1.5 font-mono"
-                        style={{ color: C.coefficient }}
+                        style={{ color: THEME.coefficient }}
                       >
                         {row.times2}
                       </td>
                       <td
                         className="py-1.5 font-mono"
-                        style={{ color: C.constant }}
+                        style={{ color: THEME.constant }}
                       >
                         {row.plus3}
                       </td>
                       <td
                         className="py-1.5 font-mono font-bold"
-                        style={{ color: C.output }}
+                        style={{ color: THEME.output }}
                       >
                         {row.output}
                       </td>
@@ -1428,23 +1338,22 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             </div>
 
             <div
-              className="mb-6 rounded-xl p-4"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-6 rounded-xl bg-nm-bg-secondary p-4"
             >
               <p
                 className="leading-relaxed"
                 style={{
-                  color: C.textSecondary,
+                  color: THEME.textSecondary,
                   fontSize: 16,
                 }}
               >
                 Look at the pattern! Every input goes through
                 the same two steps: first{" "}
-                <strong style={{ color: C.coefficient }}>
+                <strong style={{ color: THEME.coefficient }}>
                   multiply by 2
                 </strong>
                 , then{" "}
-                <strong style={{ color: C.constant }}>
+                <strong style={{ color: THEME.constant }}>
                   add 3
                 </strong>
                 .
@@ -1473,8 +1382,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             <div className="mb-6 flex flex-col items-center">
               {/* Mini machine with ? -> x */}
               <div
-                className="mb-4 flex items-center gap-4 rounded-xl p-4"
-                style={{ backgroundColor: C.bgSurface }}
+                className="mb-4 flex items-center gap-4 rounded-xl bg-nm-bg-secondary p-4"
               >
                 <div
                   className="flex items-center justify-center rounded-xl"
@@ -1482,14 +1390,14 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                     width: 64,
                     height: 64,
                     backgroundColor: "#8b5cf615",
-                    border: `2px solid ${C.primary}`,
+                    border: `2px solid ${THEME.primary}`,
                   }}
                 >
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="text-3xl font-bold italic"
-                    style={{ color: C.variable }}
+                    style={{ color: THEME.variable }}
                   >
                     x
                   </motion.span>
@@ -1497,13 +1405,13 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 <div>
                   <p
                     className="text-sm italic"
-                    style={{ color: C.textMuted }}
+                    style={{ color: MUTED }}
                   >
                     Any number can go in!
                   </p>
-                  <p className="mt-1" style={{ color: C.textSecondary }}>
+                  <p className="mt-1" style={{ color: THEME.textSecondary }}>
                     We call it{" "}
-                    <strong style={{ color: C.variable }}>
+                    <strong style={{ color: THEME.variable }}>
                       x
                     </strong>
                   </p>
@@ -1511,13 +1419,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               </div>
 
               <div
-                className="rounded-xl p-4"
-                style={{ backgroundColor: C.bgSurface }}
+                className="rounded-xl bg-nm-bg-secondary p-4"
               >
                 <p
                   className="leading-relaxed"
                   style={{
-                    color: C.textSecondary,
+                    color: THEME.textSecondary,
                     fontSize: 16,
                   }}
                 >
@@ -1527,8 +1434,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   <strong
                     className="rounded px-1.5 py-0.5"
                     style={{
-                      color: C.variable,
-                      backgroundColor: C.variableFill,
+                      color: THEME.variable,
+                      backgroundColor: THEME.variableFill,
                     }}
                   >
                     variables
@@ -1559,8 +1466,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           >
             {/* Expression building animation */}
             <div
-              className="mb-4 flex flex-col items-center rounded-xl p-6"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-4 flex flex-col items-center rounded-xl bg-nm-bg-secondary p-6"
             >
               <div className="mb-4 flex items-baseline gap-1 text-center">
                 <motion.span
@@ -1570,7 +1476,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   className="font-mono font-bold"
                   style={{
                     fontSize: "clamp(28px, 6vw, 44px)",
-                    color: C.coefficient,
+                    color: THEME.coefficient,
                   }}
                 >
                   2
@@ -1582,7 +1488,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   className="font-mono font-bold italic"
                   style={{
                     fontSize: "clamp(28px, 6vw, 44px)",
-                    color: C.variable,
+                    color: THEME.variable,
                   }}
                 >
                   x
@@ -1594,7 +1500,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   className="font-mono font-bold"
                   style={{
                     fontSize: "clamp(28px, 6vw, 44px)",
-                    color: C.textPrimary,
+                    color: THEME.textPrimary,
                   }}
                 >
                   {" "}
@@ -1607,7 +1513,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   className="font-mono font-bold"
                   style={{
                     fontSize: "clamp(28px, 6vw, 44px)",
-                    color: C.constant,
+                    color: THEME.constant,
                   }}
                 >
                   3
@@ -1620,7 +1526,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  style={{ color: C.variable }}
+                  style={{ color: THEME.variable }}
                 >
                   whatever goes in
                 </motion.span>
@@ -1628,7 +1534,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  style={{ color: C.coefficient }}
+                  style={{ color: THEME.coefficient }}
                 >
                   multiply by 2
                 </motion.span>
@@ -1636,7 +1542,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
-                  style={{ color: C.constant }}
+                  style={{ color: THEME.constant }}
                 >
                   add 3
                 </motion.span>
@@ -1651,12 +1557,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               className="mb-4 rounded-r-lg py-3 pl-4 pr-4"
               style={{
                 backgroundColor: "#f59e0b15",
-                borderLeft: `4px solid ${C.coefficient}`,
+                borderLeft: `4px solid ${THEME.coefficient}`,
               }}
             >
               <p
                 className="text-sm leading-relaxed"
-                style={{ color: C.warning }}
+                style={{ color: WARNING }}
               >
                 Wait -- when we write{" "}
                 <strong>2x</strong>, we mean{" "}
@@ -1669,13 +1575,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.8, ...FADE }}
-              className="mb-6 rounded-xl p-4"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-6 rounded-xl bg-nm-bg-secondary p-4"
             >
               <p
                 className="leading-relaxed"
                 style={{
-                  color: C.textSecondary,
+                  color: THEME.textSecondary,
                   fontSize: 16,
                 }}
               >
@@ -1685,8 +1590,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 <strong
                   className="rounded px-1.5 py-0.5"
                   style={{
-                    color: C.constant,
-                    backgroundColor: C.constantFill,
+                    color: THEME.constant,
+                    backgroundColor: THEME.constantFill,
                   }}
                 >
                   expression
@@ -1723,28 +1628,28 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 transition={{ delay: 0, ...FADE }}
                 className="flex-1 rounded-xl p-4"
                 style={{
-                  backgroundColor: C.bgSurface,
-                  borderTop: `3px solid ${C.constant}`,
+                  backgroundColor: SURFACE,
+                  borderTop: `3px solid ${THEME.constant}`,
                 }}
               >
                 <span
                   className="mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
                   style={{
-                    backgroundColor: C.constantFill,
-                    color: C.constant,
+                    backgroundColor: THEME.constantFill,
+                    color: THEME.constant,
                   }}
                 >
                   Expression
                 </span>
                 <p
                   className="my-2 font-mono text-xl font-bold"
-                  style={{ color: C.textPrimary }}
+                  style={{ color: THEME.textPrimary }}
                 >
                   2x + 3
                 </p>
                 <p
                   className="text-xs leading-relaxed"
-                  style={{ color: C.textMuted }}
+                  style={{ color: MUTED }}
                 >
                   A recipe. No equals sign. No final answer.
                 </p>
@@ -1754,17 +1659,17 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               <div className="flex flex-col items-center justify-center">
                 <div
                   className="h-full w-px"
-                  style={{ backgroundColor: C.borderLight }}
+                  style={{ backgroundColor: ELEVATED }}
                 />
                 <span
                   className="my-1 text-xs font-semibold"
-                  style={{ color: C.textDim }}
+                  style={{ color: MUTED }}
                 >
                   vs
                 </span>
                 <div
                   className="h-full w-px"
-                  style={{ backgroundColor: C.borderLight }}
+                  style={{ backgroundColor: ELEVATED }}
                 />
               </div>
 
@@ -1775,28 +1680,28 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 transition={{ delay: 0.2, ...FADE }}
                 className="flex-1 rounded-xl p-4"
                 style={{
-                  backgroundColor: C.bgSurface,
-                  borderTop: `3px solid ${C.output}`,
+                  backgroundColor: SURFACE,
+                  borderTop: `3px solid ${THEME.output}`,
                 }}
               >
                 <span
                   className="mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
                   style={{
-                    backgroundColor: C.outputFill,
-                    color: C.output,
+                    backgroundColor: THEME.outputFill,
+                    color: THEME.output,
                   }}
                 >
                   Equation
                 </span>
                 <p
                   className="my-2 font-mono text-xl font-bold"
-                  style={{ color: C.textPrimary }}
+                  style={{ color: THEME.textPrimary }}
                 >
                   2x + 3 = 11
                 </p>
                 <p
                   className="text-xs leading-relaxed"
-                  style={{ color: C.textMuted }}
+                  style={{ color: MUTED }}
                 >
                   A statement. Has equals sign. Says two things
                   are the same.
@@ -1805,13 +1710,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             </div>
 
             <div
-              className="mb-6 rounded-xl p-4"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-6 rounded-xl bg-nm-bg-secondary p-4"
             >
               <p
                 className="leading-relaxed"
                 style={{
-                  color: C.textSecondary,
+                  color: THEME.textSecondary,
                   fontSize: 16,
                 }}
               >
@@ -1819,7 +1723,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 what to do, but doesn&apos;t tell you the
                 answer. An equation says &quot;these two things
                 are equal.&quot; Today we&apos;re learning about{" "}
-                <strong style={{ color: C.constant }}>
+                <strong style={{ color: THEME.constant }}>
                   expressions
                 </strong>
                 .
@@ -1850,16 +1754,16 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               className="mb-4 rounded-r-xl p-5"
               style={{
                 backgroundColor: "#7c3aed20",
-                borderLeft: `4px solid ${C.variable}`,
+                borderLeft: `4px solid ${THEME.variable}`,
               }}
             >
               <div className="mb-2 flex items-center gap-2">
-                <span style={{ color: C.coefficient, fontSize: 24 }}>
+                <span style={{ color: THEME.coefficient, fontSize: 24 }}>
                   &#128161;
                 </span>
                 <span
                   className="text-xs font-semibold uppercase tracking-wider"
-                  style={{ color: C.variable }}
+                  style={{ color: THEME.variable }}
                 >
                   Key Insight
                 </span>
@@ -1867,7 +1771,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               <p
                 className="leading-relaxed"
                 style={{
-                  color: C.textPrimary,
+                  color: THEME.textPrimary,
                   fontSize: 18,
                   fontWeight: 500,
                   lineHeight: 1.7,
@@ -1877,8 +1781,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 <strong
                   className="rounded px-1 py-0.5"
                   style={{
-                    color: C.variable,
-                    backgroundColor: C.variableFill,
+                    color: THEME.variable,
+                    backgroundColor: THEME.variableFill,
                   }}
                 >
                   variable
@@ -1889,8 +1793,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 <strong
                   className="rounded px-1 py-0.5"
                   style={{
-                    color: C.constant,
-                    backgroundColor: C.constantFill,
+                    color: THEME.constant,
+                    backgroundColor: THEME.constantFill,
                   }}
                 >
                   expression
@@ -1902,15 +1806,14 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 
             {/* Interactive slider */}
             <div
-              className="mb-6 rounded-xl p-4"
-              style={{ backgroundColor: C.bgSurface }}
+              className="mb-6 rounded-xl bg-nm-bg-secondary p-4"
             >
               <div className="mb-3 flex items-baseline justify-center gap-1 font-mono text-2xl font-bold">
-                <span style={{ color: C.coefficient }}>2</span>
-                <span style={{ color: C.variable }}>
+                <span style={{ color: THEME.coefficient }}>2</span>
+                <span style={{ color: THEME.variable }}>
                   ({sliderValue})
                 </span>
-                <span style={{ color: C.textPrimary }}>
+                <span style={{ color: THEME.textPrimary }}>
                   {" "}
                   + 3 ={" "}
                 </span>
@@ -1920,7 +1823,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   animate={{ scale: 1 }}
                   transition={SPRING}
                   style={{
-                    color: C.output,
+                    color: THEME.output,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
@@ -1931,7 +1834,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               <div className="flex items-center gap-3">
                 <span
                   className="text-sm font-semibold"
-                  style={{ color: C.variable }}
+                  style={{ color: THEME.variable }}
                 >
                   x =
                 </span>
@@ -1949,7 +1852,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                   }}
                   className="flex-1"
                   style={{
-                    accentColor: C.primary,
+                    accentColor: THEME.primary,
                     minHeight: 44,
                   }}
                   aria-label="Change the value of x"
@@ -1957,7 +1860,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 />
                 <span
                   className="min-w-[28px] text-center font-mono text-lg font-bold"
-                  style={{ color: C.variable }}
+                  style={{ color: THEME.variable }}
                 >
                   {sliderValue}
                 </span>
@@ -2005,20 +1908,19 @@ function SymbolBridgeStage({
     >
       {/* The expression displayed large */}
       <div
-        className="mb-8 rounded-xl p-6 text-center"
-        style={{ backgroundColor: C.bgSurface }}
+        className="mb-8 rounded-xl bg-nm-bg-secondary p-6 text-center"
       >
         <div
           className="mb-2 font-mono font-bold"
           style={{ fontSize: "clamp(32px, 7vw, 56px)" }}
         >
-          <span style={{ color: C.coefficient }}>2</span>
-          <span style={{ color: C.variable }}>x</span>
-          <span style={{ color: C.textPrimary }}>
+          <span style={{ color: THEME.coefficient }}>2</span>
+          <span style={{ color: THEME.variable }}>x</span>
+          <span style={{ color: THEME.textPrimary }}>
             {" "}
             +{" "}
           </span>
-          <span style={{ color: C.constant }}>3</span>
+          <span style={{ color: THEME.constant }}>3</span>
         </div>
       </div>
 
@@ -2036,16 +1938,16 @@ function SymbolBridgeStage({
               transition={FADE}
               className="rounded-xl p-4"
               style={{
-                backgroundColor: C.bgSurface,
-                borderLeft: `4px solid ${C.variable}`,
+                backgroundColor: SURFACE,
+                borderLeft: `4px solid ${THEME.variable}`,
               }}
             >
-              <p className="text-sm font-semibold" style={{ color: C.variable }}>
+              <p className="text-sm font-semibold" style={{ color: THEME.variable }}>
                 x &mdash; Variable
               </p>
               <p
                 className="text-sm"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textSecondary }}
               >
                 The unknown number. It can be anything!
               </p>
@@ -2062,19 +1964,19 @@ function SymbolBridgeStage({
               transition={FADE}
               className="rounded-xl p-4"
               style={{
-                backgroundColor: C.bgSurface,
-                borderLeft: `4px solid ${C.coefficient}`,
+                backgroundColor: SURFACE,
+                borderLeft: `4px solid ${THEME.coefficient}`,
               }}
             >
               <p
                 className="text-sm font-semibold"
-                style={{ color: C.coefficient }}
+                style={{ color: THEME.coefficient }}
               >
                 2 &mdash; Coefficient
               </p>
               <p
                 className="text-sm"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textSecondary }}
               >
                 The number multiplied by the variable. 2x means
                 2 &times; x.
@@ -2092,16 +1994,16 @@ function SymbolBridgeStage({
               transition={FADE}
               className="rounded-xl p-4"
               style={{
-                backgroundColor: C.bgSurface,
-                borderLeft: `4px solid ${C.constant}`,
+                backgroundColor: SURFACE,
+                borderLeft: `4px solid ${THEME.constant}`,
               }}
             >
-              <p className="text-sm font-semibold" style={{ color: C.constant }}>
+              <p className="text-sm font-semibold" style={{ color: THEME.constant }}>
                 3 &mdash; Constant
               </p>
               <p
                 className="text-sm"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textSecondary }}
               >
                 A fixed number that doesn&apos;t change.
               </p>
@@ -2118,26 +2020,26 @@ function SymbolBridgeStage({
               transition={FADE}
               className="rounded-xl p-4"
               style={{
-                backgroundColor: C.bgSurface,
-                borderLeft: `4px solid ${C.textPrimary}`,
+                backgroundColor: SURFACE,
+                borderLeft: `4px solid ${THEME.textPrimary}`,
               }}
             >
               <p
                 className="text-sm font-semibold"
-                style={{ color: C.textPrimary }}
+                style={{ color: THEME.textPrimary }}
               >
                 Terms
               </p>
               <p
                 className="text-sm"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textSecondary }}
               >
                 An expression has{" "}
                 <strong>terms</strong> separated by + or -
                 signs.{" "}
-                <span style={{ color: C.coefficient }}>2x</span>{" "}
+                <span style={{ color: THEME.coefficient }}>2x</span>{" "}
                 is Term 1 (variable term) and{" "}
-                <span style={{ color: C.constant }}>3</span> is
+                <span style={{ color: THEME.constant }}>3</span> is
                 Term 2 (constant term).
               </p>
             </motion.div>
@@ -2153,22 +2055,22 @@ function SymbolBridgeStage({
               transition={{ duration: 0.5 }}
               className="rounded-xl p-5"
               style={{
-                backgroundColor: C.bgSurface,
-                border: `2px solid ${C.primary}`,
+                backgroundColor: SURFACE,
+                border: `2px solid ${THEME.primary}`,
               }}
             >
               <p
                 className="mb-3 text-center text-lg font-semibold"
                 style={{
-                  color: C.textPrimary,
-                  textShadow: `0 0 12px ${C.constant}40`,
+                  color: THEME.textPrimary,
+                  textShadow: `0 0 12px ${THEME.constant}40`,
                 }}
               >
                 Algebraic Expression
               </p>
               <p
                 className="text-center text-sm leading-relaxed"
-                style={{ color: C.textSecondary }}
+                style={{ color: THEME.textSecondary }}
               >
                 A combination of variables, numbers, and
                 operations that describes a calculation.
@@ -2176,25 +2078,24 @@ function SymbolBridgeStage({
 
               {/* Summary tree */}
               <div
-                className="mt-4 rounded-lg p-3 font-mono text-xs"
-                style={{ backgroundColor: C.bgPrimary }}
+                className="mt-4 rounded-lg bg-nm-bg-primary p-3 font-mono text-xs"
               >
-                <p className="font-bold" style={{ color: C.textPrimary }}>
+                <p className="font-bold" style={{ color: THEME.textPrimary }}>
                   2x + 3
                 </p>
-                <p style={{ color: C.coefficient }}>
+                <p style={{ color: THEME.coefficient }}>
                   &nbsp;&nbsp;2 &larr; coefficient
                 </p>
-                <p style={{ color: C.variable }}>
+                <p style={{ color: THEME.variable }}>
                   &nbsp;&nbsp;x &larr; variable
                 </p>
-                <p style={{ color: C.constant }}>
+                <p style={{ color: THEME.constant }}>
                   &nbsp;&nbsp;3 &larr; constant
                 </p>
-                <p style={{ color: C.textMuted }}>
+                <p style={{ color: MUTED }}>
                   &nbsp;&nbsp;2x &larr; Term 1
                 </p>
-                <p style={{ color: C.textMuted }}>
+                <p style={{ color: MUTED }}>
                   &nbsp;&nbsp;3 &nbsp;&larr; Term 2
                 </p>
               </div>
@@ -2204,9 +2105,7 @@ function SymbolBridgeStage({
       </div>
 
       {step >= 5 && (
-        <div className="mt-6 flex justify-center">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} />
       )}
     </div>
   );
@@ -2232,10 +2131,10 @@ const SCENARIOS: readonly ScenarioCard[] = [
     body: "In a game, you earn double points during a power-up, plus a 5-point bonus each round. If you collect x points:",
     expression: "2x + 5",
     exprParts: [
-      { text: "2", color: C.coefficient },
-      { text: "x", color: C.variable },
-      { text: " + ", color: C.textPrimary },
-      { text: "5", color: C.constant },
+      { text: "2", color: THEME.coefficient },
+      { text: "x", color: THEME.variable },
+      { text: " + ", color: THEME.textPrimary },
+      { text: "5", color: THEME.constant },
     ],
     example:
       "Get 10 points? That's 2(10) + 5 = 25! Get 50? That's 2(50) + 5 = 105!",
@@ -2246,10 +2145,10 @@ const SCENARIOS: readonly ScenarioCard[] = [
     body: "T-shirts cost $12 each and shipping is always $4, no matter how many you buy. If you buy n shirts:",
     expression: "12n + 4",
     exprParts: [
-      { text: "12", color: C.coefficient },
-      { text: "n", color: C.variable },
-      { text: " + ", color: C.textPrimary },
-      { text: "4", color: C.constant },
+      { text: "12", color: THEME.coefficient },
+      { text: "n", color: THEME.variable },
+      { text: " + ", color: THEME.textPrimary },
+      { text: "4", color: THEME.constant },
     ],
     example:
       "Buy 3 shirts? 12(3) + 4 = $40. Buy 1? 12(1) + 4 = $16.",
@@ -2260,10 +2159,10 @@ const SCENARIOS: readonly ScenarioCard[] = [
     body: "A smoothie recipe uses 2 cups of fruit per person plus 1 extra cup of ice. For p people:",
     expression: "2p + 1",
     exprParts: [
-      { text: "2", color: C.coefficient },
-      { text: "p", color: C.variable },
-      { text: " + ", color: C.textPrimary },
-      { text: "1", color: C.constant },
+      { text: "2", color: THEME.coefficient },
+      { text: "p", color: THEME.variable },
+      { text: " + ", color: THEME.textPrimary },
+      { text: "1", color: THEME.constant },
     ],
     example:
       "Party of 6? 2(6) + 1 = 13 cups. Just yourself? 2(1) + 1 = 3 cups.",
@@ -2274,11 +2173,11 @@ const SCENARIOS: readonly ScenarioCard[] = [
     body: "A regular basket is 2 points and a three-pointer is 3 points. For b regular baskets and t three-pointers:",
     expression: "2b + 3t",
     exprParts: [
-      { text: "2", color: C.coefficient },
-      { text: "b", color: C.variable },
-      { text: " + ", color: C.textPrimary },
-      { text: "3", color: C.coefficient },
-      { text: "t", color: C.variable },
+      { text: "2", color: THEME.coefficient },
+      { text: "b", color: THEME.variable },
+      { text: " + ", color: THEME.textPrimary },
+      { text: "3", color: THEME.coefficient },
+      { text: "t", color: THEME.variable },
     ],
     example:
       "This one has TWO variables! 5 regular baskets and 4 three-pointers: 2(5) + 3(4) = 10 + 12 = 22 points.",
@@ -2302,8 +2201,7 @@ function RealWorldStage({
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, ...FADE }}
-            className="rounded-2xl p-5"
-            style={{ backgroundColor: C.bgSurface }}
+            className="rounded-2xl bg-nm-bg-secondary p-5"
             role="article"
           >
             <div className="mb-2 flex items-center gap-2">
@@ -2312,7 +2210,7 @@ function RealWorldStage({
               </span>
               <h3
                 className="text-lg font-bold"
-                style={{ color: C.textPrimary }}
+                style={{ color: THEME.textPrimary }}
               >
                 {card.title}
               </h3>
@@ -2321,7 +2219,7 @@ function RealWorldStage({
             <p
               className="mb-3 leading-relaxed"
               style={{
-                color: C.textSecondary,
+                color: THEME.textSecondary,
                 fontSize: 16,
               }}
             >
@@ -2330,8 +2228,7 @@ function RealWorldStage({
 
             {/* Expression display */}
             <div
-              className="mb-3 inline-flex rounded-lg px-4 py-2"
-              style={{ backgroundColor: C.bgPrimary }}
+              className="mb-3 inline-flex rounded-lg bg-nm-bg-primary px-4 py-2"
               aria-label={`Expression: ${card.expression}`}
             >
               {card.exprParts.map((part, j) => (
@@ -2347,7 +2244,7 @@ function RealWorldStage({
 
             <p
               className="text-sm leading-relaxed"
-              style={{ color: C.textMuted }}
+              style={{ color: MUTED }}
             >
               {card.example}
             </p>
@@ -2359,7 +2256,6 @@ function RealWorldStage({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: SCENARIOS.length * 0.2 + 0.2 }}
-        className="mt-6 flex justify-center"
       >
         <ContinueButton onClick={onComplete} />
       </motion.div>
@@ -2397,10 +2293,10 @@ const PRACTICE_PROBLEMS: readonly Problem[] = [
     prompt: "In the expression 3x + 7, which is the variable?",
     kind: "tap-select",
     tapParts: [
-      { label: "3", color: C.coefficient, isCorrect: false },
-      { label: "x", color: C.variable, isCorrect: true },
-      { label: "+", color: C.textPrimary, isCorrect: false },
-      { label: "7", color: C.constant, isCorrect: false },
+      { label: "3", color: THEME.coefficient, isCorrect: false },
+      { label: "x", color: THEME.variable, isCorrect: true },
+      { label: "+", color: THEME.textPrimary, isCorrect: false },
+      { label: "7", color: THEME.constant, isCorrect: false },
     ],
     correctAnswer: "x",
     feedbackCorrect:
@@ -2512,7 +2408,7 @@ const PRACTICE_PROBLEMS: readonly Problem[] = [
   },
 ] as const;
 
-const LAYER_COLORS = ["#a78bfa", "#fbbf24", "#22d3ee"] as const;
+const LAYER_COLORS = [colors.accent.violet, colors.functional.warning, colors.accent.cyan] as const;
 const LAYER_LABELS = ["Recall", "Procedure", "Understanding"] as const;
 
 function PracticeStage({
@@ -2637,14 +2533,14 @@ function PracticeStage({
       >
         <div
           className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
-          style={{ backgroundColor: C.outputFill }}
+          style={{ backgroundColor: THEME.outputFill }}
         >
           <svg
             width={40}
             height={40}
             viewBox="0 0 24 24"
             fill="none"
-            stroke={C.success}
+            stroke={SUCCESS}
             strokeWidth={2.5}
           >
             <path d="M20 6 9 17l-5-5" />
@@ -2652,11 +2548,11 @@ function PracticeStage({
         </div>
         <h2
           className="mb-2 text-xl font-bold"
-          style={{ color: C.textPrimary }}
+          style={{ color: THEME.textPrimary }}
         >
           Practice Complete!
         </h2>
-        <p className="mb-6" style={{ color: C.textMuted }}>
+        <p className="mb-6" style={{ color: MUTED }}>
           {correctCount}/{total} correct ({pct}%)
         </p>
         <ContinueButton onClick={onComplete} />
@@ -2680,17 +2576,17 @@ function PracticeStage({
               height: 12,
               backgroundColor:
                 state === "correct"
-                  ? C.success
+                  ? SUCCESS
                   : state === "incorrect"
-                    ? C.error
-                    : C.border,
+                    ? ERROR
+                    : BORDER,
               border:
                 i === currentIdx
-                  ? `2px solid ${C.primary}`
+                  ? `2px solid ${THEME.primary}`
                   : "none",
               boxShadow:
                 i === currentIdx
-                  ? `0 0 6px ${C.primary}80`
+                  ? `0 0 6px ${THEME.primary}80`
                   : "none",
             }}
           />
@@ -2709,11 +2605,11 @@ function PracticeStage({
           >
             {LAYER_LABELS[prob.layer]!}
           </span>
-          <span style={{ color: C.textDim }}>
+          <span style={{ color: MUTED }}>
             Problem {currentIdx + 1} / {total}
           </span>
         </span>
-        <span style={{ color: C.textDim }}>
+        <span style={{ color: MUTED }}>
           {correctCount} correct
         </span>
       </div>
@@ -2730,15 +2626,15 @@ function PracticeStage({
           <div
             className="rounded-2xl p-5"
             style={{
-              backgroundColor: C.bgSurface,
-              border: `1px solid ${C.border}`,
+              backgroundColor: SURFACE,
+              border: `1px solid ${BORDER}`,
             }}
             role="form"
             aria-label={prob.prompt}
           >
             <p
               className="mb-5 text-base font-medium leading-relaxed"
-              style={{ color: C.textPrimary }}
+              style={{ color: THEME.textPrimary }}
             >
               {prob.prompt}
             </p>
@@ -2765,12 +2661,12 @@ function PracticeStage({
                           minHeight: 44,
                           backgroundColor:
                             selectedAnswer === part.label
-                              ? `${C.primary}20`
-                              : C.bgPrimary,
+                              ? `${THEME.primary}20`
+                              : BG,
                           border: `2px solid ${
                             selectedAnswer === part.label
-                              ? C.primary
-                              : C.border
+                              ? THEME.primary
+                              : BORDER
                           }`,
                           color: part.color,
                         }}
@@ -2808,14 +2704,14 @@ function PracticeStage({
                             maxWidth: 400,
                             backgroundColor:
                               selectedAnswer === opt
-                                ? `${C.primary}15`
-                                : C.bgPrimary,
+                                ? `${THEME.primary}15`
+                                : BG,
                             border: `2px solid ${
                               selectedAnswer === opt
-                                ? C.primary
-                                : C.border
+                                ? THEME.primary
+                                : BORDER
                             }`,
-                            color: C.textSecondary,
+                            color: THEME.textSecondary,
                           }}
                           role="radio"
                           aria-checked={selectedAnswer === opt}
@@ -2825,12 +2721,12 @@ function PracticeStage({
                             style={{
                               backgroundColor:
                                 selectedAnswer === opt
-                                  ? C.primary
-                                  : C.border,
+                                  ? THEME.primary
+                                  : BORDER,
                               color:
                                 selectedAnswer === opt
-                                  ? C.textPrimary
-                                  : C.textDim,
+                                  ? THEME.textPrimary
+                                  : MUTED,
                             }}
                           >
                             {letter}
@@ -2858,17 +2754,17 @@ function PracticeStage({
                           minHeight: 56,
                           backgroundColor:
                             selectedAnswer === opt
-                              ? `${C.primary}15`
-                              : C.bgPrimary,
+                              ? `${THEME.primary}15`
+                              : BG,
                           border: `2px solid ${
                             selectedAnswer === opt
-                              ? C.primary
-                              : C.border
+                              ? THEME.primary
+                              : BORDER
                           }`,
                           color:
                             selectedAnswer === opt
-                              ? C.textPrimary
-                              : C.textSecondary,
+                              ? THEME.textPrimary
+                              : THEME.textSecondary,
                         }}
                         aria-label={`Select: ${opt}`}
                       >
@@ -2900,9 +2796,9 @@ function PracticeStage({
                       style={{
                         width: 120,
                         minHeight: 52,
-                        backgroundColor: C.bgPrimary,
-                        border: `2px solid ${C.border}`,
-                        color: C.textPrimary,
+                        backgroundColor: BG,
+                        border: `2px solid ${BORDER}`,
+                        color: THEME.textPrimary,
                       }}
                       aria-label="Enter the value of the expression"
                     />
@@ -2916,7 +2812,7 @@ function PracticeStage({
                       {/* Source chips */}
                       <p
                         className="mb-2 text-xs"
-                        style={{ color: C.textDim }}
+                        style={{ color: MUTED }}
                       >
                         Tap tiles to build the expression:
                       </p>
@@ -2929,11 +2825,9 @@ function PracticeStage({
                           const isOp = ["+", "-", "*"].includes(
                             chip,
                           );
-                          const chipColor = isVar
-                            ? C.variable
-                            : isOp
-                              ? C.coefficient
-                              : C.constant;
+                          let chipColor: string = THEME.constant;
+                          if (isVar) chipColor = THEME.variable;
+                          else if (isOp) chipColor = THEME.coefficient;
                           return (
                             <motion.button
                               key={chip}
@@ -2973,13 +2867,13 @@ function PracticeStage({
                             style={{
                               width: 56,
                               height: 56,
-                              border: `2px ${slot ? "solid" : "dashed"} ${slot ? C.primary : C.borderLight}`,
+                              border: `2px ${slot ? "solid" : "dashed"} ${slot ? THEME.primary : ELEVATED}`,
                               backgroundColor: slot
-                                ? `${C.primary}15`
+                                ? `${THEME.primary}15`
                                 : "transparent",
                               color: slot
-                                ? C.textPrimary
-                                : C.textDim,
+                                ? THEME.textPrimary
+                                : MUTED,
                             }}
                             aria-label={
                               slot
@@ -3000,7 +2894,7 @@ function PracticeStage({
                   disabled={!canSubmit}
                   className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
                   style={{
-                    backgroundColor: C.primary,
+                    backgroundColor: THEME.primary,
                     minHeight: 44,
                   }}
                 >
@@ -3021,9 +2915,9 @@ function PracticeStage({
                   className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2"
                   style={{
                     backgroundColor: isCorrect
-                      ? `${C.success}15`
-                      : `${C.error}15`,
-                    border: `1px solid ${isCorrect ? C.success : C.error}`,
+                      ? `${SUCCESS}15`
+                      : `${ERROR}15`,
+                    border: `1px solid ${isCorrect ? SUCCESS : ERROR}`,
                   }}
                   aria-live="assertive"
                 >
@@ -3031,8 +2925,8 @@ function PracticeStage({
                     className="text-lg"
                     style={{
                       color: isCorrect
-                        ? C.success
-                        : C.error,
+                        ? SUCCESS
+                        : ERROR,
                     }}
                   >
                     {isCorrect ? "\u2713" : "\u2717"}
@@ -3041,8 +2935,8 @@ function PracticeStage({
                     className="text-sm font-semibold"
                     style={{
                       color: isCorrect
-                        ? C.success
-                        : C.error,
+                        ? SUCCESS
+                        : ERROR,
                     }}
                   >
                     {isCorrect ? "Correct!" : "Not quite"}
@@ -3052,7 +2946,7 @@ function PracticeStage({
                 {/* Explanation */}
                 <p
                   className="mb-4 text-sm leading-relaxed"
-                  style={{ color: C.textSecondary }}
+                  style={{ color: THEME.textSecondary }}
                   aria-live="polite"
                 >
                   {isCorrect
@@ -3065,7 +2959,7 @@ function PracticeStage({
                   onClick={nextProblem}
                   className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white"
                   style={{
-                    backgroundColor: C.primary,
+                    backgroundColor: THEME.primary,
                     minHeight: 44,
                   }}
                   aria-label="Next problem"
@@ -3120,13 +3014,13 @@ function ReflectionStage({
             <div
               className="mb-4 rounded-xl py-3 pl-4 pr-4"
               style={{
-                backgroundColor: C.bgPrimary,
-                borderLeft: `4px solid ${C.primary}`,
+                backgroundColor: BG,
+                borderLeft: `4px solid ${THEME.primary}`,
               }}
             >
               <p
                 className="text-sm italic leading-relaxed"
-                style={{ color: C.textMuted }}
+                style={{ color: MUTED }}
               >
                 Great reflection! Thinking about why we use variables
                 helps deepen your understanding. Variables let us write
@@ -3139,8 +3033,7 @@ function ReflectionStage({
 
         {/* Confirmation animation */}
         <div
-          className="mb-6 rounded-xl p-5 text-center"
-          style={{ backgroundColor: C.bgSurface }}
+          className="mb-6 rounded-xl bg-nm-bg-secondary p-5 text-center"
         >
           <ExpressionCycler />
           <motion.p
@@ -3148,7 +3041,7 @@ function ReflectionStage({
             animate={{ opacity: 1 }}
             transition={{ delay: 2 }}
             className="mt-3 text-sm font-semibold"
-            style={{ color: C.textPrimary }}
+            style={{ color: THEME.textPrimary }}
           >
             One expression, infinite possibilities.
           </motion.p>
@@ -3157,7 +3050,7 @@ function ReflectionStage({
             animate={{ opacity: 1 }}
             transition={{ delay: 2.5 }}
             className="mt-2 text-sm"
-            style={{ color: C.textSecondary }}
+            style={{ color: THEME.textSecondary }}
           >
             You&apos;ve learned the language of algebra. Variables
             let us write rules that work for ANY number.
@@ -3184,15 +3077,14 @@ function ReflectionStage({
       style={{ maxWidth: 640, margin: "0 auto", width: "100%" }}
     >
       <div
-        className="w-full rounded-2xl p-6"
-        style={{ backgroundColor: C.bgSurface }}
+        className="w-full rounded-2xl bg-nm-bg-secondary p-6"
       >
         {/* Header */}
         <span
           className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest"
           style={{
             backgroundColor: "#7c3aed20",
-            color: C.variable,
+            color: THEME.variable,
           }}
         >
           Reflection
@@ -3202,7 +3094,7 @@ function ReflectionStage({
         <p
           className="mb-4 leading-relaxed"
           style={{
-            color: C.textPrimary,
+            color: THEME.textPrimary,
             fontSize: 18,
             fontWeight: 500,
             lineHeight: 1.6,
@@ -3216,18 +3108,17 @@ function ReflectionStage({
         {/* Visual hint: specific vs general */}
         <div className="mb-4 flex gap-3">
           <div
-            className="flex-1 rounded-lg p-3 text-center"
-            style={{ backgroundColor: C.bgPrimary }}
+            className="flex-1 rounded-lg bg-nm-bg-primary p-3 text-center"
           >
             <p
               className="text-xs uppercase"
-              style={{ color: C.textDim }}
+              style={{ color: MUTED }}
             >
               Specific
             </p>
             <p
               className="mt-1 font-mono text-sm font-bold"
-              style={{ color: C.textMuted }}
+              style={{ color: TEXT_SEC }}
             >
               2(4) + 3 = 11
             </p>
@@ -3235,26 +3126,25 @@ function ReflectionStage({
           <div className="flex items-center">
             <span
               className="text-xs font-semibold"
-              style={{ color: C.textDim }}
+              style={{ color: MUTED }}
             >
               vs
             </span>
           </div>
           <motion.div
-            animate={{ borderColor: [C.primary, C.variable, C.primary] }}
+            animate={{ borderColor: [THEME.primary, THEME.variable, THEME.primary] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="flex-1 rounded-lg border-2 p-3 text-center"
-            style={{ backgroundColor: C.bgPrimary }}
+            className="flex-1 rounded-lg border-2 bg-nm-bg-primary p-3 text-center"
           >
             <p
               className="text-xs uppercase"
-              style={{ color: C.textDim }}
+              style={{ color: MUTED }}
             >
               General
             </p>
             <p
               className="mt-1 font-mono text-sm font-bold"
-              style={{ color: C.textPrimary }}
+              style={{ color: THEME.textPrimary }}
             >
               2x + 3 = ?
             </p>
@@ -3274,9 +3164,9 @@ function ReflectionStage({
           style={{
             minHeight: 120,
             maxHeight: 240,
-            backgroundColor: C.bgPrimary,
-            border: `1px solid ${C.border}`,
-            color: C.textPrimary,
+            backgroundColor: BG,
+            border: `1px solid ${BORDER}`,
+            color: THEME.textPrimary,
             lineHeight: 1.6,
           }}
           rows={4}
@@ -3286,7 +3176,7 @@ function ReflectionStage({
         <p
           className="mt-1 text-right text-xs"
           style={{
-            color: meetsMinimum ? C.success : C.textDim,
+            color: meetsMinimum ? SUCCESS : MUTED,
           }}
         >
           {charCount} / 20 minimum
@@ -3298,7 +3188,7 @@ function ReflectionStage({
           disabled={!meetsMinimum}
           className="mt-3 w-full rounded-xl px-6 py-3 text-base font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
           style={{
-            backgroundColor: C.primary,
+            backgroundColor: THEME.primary,
             minHeight: 52,
           }}
         >
@@ -3310,7 +3200,7 @@ function ReflectionStage({
           onClick={handleSkip}
           className="mt-2 w-full py-2 text-sm underline-offset-2 hover:underline"
           style={{
-            color: C.textDim,
+            color: MUTED,
             minHeight: 44,
           }}
           aria-label="Skip reflection"
@@ -3342,16 +3232,16 @@ function ExpressionCycler() {
       className="font-mono text-xl font-bold"
       aria-label={`The expression 2x + 3 evaluated for different values of x`}
     >
-      <span style={{ color: C.coefficient }}>2</span>
-      <span style={{ color: C.variable }}>({x})</span>
-      <span style={{ color: C.textPrimary }}> + 3 = </span>
+      <span style={{ color: THEME.coefficient }}>2</span>
+      <span style={{ color: THEME.variable }}>({x})</span>
+      <span style={{ color: THEME.textPrimary }}> + 3 = </span>
       <motion.span
         key={result}
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={SPRING}
         style={{
-          color: C.output,
+          color: THEME.output,
           fontVariantNumeric: "tabular-nums",
           display: "inline-block",
         }}
@@ -3369,64 +3259,20 @@ function ExpressionCycler() {
 export function VariablesLesson({
   onComplete,
 }: VariablesLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const stage = STAGE_ORDER[stageIndex]!;
-
-  const advanceStage = useCallback(() => {
-    setStageIndex((i) => {
-      const next = i + 1;
-      if (next >= STAGE_ORDER.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
   return (
-    <div
-      className="flex min-h-dvh flex-col"
-      style={{ backgroundColor: C.bgPrimary }}
-    >
-      {/* Stage progress */}
-      <StageProgressDots
-        currentIndex={stageIndex}
-        total={STAGE_ORDER.length}
-      />
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && (
-            <HookStage onComplete={advanceStage} />
-          )}
-          {stage === "spatial" && (
-            <SpatialStage onComplete={advanceStage} />
-          )}
-          {stage === "discovery" && (
-            <DiscoveryStage onComplete={advanceStage} />
-          )}
-          {stage === "symbol" && (
-            <SymbolBridgeStage onComplete={advanceStage} />
-          )}
-          {stage === "realWorld" && (
-            <RealWorldStage onComplete={advanceStage} />
-          )}
-          {stage === "practice" && (
-            <PracticeStage onComplete={advanceStage} />
-          )}
-          {stage === "reflection" && (
-            <ReflectionStage onComplete={advanceStage} />
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="AL-1.1 Variables" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

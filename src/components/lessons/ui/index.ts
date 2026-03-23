@@ -1,4 +1,5 @@
 export { LessonShell } from "./LessonShell";
+export type { StageContext } from "./LessonShell";
 export { StageContainer } from "./StageContainer";
 export { HookVideo } from "./HookVideo";
 export { PromptCard } from "./PromptCard";
@@ -8,3 +9,6 @@ export { ReflectionInput } from "./ReflectionInput";
 export { ScenarioCards } from "./ScenarioCards";
 export { NotationReveal } from "./NotationReveal";
 export { InteractiveSVG } from "./InteractiveSVG";
+export { ContinueButton } from "./ContinueButton";
+export { CompareToggle } from "./CompareToggle";
+export { InteractionDots } from "./InteractionDots";

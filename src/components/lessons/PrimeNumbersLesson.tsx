@@ -1,5 +1,11 @@
 "use client";
 
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
+
 import {
   useCallback,
   useEffect,
@@ -18,57 +24,42 @@ interface PrimeNumbersLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   SPRING CONFIGS (per NT-2.2 spec)
+   SPRING ALIASES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const GENTLE_SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const BOUNCY_SPRING = { type: "spring" as const, damping: 15, stiffness: 350 };
-const _SNAP_SPRING = { type: "spring" as const, damping: 25, stiffness: 400 };
-const TREE_SPRING = { type: "spring" as const, damping: 22, stiffness: 350 };
+const GENTLE_SPRING = springs.default;
+const BOUNCY_SPRING = springs.bouncy;
+const TREE_SPRING   = springs.pop;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLORS (per NT-2.2 colour palette)
+   COLOR ALIASES  (shared tokens → short names)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const C = {
-  primeGlow: "#fbbf24",
-  primeBg: "rgba(251,191,36,0.12)",
-  composite: "#818cf8",
-  compositeBg: "rgba(129,140,248,0.19)",
-  crossedOut: "rgba(251,113,133,0.4)",
-  valid: "#34d399",
-  invalid: "#fb7185",
-  textPrimary: "#f1f5f9",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  textDimmer: "#475569",
-  surface: "#1e293b",
-  surfaceDeep: "#0f172a",
-  border: "#334155",
-  branch: "#475569",
-  violet: "#a78bfa",
-  blue: "#60a5fa",
+  /* ── Shared tokens ── */
+  textPrimary:  colors.text.primary,     // #f1f5f9
+  textSecondary: "#e2e8f0",              // no exact token — keep literal
+  textMuted:    colors.text.secondary,   // #94a3b8
+  textDim:      colors.text.muted,       // #64748b
+  textDimmer:   colors.bg.elevated,      // #475569
+  surface:      colors.bg.secondary,     // #1e293b
+  surfaceDeep:  colors.bg.primary,       // #0f172a
+  border:       colors.bg.surface,       // #334155
+  branch:       colors.bg.elevated,      // #475569
+  composite:    colors.accent.indigo,    // #818cf8
+  valid:        colors.functional.success, // #34d399
+  invalid:      colors.functional.error, // #fb7185
+  violet:       colors.accent.violet,    // #a78bfa
+  blue:         colors.functional.info,  // #60a5fa
+  primeGlow:    colors.accent.amber,     // #fbbf24
+} as const;
+
+/* ── Lesson-specific colours (no shared-token equivalent) ── */
+const THEME = {
+  primeBg:      "rgba(251,191,36,0.12)",
+  compositeBg:  "rgba(129,140,248,0.19)",
+  crossedOut:   "rgba(251,113,133,0.4)",
 } as const;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -113,41 +104,7 @@ function XpFloat({ amount }: { amount: number }) {
   );
 }
 
-/** Standard bottom-action CTA button (44px+ touch target). */
-function CTAButton({
-  label,
-  onClick,
-  disabled = false,
-  ariaLabel,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  ariaLabel?: string;
-}) {
-  return (
-    <motion.div
-      className="w-full max-w-sm mx-auto pb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={disabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-    >
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          "w-full rounded-xl px-6 py-3 text-base font-semibold text-white transition-all duration-150",
-          "min-h-[44px] min-w-[44px] select-none",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
-          disabled && "opacity-40 cursor-not-allowed pointer-events-none",
-        )}
-        style={{ backgroundColor: C.composite }}
-      >
-        {label}
-      </button>
-    </motion.div>
-  );
-}
+/* CTAButton replaced by shared <ContinueButton> from ui/ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STAGE 1 — HOOK
@@ -371,7 +328,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                     <g key={`l1-${i}`}>
                       <motion.rect
                         x={leaf.x - 25} y={leaf.y - 15} width={50} height={30} rx={10}
-                        fill={C.primeBg} stroke={C.primeGlow} strokeWidth={2}
+                        fill={THEME.primeBg} stroke={C.primeGlow} strokeWidth={2}
                         filter="url(#prime-glow-hook)"
                         initial={{ scale: 0.3, opacity: 0 }}
                         animate={{ scale: phaseNum >= 3 ? [1, 1.15, 1] : 1, opacity: 1 }}
@@ -476,7 +433,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   ].map((leaf, i) => (
                     <g key={`l2-${i}`}>
                       <motion.rect x={leaf.x - 25} y={leaf.y - 15} width={50} height={30} rx={10}
-                        fill={C.primeBg} stroke={C.primeGlow} strokeWidth={2}
+                        fill={THEME.primeBg} stroke={C.primeGlow} strokeWidth={2}
                         filter="url(#prime-glow-hook)"
                         initial={{ scale: 0.3, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -572,11 +529,9 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
       </svg>
 
       {showCTA && (
-        <CTAButton
-          label="Discover the atoms of math"
-          onClick={onComplete}
-          ariaLabel="Continue to interactive exploration of prime numbers"
-        />
+        <ContinueButton onClick={onComplete} color={C.composite}>
+          Discover the atoms of math
+        </ContinueButton>
       )}
     </div>
   );
@@ -844,9 +799,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               let showCross = false;
 
               if (state === "special") { bgColor = C.surfaceDeep; textColor = C.textDimmer; borderColor = C.surfaceDeep; }
-              else if (isCurrent) { bgColor = C.primeBg; textColor = C.primeGlow; borderColor = C.primeGlow; }
+              else if (isCurrent) { bgColor = THEME.primeBg; textColor = C.primeGlow; borderColor = C.primeGlow; }
               else if (state === "crossedOut") { bgColor = C.surfaceDeep; textColor = C.textDimmer; borderColor = C.surfaceDeep; showCross = true; }
-              else if (state === "revealedPrime") { bgColor = C.compositeBg; textColor = C.composite; borderColor = C.composite; }
+              else if (state === "revealedPrime") { bgColor = THEME.compositeBg; textColor = C.composite; borderColor = C.composite; }
 
               return (
                 <motion.button key={n} onClick={() => handleCellTap(n)}
@@ -866,8 +821,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                   {n}
                   {showCross && (
                     <svg className="pointer-events-none absolute inset-0" viewBox="0 0 32 32" aria-hidden="true">
-                      <line x1={4} y1={4} x2={28} y2={28} stroke={C.crossedOut} strokeWidth={2} />
-                      <line x1={28} y1={4} x2={4} y2={28} stroke={C.crossedOut} strokeWidth={2} />
+                      <line x1={4} y1={4} x2={28} y2={28} stroke={THEME.crossedOut} strokeWidth={2} />
+                      <line x1={28} y1={4} x2={4} y2={28} stroke={THEME.crossedOut} strokeWidth={2} />
                     </svg>
                   )}
                 </motion.button>
@@ -911,8 +866,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
         {sieveComplete && (
           <div className="mt-6">
-            <CTAButton label="Now let\u2019s build with primes..." onClick={() => setSpatialPhase("tree")}
-              ariaLabel="Continue to factor tree builder" />
+            <ContinueButton onClick={() => setSpatialPhase("tree")} color={C.composite}>
+              Now let{"\u2019"}s build with primes...
+            </ContinueButton>
           </div>
         )}
       </div>
@@ -994,7 +950,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                 aria-label={`${node.value}${node.isPrime ? ", prime" : ", composite"}`}>
                 <motion.rect
                   x={node.x - 25} y={node.y - 16} width={50} height={32} rx={12}
-                  fill={isPrimeLeaf ? C.primeBg : C.surface}
+                  fill={isPrimeLeaf ? THEME.primeBg : C.surface}
                   stroke={isPrimeLeaf ? C.primeGlow : C.composite}
                   strokeWidth={isPrimeLeaf ? 2 : 1.5}
                   filter={isPrimeLeaf ? "url(#prime-glow-tree)" : undefined}
@@ -1049,10 +1005,9 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
       {treeComplete && (
         <div className="mt-4">
-          <CTAButton
-            label={treesCompleted === 0 ? "Now try 36!" : "Ready to discover the patterns?"}
-            onClick={handleTreeContinue}
-            ariaLabel={treesCompleted === 0 ? "Continue to build factor tree for 36" : "Continue to guided discovery"} />
+          <ContinueButton onClick={handleTreeContinue} color={C.composite}>
+            {treesCompleted === 0 ? "Now try 36!" : "Ready to discover the patterns?"}
+          </ContinueButton>
         </div>
       )}
     </div>
@@ -1351,25 +1306,23 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
 
             {/* Mini-visualizations */}
             {card.miniViz === "encryption" && (
-              <div className="flex items-center justify-center gap-4 rounded-xl py-4 px-3"
-                style={{ backgroundColor: C.surfaceDeep }}
+              <div className="flex items-center justify-center gap-4 rounded-xl bg-nm-bg-primary py-4 px-3"
                 role="img" aria-label="Two prime numbers p and q multiply easily into p times q, but reversing the process is extremely difficult">
                 <div className="flex items-center justify-center rounded-full w-10 h-10 text-sm font-bold"
-                  style={{ backgroundColor: C.primeBg, border: `2px solid ${C.primeGlow}`, color: C.primeGlow }}>p</div>
+                  style={{ backgroundColor: THEME.primeBg, border: `2px solid ${C.primeGlow}`, color: C.primeGlow }}>p</div>
                 <span style={{ color: C.textDim }}>{"\u00d7"}</span>
                 <div className="flex items-center justify-center rounded-full w-10 h-10 text-sm font-bold"
-                  style={{ backgroundColor: C.primeBg, border: `2px solid ${C.primeGlow}`, color: C.primeGlow }}>q</div>
+                  style={{ backgroundColor: THEME.primeBg, border: `2px solid ${C.primeGlow}`, color: C.primeGlow }}>q</div>
                 <span style={{ color: C.valid, fontSize: 18 }} aria-hidden="true">{"\u2192"}</span>
                 <div className="flex items-center justify-center rounded-lg px-3 py-1 text-sm font-bold"
-                  style={{ backgroundColor: C.compositeBg, border: `2px solid ${C.composite}`, color: C.composite }}>
+                  style={{ backgroundColor: THEME.compositeBg, border: `2px solid ${C.composite}`, color: C.composite }}>
                   p{"\u00d7"}q
                 </div>
                 <span style={{ color: C.invalid, fontSize: 12, fontWeight: 600 }}>{"\u2190"} Hard!</span>
               </div>
             )}
             {card.miniViz === "cicadas" && (
-              <div className="flex items-center justify-center gap-1 rounded-xl py-3 px-3 overflow-x-auto"
-                style={{ backgroundColor: C.surfaceDeep }}
+              <div className="flex items-center justify-center gap-1 rounded-xl bg-nm-bg-primary py-3 px-3 overflow-x-auto"
                 role="img" aria-label="Timeline showing predator cycle every 4 years and cicada cycle every 13 years">
                 {Array.from({ length: 17 }, (_, i) => {
                   const yr = i + 1;
@@ -1384,7 +1337,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
               </div>
             )}
             {card.miniViz === "music" && (
-              <div className="rounded-xl py-3 px-3 space-y-2" style={{ backgroundColor: C.surfaceDeep }}
+              <div className="rounded-xl bg-nm-bg-primary py-3 px-3 space-y-2"
                 role="img" aria-label="Two beat patterns: standard 4-beat and prime 7-beat rarely align">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] w-16 shrink-0" style={{ color: C.textDim }}>4-beat</span>
@@ -1407,10 +1360,9 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       <div className="mt-6">
-        <CTAButton
-          label={cardIdx + 1 >= REAL_WORLD_CARDS.length ? "Continue" : "Next"}
-          onClick={handleNext}
-          ariaLabel={cardIdx + 1 >= REAL_WORLD_CARDS.length ? "Continue to practice" : "Next real-world example"} />
+        <ContinueButton onClick={handleNext} color={C.composite}>
+          {cardIdx + 1 >= REAL_WORLD_CARDS.length ? "Continue" : "Next"}
+        </ContinueButton>
       </div>
     </div>
   );
@@ -1669,13 +1621,13 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                 <div className="flex gap-3 mb-5" role="radiogroup">
                   <button onClick={() => handleSelect("prime")}
                     className="flex-1 rounded-xl px-6 py-3 text-base font-semibold min-h-[48px] transition-all"
-                    style={{ backgroundColor: selectedAnswers[0] === "prime" ? C.primeBg : "transparent", border: `2px solid ${selectedAnswers[0] === "prime" ? C.primeGlow : C.border}`, color: selectedAnswers[0] === "prime" ? C.primeGlow : C.textSecondary }}
+                    style={{ backgroundColor: selectedAnswers[0] === "prime" ? THEME.primeBg : "transparent", border: `2px solid ${selectedAnswers[0] === "prime" ? C.primeGlow : C.border}`, color: selectedAnswers[0] === "prime" ? C.primeGlow : C.textSecondary }}
                     role="radio" aria-checked={selectedAnswers[0] === "prime"}>
                     Prime
                   </button>
                   <button onClick={() => handleSelect("not-prime")}
                     className="flex-1 rounded-xl px-6 py-3 text-base font-semibold min-h-[48px] transition-all"
-                    style={{ backgroundColor: selectedAnswers[0] === "not-prime" ? C.compositeBg : "transparent", border: `2px solid ${selectedAnswers[0] === "not-prime" ? C.composite : C.border}`, color: selectedAnswers[0] === "not-prime" ? C.composite : C.textSecondary }}
+                    style={{ backgroundColor: selectedAnswers[0] === "not-prime" ? THEME.compositeBg : "transparent", border: `2px solid ${selectedAnswers[0] === "not-prime" ? C.composite : C.border}`, color: selectedAnswers[0] === "not-prime" ? C.composite : C.textSecondary }}
                     role="radio" aria-checked={selectedAnswers[0] === "not-prime"}>
                     Not Prime
                   </button>
@@ -1748,7 +1700,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           {submitted && (
             <div className="mb-6 rounded-2xl p-5" style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: C.primeBg }}>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: THEME.primeBg }}>
                   <svg width={16} height={16} viewBox="0 0 24 24" fill={C.primeGlow}>
                     <path d="M12 2a7 7 0 00-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 001 1h6a1 1 0 001-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 00-7-7zM9 21a1 1 0 001 1h4a1 1 0 001-1v-1H9v1z" />
                   </svg>
@@ -1760,7 +1712,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               </p>
             </div>
           )}
-          <CTAButton label="Complete Lesson" onClick={onComplete} ariaLabel="Complete the Prime Numbers lesson" />
+          <ContinueButton onClick={onComplete} color={C.composite}>Complete Lesson</ContinueButton>
         </motion.div>
       </div>
     );
@@ -1790,7 +1742,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
       </motion.div>
 
       <div className="flex flex-col items-center gap-2 pb-8">
-        <CTAButton label="Share My Thinking" onClick={() => setSubmitted(true)} disabled={!ok} ariaLabel="Submit your reflection" />
+        <ContinueButton onClick={() => setSubmitted(true)} disabled={!ok} color={C.composite}>Share My Thinking</ContinueButton>
         <button onClick={() => setSkipped(true)} className="text-xs min-h-[44px] px-4" style={{ color: C.textDimmer }} aria-label="Skip reflection">
           Skip
         </button>
@@ -1804,53 +1756,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export function PrimeNumbersLesson({ onComplete }: PrimeNumbersLessonProps) {
-  const [si, setSi] = useState(0);
-  const stage = STAGE_ORDER[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    setSi((prev) => {
-      if (prev + 1 >= STAGE_ORDER.length) { onComplete?.(); return prev; }
-      return prev + 1;
-    });
-  }, [onComplete]);
-
-  const finish = useCallback(() => { onComplete?.(); }, [onComplete]);
-
-  function renderStage() {
-    switch (stage) {
-      case "hook":       return <HookStage onComplete={advance} />;
-      case "spatial":    return <SpatialStage onComplete={advance} />;
-      case "discovery":  return <DiscoveryStage onComplete={advance} />;
-      case "symbol":     return <SymbolBridgeStage onComplete={advance} />;
-      case "realWorld":  return <RealWorldStage onComplete={advance} />;
-      case "practice":   return <PracticeStage onComplete={advance} />;
-      case "reflection": return <ReflectionStage onComplete={finish} />;
-      default:           return null;
-    }
-  }
-
   return (
-    <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
-      {/* Stage progress indicator */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 bg-nm-bg-primary/95 px-4 py-3 backdrop-blur-sm">
-        {STAGE_ORDER.map((s, i) => (
-          <div key={s} className="flex-1 h-1.5 rounded-full transition-colors duration-300"
-            style={{ backgroundColor: i <= si ? C.composite : C.border, opacity: i <= si ? 1 : 0.3 }}
-            role="progressbar" aria-valuenow={i <= si ? 100 : 0} aria-valuemin={0} aria-valuemax={100}
-            aria-label={`Stage ${i + 1}: ${s}`} />
-        ))}
-      </div>
-
-      <main className="flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div key={stage} className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}>
-            {renderStage()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
+    <LessonShell title="NT-2.2 Prime Numbers" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /**
  * SP-5.5 Sampling — Grade 7
@@ -23,32 +28,33 @@ import { VideoHook } from "@/components/lessons/VideoHook";
 
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
-const POP_COLOR = "#60a5fa";
-const SAMPLE_COLOR = "#a78bfa";
-const BIAS_COLOR = "#f472b6";
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONSTANTS & HELPERS
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
+/* ── Lesson-specific semantic colors (aliases to shared tokens) ── */
+const THEME = {
+  text: colors.text.primary,
+  muted: colors.text.secondary,
+  surface: colors.bg.secondary,
+  border: colors.bg.elevated,
+  primary: colors.accent.indigo,
+  success: colors.accent.emerald,
+  error: colors.functional.error,
+  popColor: colors.functional.info,
+  sampleColor: colors.accent.violet,
+  biasColor: "#f472b6",
+} as const;
 
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (<div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>{Array.from({ length: total }, (_, i) => (<div key={i} className="h-2 w-2 rounded-full transition-all duration-300" style={{ background: i <= current ? PRIMARY : BORDER, transform: i === current ? "scale(1.4)" : "scale(1)" }} />))}</div>);
-}
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay, duration: 0.5, ease: "easeOut" }} onClick={onClick} className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]" style={{ background: PRIMARY, minHeight: 48 }} aria-label={label}>{label}</motion.button>);
-}
-function StageWrapper({ children }: { children: ReactNode }) {
-  return (<motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4, ease: "easeInOut" }} className="flex min-h-dvh flex-col items-center justify-center px-4 py-12" style={{ background: BG }}>{children}</motion.div>);
+const SPRING = springs.default;
+
+function StageContainer({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
+      {children}
+    </div>
+  );
 }
 
 function simpleRandom(seed: number): () => number {
@@ -71,19 +77,19 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center" aria-live="polite">
-        <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 text-center text-[clamp(20px,5vw,32px)] font-bold" style={{ color: TEXT }}>How can you learn about 1,000 students without asking every one?</motion.h2>
+        <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 text-center text-[clamp(20px,5vw,32px)] font-bold" style={{ color: THEME.text }}>How can you learn about 1,000 students without asking every one?</motion.h2>
         <svg viewBox="0 0 400 280" className="w-full max-w-md" aria-label="School population with sampled students highlighted">
           {phase >= 1 && dots.map((d, i) => (
-            <motion.circle key={i} cx={d.x} cy={d.y} r={4} fill={phase >= 2 && d.sampled ? SAMPLE_COLOR : `${POP_COLOR}40`} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: phase >= 2 && d.sampled ? 2 : 1 }} transition={{ delay: i * 0.008, ...SPRING }} />
+            <motion.circle key={i} cx={d.x} cy={d.y} r={4} fill={phase >= 2 && d.sampled ? THEME.sampleColor : `${THEME.popColor}40`} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: phase >= 2 && d.sampled ? 2 : 1 }} transition={{ delay: i * 0.008, ...SPRING }} />
           ))}
-          {phase >= 2 && (<g><circle cx={30} cy={260} r={4} fill={`${POP_COLOR}40`} /><text x={40} y={264} fill={MUTED} fontSize={11}>Population (1,000)</text><circle cx={200} cy={260} r={6} fill={SAMPLE_COLOR} /><text x={212} y={264} fill={SAMPLE_COLOR} fontSize={11}>Sample (50)</text></g>)}
+          {phase >= 2 && (<g><circle cx={30} cy={260} r={4} fill={`${THEME.popColor}40`} /><text x={40} y={264} fill={THEME.muted} fontSize={11}>Population (1,000)</text><circle cx={200} cy={260} r={6} fill={THEME.sampleColor} /><text x={212} y={264} fill={THEME.sampleColor} fontSize={11}>Sample (50)</text></g>)}
         </svg>
-        {phase >= 3 && (<motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm" style={{ color: MUTED }}>Ask 50 random students their favorite lunch. If 60% say pizza, you can predict about 60% of all 1,000 would too!</motion.p>)}
+        {phase >= 3 && (<motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm" style={{ color: THEME.muted }}>Ask 50 random students their favorite lunch. If 60% say pizza, you can predict about 60% of all 1,000 would too!</motion.p>)}
         {phase >= 4 && <ContinueButton onClick={onContinue} delay={0.3} />}
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -107,14 +113,14 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
   const barMargin = 40; const barAreaW = 320; const barAreaH = 120;
 
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
-        <h2 className="text-center text-[clamp(16px,4vw,24px)] font-bold" style={{ color: TEXT }}>Draw random samples and see how they compare</h2>
-        <p className="text-xs" style={{ color: MUTED }}>Population truth: 60% prefer pizza. Each sample has {sampleSize} people.</p>
+        <h2 className="text-center text-[clamp(16px,4vw,24px)] font-bold" style={{ color: THEME.text }}>Draw random samples and see how they compare</h2>
+        <p className="text-xs" style={{ color: THEME.muted }}>Population truth: 60% prefer pizza. Each sample has {sampleSize} people.</p>
         <svg viewBox={`0 0 ${barMargin * 2 + barAreaW} ${barMargin + barAreaH + 30}`} className="w-full max-w-md" aria-label="Bar chart of sample results">
-          <line x1={barMargin} y1={barMargin + barAreaH} x2={barMargin + barAreaW} y2={barMargin + barAreaH} stroke={MUTED} strokeWidth={1} />
-          <line x1={barMargin} y1={barMargin + barAreaH * (1 - 0.6)} x2={barMargin + barAreaW} y2={barMargin + barAreaH * (1 - 0.6)} stroke={SUCCESS} strokeWidth={1} strokeDasharray="6 3" />
-          <text x={barMargin + barAreaW + 5} y={barMargin + barAreaH * (1 - 0.6) + 4} fill={SUCCESS} fontSize={10}>60%</text>
+          <line x1={barMargin} y1={barMargin + barAreaH} x2={barMargin + barAreaW} y2={barMargin + barAreaH} stroke={THEME.muted} strokeWidth={1} />
+          <line x1={barMargin} y1={barMargin + barAreaH * (1 - 0.6)} x2={barMargin + barAreaW} y2={barMargin + barAreaH * (1 - 0.6)} stroke={THEME.success} strokeWidth={1} strokeDasharray="6 3" />
+          <text x={barMargin + barAreaW + 5} y={barMargin + barAreaH * (1 - 0.6) + 4} fill={THEME.success} fontSize={10}>60%</text>
           {samples.map((pct, i) => {
             const maxBars = 15;
             const visibleIdx = i >= samples.length - maxBars ? i - (samples.length - maxBars) : -1;
@@ -122,23 +128,23 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             const bw = Math.min(20, barAreaW / maxBars - 2);
             const bx = barMargin + visibleIdx * (bw + 2);
             const bh = (pct / 100) * barAreaH;
-            return (<motion.rect key={i} x={bx} y={barMargin + barAreaH - bh} width={bw} height={bh} rx={3} fill={SAMPLE_COLOR} initial={{ height: 0, y: barMargin + barAreaH }} animate={{ height: bh, y: barMargin + barAreaH - bh }} transition={SPRING} />);
+            return (<motion.rect key={i} x={bx} y={barMargin + barAreaH - bh} width={bw} height={bh} rx={3} fill={THEME.sampleColor} initial={{ height: 0, y: barMargin + barAreaH }} animate={{ height: bh, y: barMargin + barAreaH - bh }} transition={SPRING} />);
           })}
-          <text x={barMargin} y={barMargin + barAreaH + 18} fill={MUTED} fontSize={10}>Samples drawn: {samples.length}</text>
+          <text x={barMargin} y={barMargin + barAreaH + 18} fill={THEME.muted} fontSize={10}>Samples drawn: {samples.length}</text>
         </svg>
         <div className="flex flex-col items-center gap-2">
-          <motion.button whileTap={{ scale: 0.9 }} onClick={drawSample} data-interactive="true" className="flex items-center justify-center rounded-xl px-6 py-3 font-semibold text-white" style={{ background: SAMPLE_COLOR, minHeight: 48, minWidth: 160 }} aria-label="Draw a random sample">Draw Sample</motion.button>
+          <motion.button whileTap={{ scale: 0.9 }} onClick={drawSample} data-interactive="true" className="flex items-center justify-center rounded-xl px-6 py-3 font-semibold text-white" style={{ background: THEME.sampleColor, minHeight: 48, minWidth: 160 }} aria-label="Draw a random sample">Draw Sample</motion.button>
           {samples.length > 0 && (
-            <div className="rounded-xl px-6 py-2 text-center" style={{ background: SURFACE }}>
-              <p className="text-sm font-bold" style={{ color: TEXT }}>
-                {"Last sample: "}<span style={{ color: SAMPLE_COLOR }}>{samples[samples.length - 1]}%</span>{" | Average: "}<span style={{ color: SUCCESS }}>{avg}%</span>{" | True: "}<span style={{ color: SUCCESS }}>60%</span>
+            <div className="rounded-xl bg-nm-bg-secondary px-6 py-2 text-center">
+              <p className="text-sm font-bold" style={{ color: THEME.text }}>
+                {"Last sample: "}<span style={{ color: THEME.sampleColor }}>{samples[samples.length - 1]}%</span>{" | Average: "}<span style={{ color: THEME.success }}>{avg}%</span>{" | True: "}<span style={{ color: THEME.success }}>60%</span>
               </p>
             </div>
           )}
         </div>
         {canContinue && <ContinueButton onClick={onContinue} />}
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -153,13 +159,13 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   const handleAck = useCallback(() => { if (promptIdx < prompts.length - 1) { setPromptIdx((i) => i + 1); } else { onContinue(); } }, [promptIdx, prompts.length, onContinue]);
   const current = prompts[promptIdx]!;
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <div className="flex gap-2">{prompts.map((_, i) => (<div key={i} className="h-2 w-8 rounded-full" style={{ background: i <= promptIdx ? PRIMARY : BORDER }} />))}</div>
-        <AnimatePresence mode="wait"><motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl p-6 text-center" style={{ background: SURFACE }}><p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: TEXT }}>{current.text}</p></motion.div></AnimatePresence>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={handleAck} className="rounded-xl px-8 py-3 text-base font-semibold text-white" style={{ background: PRIMARY, minHeight: 48, minWidth: 160 }} aria-label={current.button}>{current.button}</motion.button>
+        <div className="flex gap-2">{prompts.map((_, i) => (<div key={i} className="h-2 w-8 rounded-full" style={{ background: i <= promptIdx ? THEME.primary : THEME.border }} />))}</div>
+        <AnimatePresence mode="wait"><motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl bg-nm-bg-secondary p-6 text-center"><p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: THEME.text }}>{current.text}</p></motion.div></AnimatePresence>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={handleAck} className="rounded-xl px-8 py-3 text-base font-semibold text-white" style={{ background: THEME.primary, minHeight: 48, minWidth: 160 }} aria-label={current.button}>{current.button}</motion.button>
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -168,21 +174,21 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   const [step, setStep] = useState(0);
   useEffect(() => { const t = [setTimeout(() => setStep(1), 1200), setTimeout(() => setStep(2), 2400), setTimeout(() => setStep(3), 3800)]; return () => t.forEach(clearTimeout); }, []);
   const items = [
-    { label: "Population", text: "The entire group (N = all)", color: POP_COLOR },
-    { label: "Sample", text: "A subset you measure (n < N)", color: SAMPLE_COLOR },
-    { label: "Inference", text: "Use sample results to predict population", color: SUCCESS },
+    { label: "Population", text: "The entire group (N = all)", color: THEME.popColor },
+    { label: "Sample", text: "A subset you measure (n < N)", color: THEME.sampleColor },
+    { label: "Inference", text: "Use sample results to predict population", color: THEME.success },
   ];
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Sampling Vocabulary</h2>
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: THEME.text }}>Sampling Vocabulary</h2>
         <div className="flex flex-col gap-4">
-          {items.map((item, i) => i <= step ? (<motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl px-6 py-4" style={{ background: SURFACE }}><p className="text-xs font-semibold uppercase" style={{ color: MUTED }}>{item.label}</p><p className="mt-1 font-mono text-[clamp(14px,3.5vw,20px)] font-bold" style={{ color: item.color }}>{item.text}</p></motion.div>) : null)}
+          {items.map((item, i) => i <= step ? (<motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl bg-nm-bg-secondary px-6 py-4"><p className="text-xs font-semibold uppercase" style={{ color: THEME.muted }}>{item.label}</p><p className="mt-1 font-mono text-[clamp(14px,3.5vw,20px)] font-bold" style={{ color: item.color }}>{item.text}</p></motion.div>) : null)}
         </div>
-        {step >= 3 && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-6 py-4 text-center" style={{ borderColor: PRIMARY, background: `${PRIMARY}15` }}><p className="text-sm font-bold" style={{ color: TEXT }}>Random sample {"\u2192"} Representative {"\u2192"} Valid predictions</p><p className="mt-1 text-sm font-bold" style={{ color: BIAS_COLOR }}>Biased sample {"\u2192"} Not representative {"\u2192"} Misleading!</p></motion.div>)}
+        {step >= 3 && (<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-6 py-4 text-center" style={{ borderColor: THEME.primary, background: `${THEME.primary}15` }}><p className="text-sm font-bold" style={{ color: THEME.text }}>Random sample {"\u2192"} Representative {"\u2192"} Valid predictions</p><p className="mt-1 text-sm font-bold" style={{ color: THEME.biasColor }}>Biased sample {"\u2192"} Not representative {"\u2192"} Misleading!</p></motion.div>)}
         {step >= 3 && <ContinueButton onClick={onContinue} delay={0.5} />}
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -194,15 +200,15 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
     { icon: "\uD83D\uDC8A", title: "Medical Trials", desc: "New medicines are tested on a random sample of patients. Results from the sample are used to predict how the medicine will work for the whole population." },
   ];
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Sampling in Real Life</h2>
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: THEME.text }}>Sampling in Real Life</h2>
         <div className="flex flex-col gap-4">
-          {scenarios.map((s, i) => (<motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl p-4" style={{ background: SURFACE }}><div className="flex items-start gap-3"><span className="text-2xl">{s.icon}</span><div><p className="font-semibold" style={{ color: TEXT }}>{s.title}</p><p className="mt-1 text-sm leading-relaxed" style={{ color: MUTED }}>{s.desc}</p></div></div></motion.div>))}
+          {scenarios.map((s, i) => (<motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl bg-nm-bg-secondary p-4"><div className="flex items-start gap-3"><span className="text-2xl">{s.icon}</span><div><p className="font-semibold" style={{ color: THEME.text }}>{s.title}</p><p className="mt-1 text-sm leading-relaxed" style={{ color: THEME.muted }}>{s.desc}</p></div></div></motion.div>))}
         </div>
         <ContinueButton onClick={onContinue} />
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -231,25 +237,25 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
   const handleNext = useCallback(() => { setSelected(null); setAnswered(false); setCurrentIdx((i) => i + 1); }, []);
 
   if (done || !problem) {
-    return (<StageWrapper><div className="flex flex-col items-center gap-4"><h2 className="text-[clamp(20px,5vw,28px)] font-bold" style={{ color: TEXT }}>Practice Complete!</h2><p className="text-lg" style={{ color: MUTED }}>You got {score} out of {PROBLEMS.length} correct.</p><ContinueButton onClick={onContinue} label="Continue" /></div></StageWrapper>);
+    return (<StageContainer><div className="flex flex-col items-center gap-4"><h2 className="text-[clamp(20px,5vw,28px)] font-bold" style={{ color: THEME.text }}>Practice Complete!</h2><p className="text-lg" style={{ color: THEME.muted }}>You got {score} out of {PROBLEMS.length} correct.</p><ContinueButton onClick={onContinue} label="Continue" /></div></StageContainer>);
   }
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <p className="text-sm font-semibold" style={{ color: MUTED }}>Problem {currentIdx + 1} of {PROBLEMS.length} ({problem.layer})</p>
-        <div className="w-full rounded-xl p-6" style={{ background: SURFACE }}><p className="text-center text-[clamp(16px,4vw,20px)] font-semibold leading-relaxed" style={{ color: TEXT }}>{problem.question}</p></div>
+        <p className="text-sm font-semibold" style={{ color: THEME.muted }}>Problem {currentIdx + 1} of {PROBLEMS.length} ({problem.layer})</p>
+        <div className="w-full rounded-xl bg-nm-bg-secondary p-6"><p className="text-center text-[clamp(16px,4vw,20px)] font-semibold leading-relaxed" style={{ color: THEME.text }}>{problem.question}</p></div>
         <div className="flex w-full flex-col gap-3">
           {problem.options.map((opt, i) => {
             const isCorrect = i === problem.correctIndex; const isSelected = i === selected;
-            let bg: string = SURFACE; let border: string = BORDER;
-            if (answered) { if (isCorrect) { bg = `${SUCCESS}20`; border = SUCCESS; } else if (isSelected) { bg = `${ERROR}20`; border = ERROR; } }
-            return (<motion.button key={i} whileTap={answered ? {} : { scale: 0.97 }} onClick={() => handleSelect(i)} className="w-full rounded-xl border-2 px-4 py-3 text-left font-medium transition-colors" style={{ background: bg, borderColor: border, color: TEXT, minHeight: 48 }} aria-label={`Option: ${opt}`}>{opt}{answered && isCorrect && <span className="ml-2" style={{ color: SUCCESS }}>{"  \u2713"}</span>}{answered && isSelected && !isCorrect && <span className="ml-2" style={{ color: ERROR }}>{"  \u2717"}</span>}</motion.button>);
+            let bg: string = THEME.surface; let border: string = THEME.border;
+            if (answered) { if (isCorrect) { bg = `${THEME.success}20`; border = THEME.success; } else if (isSelected) { bg = `${THEME.error}20`; border = THEME.error; } }
+            return (<motion.button key={i} whileTap={answered ? {} : { scale: 0.97 }} onClick={() => handleSelect(i)} className="w-full rounded-xl border-2 px-4 py-3 text-left font-medium transition-colors" style={{ background: bg, borderColor: border, color: THEME.text, minHeight: 48 }} aria-label={`Option: ${opt}`}>{opt}{answered && isCorrect && <span className="ml-2" style={{ color: THEME.success }}>{"  \u2713"}</span>}{answered && isSelected && !isCorrect && <span className="ml-2" style={{ color: THEME.error }}>{"  \u2717"}</span>}</motion.button>);
           })}
         </div>
-        {answered && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full rounded-xl p-4" style={{ background: selected === problem.correctIndex ? `${SUCCESS}15` : `${ERROR}15` }}><p className="text-sm leading-relaxed" style={{ color: TEXT }}>{problem.feedback}</p></motion.div>)}
-        {answered && (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileTap={{ scale: 0.95 }} onClick={handleNext} className="rounded-xl px-8 py-3 font-semibold text-white" style={{ background: PRIMARY, minHeight: 48, minWidth: 160 }} aria-label="Next problem">{"Next \u2192"}</motion.button>)}
+        {answered && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full rounded-xl p-4" style={{ background: selected === problem.correctIndex ? `${THEME.success}15` : `${THEME.error}15` }}><p className="text-sm leading-relaxed" style={{ color: THEME.text }}>{problem.feedback}</p></motion.div>)}
+        {answered && (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileTap={{ scale: 0.95 }} onClick={handleNext} className="rounded-xl px-8 py-3 font-semibold text-white" style={{ background: THEME.primary, minHeight: 48, minWidth: 160 }} aria-label="Next problem">{"Next \u2192"}</motion.button>)}
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
@@ -257,42 +263,39 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
 function ReflectionStage({ onContinue }: { onContinue: () => void }) {
   const [text, setText] = useState(""); const [submitted, setSubmitted] = useState(false);
   const handleSubmit = useCallback(() => { setSubmitted(true); }, []);
-  if (submitted) { return (<StageWrapper><div className="flex flex-col items-center gap-4 text-center"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}><p className="text-4xl">{"\uD83E\uDDE0"}</p><h2 className="mt-2 text-xl font-bold" style={{ color: TEXT }}>Great reflection!</h2><p className="mt-2 text-sm" style={{ color: MUTED }}>Understanding sampling helps you think critically about data everywhere. +50 XP</p></motion.div><ContinueButton onClick={onContinue} label="Complete Lesson" delay={0.5} /></div></StageWrapper>); }
+  if (submitted) { return (<StageContainer><div className="flex flex-col items-center gap-4 text-center"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}><p className="text-4xl">{"\uD83E\uDDE0"}</p><h2 className="mt-2 text-xl font-bold" style={{ color: THEME.text }}>Great reflection!</h2><p className="mt-2 text-sm" style={{ color: THEME.muted }}>Understanding sampling helps you think critically about data everywhere. +50 XP</p></motion.div><ContinueButton onClick={onContinue} label="Complete Lesson" delay={0.5} /></div></StageContainer>); }
   return (
-    <StageWrapper>
+    <StageContainer>
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Reflect</h2>
-        <p className="text-center text-sm" style={{ color: MUTED }}>Give an example of a biased sample and explain why it would lead to wrong conclusions.</p>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your explanation here..." className="w-full rounded-xl border-2 p-4 text-base" style={{ background: SURFACE, borderColor: BORDER, color: TEXT, minHeight: 120, resize: "vertical" }} aria-label="Reflection text" />
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: THEME.text }}>Reflect</h2>
+        <p className="text-center text-sm" style={{ color: THEME.muted }}>Give an example of a biased sample and explain why it would lead to wrong conclusions.</p>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your explanation here..." className="w-full rounded-xl border-2 border-nm-bg-elevated bg-nm-bg-secondary p-4 text-base text-nm-text-primary" style={{ minHeight: 120, resize: "vertical" }} aria-label="Reflection text" />
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={onContinue} className="rounded-xl px-6 py-3 text-sm" style={{ background: SURFACE, color: MUTED, minHeight: 44 }}>Skip</motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={handleSubmit} disabled={text.length < 20} className="rounded-xl px-8 py-3 font-semibold text-white disabled:opacity-40" style={{ background: PRIMARY, minHeight: 48, minWidth: 120 }} aria-label="Submit reflection">Submit</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onContinue} className="rounded-xl bg-nm-bg-secondary px-6 py-3 text-sm text-nm-text-secondary" style={{ minHeight: 44 }}>Skip</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleSubmit} disabled={text.length < 20} className="rounded-xl px-8 py-3 font-semibold text-white disabled:opacity-40" style={{ background: THEME.primary, minHeight: 48, minWidth: 120 }} aria-label="Submit reflection">Submit</motion.button>
         </div>
-        <p className="text-xs" style={{ color: MUTED }}>{text.length < 20 ? `${20 - text.length} more characters needed` : "Ready to submit!"}</p>
+        <p className="text-xs" style={{ color: THEME.muted }}>{text.length < 20 ? `${20 - text.length} more characters needed` : "Ready to submit!"}</p>
       </div>
-    </StageWrapper>
+    </StageContainer>
   );
 }
 
 /* ---- Main ---- */
 export function SamplingLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-  const advance = useCallback(() => { const next = STAGES[stageIdx + 1]; if (next) { setStage(next); } else { onComplete?.(); } }, [stageIdx, onComplete]);
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="SP-5.5 Sampling" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onContinue={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

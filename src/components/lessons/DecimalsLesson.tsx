@@ -16,49 +16,22 @@ import {
 } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
 
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
+
 /* ------------------------------------------------------------------ */
-/*  Constants                                                          */
+/*  Lesson-specific theme (values not in shared tokens)                */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const TEXT_SEC = "#e2e8f0";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const ELEVATED = "#334155";
-const PRIMARY = "#8b5cf6";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
-const WARNING = "#fbbf24";
-
-const CYAN = "#22d3ee";
-const PURPLE = "#a78bfa";
-const AMBER = "#f59e0b";
-const ROSE = "#fb7185";
-const INDIGO = "#818cf8";
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
+const THEME = {
+  textSecondary: "#e2e8f0",
+  primary: "#8b5cf6",
+  error: "#f87171",
+  amber: "#f59e0b",
+} as const;
 
 interface DecimalsLessonProps {
   onComplete?: () => void;
@@ -68,52 +41,11 @@ interface DecimalsLessonProps {
 /*  Shared sub-components                                              */
 /* ------------------------------------------------------------------ */
 
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  delay = 0,
-  color = PRIMARY,
-}: {
-  onClick: () => void;
-  label?: string;
-  delay?: number;
-  color?: string;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]"
-      style={{ background: color, minHeight: 48 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-function StageWrapper({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex min-h-dvh flex-col items-center justify-center px-4 py-8"
-      style={{ background: BG }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 /** Mini 10x10 grid for illustration purposes (non-interactive) */
 function MiniGrid({
   shadedCount,
   size = 180,
-  fillColor = `${CYAN}80`,
+  fillColor = `${colors.accent.cyan}80`,
   label,
 }: {
   shadedCount: number;
@@ -127,7 +59,7 @@ function MiniGrid({
       {label && (
         <span
           className="font-mono text-lg font-bold tabular-nums"
-          style={{ color: TEXT }}
+          style={{ color: colors.text.primary }}
         >
           {label}
         </span>
@@ -137,7 +69,7 @@ function MiniGrid({
         style={{
           gridTemplateColumns: `repeat(10, ${cellSize}px)`,
           gap: 1,
-          background: ELEVATED,
+          background: colors.bg.surface,
           borderRadius: 4,
           overflow: "hidden",
           width: size + 9,
@@ -154,13 +86,13 @@ function MiniGrid({
             style={{
               width: cellSize,
               height: cellSize,
-              background: i < shadedCount ? fillColor : SURFACE,
+              background: i < shadedCount ? fillColor : colors.bg.secondary,
               borderRadius: 1,
             }}
           />
         ))}
       </div>
-      <span className="text-xs" style={{ color: MUTED }}>
+      <span className="text-xs" style={{ color: colors.text.secondary }}>
         {shadedCount} out of 100
       </span>
     </div>
@@ -171,8 +103,8 @@ function MiniGrid({
 /*  STAGE 1: Hook                                                      */
 /* ================================================================== */
 
-function HookStage({ onContinue }: { onContinue: () => void }) {
-  return <VideoHook src="/videos/DecimalsHook.webm" onComplete={onContinue} />;
+function HookStage({ onComplete }: { onComplete: () => void }) {
+  return <VideoHook src="/videos/DecimalsHook.webm" onComplete={onComplete} />;
 
   const reduced = useReducedMotion();
   const [phase, setPhase] = useState(0);
@@ -214,7 +146,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
   );
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div
         className="relative flex w-full max-w-2xl flex-col items-center justify-center gap-6"
         style={{ minHeight: "70vh" }}
@@ -231,7 +163,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="text-center font-semibold"
               style={{
-                color: TEXT,
+                color: colors.text.primary,
                 fontSize: "clamp(20px, 5vw, 36px)",
                 textShadow: "0 0 20px rgba(129,140,248,0.3)",
               }}
@@ -248,7 +180,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="text-center font-bold tracking-wider"
-              style={{ color: CYAN, fontSize: "clamp(16px, 4vw, 28px)" }}
+              style={{ color: colors.accent.cyan, fontSize: "clamp(16px, 4vw, 28px)" }}
             >
               10 numbers hiding between 0 and 1!
             </motion.p>
@@ -262,7 +194,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="text-center font-bold"
-              style={{ color: PURPLE, fontSize: "clamp(16px, 4vw, 28px)" }}
+              style={{ color: colors.accent.violet, fontSize: "clamp(16px, 4vw, 28px)" }}
             >
               10 more between 0.1 and 0.2! Every gap has 10 numbers...
             </motion.p>
@@ -275,7 +207,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="text-center italic"
-              style={{ color: TEXT, fontSize: "clamp(16px, 4vw, 24px)" }}
+              style={{ color: colors.text.primary, fontSize: "clamp(16px, 4vw, 24px)" }}
             >
               It never ends. Between any two numbers, there are infinitely more.
             </motion.p>
@@ -290,7 +222,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="absolute left-[10%] right-[10%] top-1/2"
-            style={{ height: 2, background: BORDER, transformOrigin: "center" }}
+            style={{ height: 2, background: colors.bg.elevated, transformOrigin: "center" }}
           />
 
           {/* End labels */}
@@ -304,7 +236,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                 style={{
                   left: "10%",
                   transform: "translateX(-50%)",
-                  color: phase >= 4 ? CYAN : TEXT,
+                  color: phase >= 4 ? colors.accent.cyan : colors.text.primary,
                   fontSize:
                     phase >= 4
                       ? "clamp(16px, 4vw, 24px)"
@@ -321,7 +253,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                 style={{
                   right: "10%",
                   transform: "translateX(50%)",
-                  color: phase >= 4 ? CYAN : TEXT,
+                  color: phase >= 4 ? colors.accent.cyan : colors.text.primary,
                   fontSize:
                     phase >= 4
                       ? "clamp(16px, 4vw, 24px)"
@@ -348,11 +280,11 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                 }}
               >
                 <div
-                  style={{ width: 1.5, height: 8, background: CYAN, marginBottom: 4 }}
+                  style={{ width: 1.5, height: 8, background: colors.accent.cyan, marginBottom: 4 }}
                 />
                 <span
                   className="font-mono text-xs font-semibold tabular-nums"
-                  style={{ color: CYAN, fontSize: "clamp(10px, 2.5vw, 14px)" }}
+                  style={{ color: colors.accent.cyan, fontSize: "clamp(10px, 2.5vw, 14px)" }}
                 >
                   {t.label}
                 </span>
@@ -374,11 +306,11 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
                 }}
               >
                 <div
-                  style={{ width: 1, height: 6, background: PURPLE, marginBottom: 4 }}
+                  style={{ width: 1, height: 6, background: colors.accent.violet, marginBottom: 4 }}
                 />
                 <span
                   className="font-mono font-semibold tabular-nums"
-                  style={{ color: PURPLE, fontSize: "clamp(9px, 2vw, 12px)" }}
+                  style={{ color: colors.accent.violet, fontSize: "clamp(9px, 2vw, 12px)" }}
                 >
                   {t.label}
                 </span>
@@ -386,7 +318,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
             ))}
         </div>
 
-        {phase >= 6 && <ContinueButton onClick={onContinue} delay={0.5} />}
+        {phase >= 6 && <ContinueButton onClick={onComplete} delay={0.5} />}
       </div>
 
       {/* Screen-reader description */}
@@ -396,7 +328,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
         and 0.2: 0.11, 0.12, 0.13 and so on. Between any two numbers, there are
         infinitely more.
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -404,7 +336,7 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
 /*  STAGE 2: Spatial Experience                                        */
 /* ================================================================== */
 
-function SpatialStage({ onContinue }: { onContinue: () => void }) {
+function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const [shadedCells, setShadedCells] = useState<Set<number>>(
     () => new Set<number>(),
   );
@@ -478,7 +410,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
   );
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-lg flex-col items-center gap-4">
         {/* Decimal Display */}
         <motion.div
@@ -486,29 +418,29 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center rounded-2xl px-6 py-4"
-          style={{ background: SURFACE }}
+          style={{ background: colors.bg.secondary }}
           aria-live="polite"
         >
           <span
             className="font-mono font-bold tabular-nums"
-            style={{ color: TEXT, fontSize: "clamp(36px, 8vw, 56px)" }}
+            style={{ color: colors.text.primary, fontSize: "clamp(36px, 8vw, 56px)" }}
           >
             {decimalValue.toFixed(2)}
           </span>
           <span className="mt-1 text-sm">
-            <span style={{ color: AMBER }}>{tenthsDigit} tenths</span>
-            <span style={{ color: MUTED }}> + </span>
-            <span style={{ color: ROSE }}>{hundredthsDigit} hundredths</span>
+            <span style={{ color: THEME.amber }}>{tenthsDigit} tenths</span>
+            <span style={{ color: colors.text.secondary }}> + </span>
+            <span style={{ color: colors.accent.rose }}>{hundredthsDigit} hundredths</span>
           </span>
-          <span className="mt-0.5 text-xs" style={{ color: MUTED }}>
+          <span className="mt-0.5 text-xs" style={{ color: colors.text.secondary }}>
             = {Math.round(decimalValue * 100)}/100
           </span>
         </motion.div>
 
         {/* Model Toggle */}
         <div
-          className="flex rounded-xl p-1"
-          style={{ background: BG, border: `1px solid ${ELEVATED}` }}
+          className="flex rounded-xl p-1 bg-nm-bg-primary"
+          style={{ border: `1px solid ${colors.bg.surface}` }}
           role="tablist"
           aria-label="Spatial model selection"
         >
@@ -522,8 +454,8 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
               style={{
                 minWidth: 80,
                 minHeight: 40,
-                background: activeModel === model ? ELEVATED : "transparent",
-                color: activeModel === model ? TEXT : MUTED,
+                background: activeModel === model ? colors.bg.surface : "transparent",
+                color: activeModel === model ? colors.text.primary : colors.text.secondary,
               }}
             >
               {model === "grid" ? "Grid" : "Number Line"}
@@ -545,7 +477,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                   key={`col-${c}`}
                   onClick={() => toggleColumn(c)}
                   className="text-center font-mono text-[10px] font-semibold tabular-nums"
-                  style={{ width: "min(8vw, 36px)", color: AMBER, minHeight: 20 }}
+                  style={{ width: "min(8vw, 36px)", color: THEME.amber, minHeight: 20 }}
                   aria-label={`Toggle column ${c + 1}`}
                 >
                   {c % 2 === 0 ? `0.${c + 1}` : ""}
@@ -559,7 +491,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
               style={{
                 gridTemplateColumns: "repeat(10, min(8vw, 36px))",
                 gap: 1,
-                background: ELEVATED,
+                background: colors.bg.surface,
                 borderRadius: 4,
                 overflow: "hidden",
               }}
@@ -576,14 +508,14 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                         ? { scale: 1, opacity: 0.8 }
                         : { scale: 1, opacity: 1 }
                     }
-                    transition={reduced ? { duration: 0 } : SPRING_POP}
+                    transition={reduced ? { duration: 0 } : springs.pop}
                     role="checkbox"
                     aria-checked={isShaded}
                     aria-label={`Row ${Math.floor(i / 10) + 1}, Column ${(i % 10) + 1}`}
                     style={{
                       width: "min(8vw, 36px)",
                       height: "min(8vw, 36px)",
-                      background: isShaded ? INDIGO : SURFACE,
+                      background: isShaded ? colors.accent.indigo : colors.bg.secondary,
                       borderRadius: 2,
                       border: "none",
                       cursor: "pointer",
@@ -599,8 +531,8 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
               disabled={shadedCount === 0}
               className="mt-2 rounded-lg px-5 py-2 text-sm font-medium transition-colors active:scale-[0.97]"
               style={{
-                background: ELEVATED,
-                color: MUTED,
+                background: colors.bg.surface,
+                color: colors.text.secondary,
                 minHeight: 44,
                 opacity: shadedCount === 0 ? 0.3 : 1,
               }}
@@ -616,7 +548,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   className="text-center text-lg font-semibold"
-                  style={{ color: TEXT }}
+                  style={{ color: colors.text.primary }}
                 >
                   {"That's a whole 1!"}
                 </motion.p>
@@ -634,7 +566,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
           >
             <span
               className="font-mono text-base font-semibold tabular-nums"
-              style={{ color: TEXT }}
+              style={{ color: colors.text.primary }}
             >
               {pointPosition.toFixed(2)}
             </span>
@@ -651,7 +583,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             >
               <div
                 className="absolute left-0 right-0 top-1/2"
-                style={{ height: 2, background: BORDER }}
+                style={{ height: 2, background: colors.bg.elevated }}
               />
 
               {Array.from({ length: 11 }, (_, i) => (
@@ -667,13 +599,13 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                     style={{
                       width: i === 0 || i === 10 ? 2 : 1.5,
                       height: i === 0 || i === 10 ? 12 : 8,
-                      background: i === 0 || i === 10 ? TEXT : CYAN,
+                      background: i === 0 || i === 10 ? colors.text.primary : colors.accent.cyan,
                     }}
                   />
                   <span
                     className="mt-1 font-mono text-xs font-semibold tabular-nums"
                     style={{
-                      color: i === 0 || i === 10 ? TEXT : CYAN,
+                      color: i === 0 || i === 10 ? colors.text.primary : colors.accent.cyan,
                       fontSize: i === 0 || i === 10 ? 16 : 12,
                     }}
                   >
@@ -686,7 +618,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
               <motion.div
                 {...(bindDrag() as Record<string, unknown>)}
                 animate={{ left: `${pointPosition * 100}%` }}
-                transition={SPRING}
+                transition={springs.default}
                 className="absolute top-1/2 cursor-grab active:cursor-grabbing"
                 style={{
                   width: 44,
@@ -704,7 +636,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
                     width: 20,
                     height: 20,
                     borderRadius: "50%",
-                    background: INDIGO,
+                    background: colors.accent.indigo,
                     border: "2px solid #c4b5fd",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
                   }}
@@ -714,9 +646,9 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
           </motion.div>
         )}
 
-        {canContinue && <ContinueButton onClick={onContinue} />}
+        {canContinue && <ContinueButton onClick={onComplete} />}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -724,7 +656,7 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
 /*  STAGE 3: Guided Discovery                                          */
 /* ================================================================== */
 
-function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
+function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   const [prompt, setPrompt] = useState(1);
   const reduced = useReducedMotion();
 
@@ -772,7 +704,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   }, [slots, correctOrder]);
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         <AnimatePresence mode="wait">
           {/* Prompt 1: The Trap */}
@@ -789,11 +721,11 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <div className="flex flex-col items-center">
                   <span
                     className="font-mono font-bold tabular-nums"
-                    style={{ color: TEXT, fontSize: "clamp(36px, 8vw, 56px)" }}
+                    style={{ color: colors.text.primary, fontSize: "clamp(36px, 8vw, 56px)" }}
                   >
                     0.9
                   </span>
-                  <span className="text-xs" style={{ color: MUTED }}>
+                  <span className="text-xs" style={{ color: colors.text.secondary }}>
                     just one digit after the point
                   </span>
                 </div>
@@ -801,9 +733,9 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <motion.span
                   animate={{
                     boxShadow: [
-                      `0 0 0 2px ${WARNING}40`,
-                      `0 0 0 6px ${WARNING}20`,
-                      `0 0 0 2px ${WARNING}40`,
+                      `0 0 0 2px ${colors.functional.warning}40`,
+                      `0 0 0 6px ${colors.functional.warning}20`,
+                      `0 0 0 2px ${colors.functional.warning}40`,
                     ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -811,9 +743,9 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                   style={{
                     width: 40,
                     height: 40,
-                    color: WARNING,
+                    color: colors.functional.warning,
                     fontSize: 24,
-                    border: `2px solid ${WARNING}`,
+                    border: `2px solid ${colors.functional.warning}`,
                   }}
                 >
                   ?
@@ -822,11 +754,11 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <div className="flex flex-col items-center">
                   <span
                     className="font-mono font-bold tabular-nums"
-                    style={{ color: TEXT, fontSize: "clamp(36px, 8vw, 56px)" }}
+                    style={{ color: colors.text.primary, fontSize: "clamp(36px, 8vw, 56px)" }}
                   >
                     0.45
                   </span>
-                  <span className="text-xs" style={{ color: MUTED }}>
+                  <span className="text-xs" style={{ color: colors.text.secondary }}>
                     two digits after the point
                   </span>
                 </div>
@@ -834,10 +766,10 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
 
               <div
                 className="rounded-xl px-5 py-4 text-center leading-relaxed"
-                style={{ background: SURFACE, color: TEXT_SEC, fontSize: 16 }}
+                style={{ background: colors.bg.secondary, color: THEME.textSecondary, fontSize: 16 }}
               >
                 Which is bigger: 0.9 or 0.45? A lot of people{" "}
-                <span className="font-bold" style={{ color: WARNING }}>
+                <span className="font-bold" style={{ color: colors.functional.warning }}>
                   get this wrong
                 </span>
                 . What do YOU think?
@@ -846,7 +778,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
               <ContinueButton
                 onClick={() => setPrompt(2)}
                 label="Hmm, let me think..."
-                color={AMBER}
+                color={THEME.amber}
               />
             </motion.div>
           )}
@@ -865,22 +797,22 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <MiniGrid
                   shadedCount={90}
                   size={Math.min(180, 40 * 4.5)}
-                  fillColor={`${CYAN}80`}
+                  fillColor={`${colors.accent.cyan}80`}
                   label="0.9"
                 />
                 <motion.span
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 2, ...SPRING_POP }}
+                  transition={{ delay: 2, ...springs.pop }}
                   className="text-3xl font-bold"
-                  style={{ color: SUCCESS }}
+                  style={{ color: colors.functional.success }}
                 >
                   {">"}
                 </motion.span>
                 <MiniGrid
                   shadedCount={45}
                   size={Math.min(180, 40 * 4.5)}
-                  fillColor={`${PURPLE}80`}
+                  fillColor={`${colors.accent.violet}80`}
                   label="0.45"
                 />
               </div>
@@ -890,18 +822,18 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 2.5, duration: 0.4 }}
                 className="max-w-md text-center text-sm leading-relaxed"
-                style={{ color: TEXT_SEC }}
+                style={{ color: THEME.textSecondary }}
               >
                 0.9 = 90/100. 0.45 = 45/100. When you compare using the{" "}
                 <span
                   className="rounded px-1.5 py-0.5 font-bold"
-                  style={{ background: `${SUCCESS}20`, color: SUCCESS }}
+                  style={{ background: `${colors.functional.success}20`, color: colors.functional.success }}
                 >
                   SAME denominator
                 </span>
                 , it is obvious: 90 {">"} 45, so 0.9 {">"} 0.45. The number of
                 decimal digits{" "}
-                <span className="font-bold" style={{ color: WARNING }}>
+                <span className="font-bold" style={{ color: colors.functional.warning }}>
                   does not tell you the size
                 </span>
                 !
@@ -928,7 +860,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 3.5, duration: 0.4 }}
                 className="max-w-md text-center text-sm leading-relaxed"
-                style={{ color: TEXT_SEC }}
+                style={{ color: THEME.textSecondary }}
               >
                 0.5 = 0.50 = 0.500.{" "}
                 <strong>Adding zeros AFTER the last decimal digit</strong> does
@@ -955,7 +887,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
             >
               <p
                 className="text-center text-lg font-medium"
-                style={{ color: TEXT }}
+                style={{ color: colors.text.primary }}
               >
                 Now you try: Which is bigger, 0.8 or 0.62?
               </p>
@@ -973,11 +905,11 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     style={{
                       width: 120,
                       minHeight: 56,
-                      background: ELEVATED,
-                      color: TEXT,
+                      background: colors.bg.surface,
+                      color: colors.text.primary,
                       border:
                         p4Answer === val
-                          ? `2px solid ${val === "0.8" && p4Correct ? SUCCESS : ERROR}`
+                          ? `2px solid ${val === "0.8" && p4Correct ? colors.functional.success : THEME.error}`
                           : "2px solid transparent",
                     }}
                     aria-label={`Select ${val}`}
@@ -998,19 +930,19 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                       <MiniGrid
                         shadedCount={80}
                         size={120}
-                        fillColor={`${CYAN}80`}
+                        fillColor={`${colors.accent.cyan}80`}
                         label="0.8"
                       />
                       <MiniGrid
                         shadedCount={62}
                         size={120}
-                        fillColor={`${PURPLE}80`}
+                        fillColor={`${colors.accent.violet}80`}
                         label="0.62"
                       />
                     </div>
                     <p
                       className="max-w-sm text-center text-sm"
-                      style={{ color: SUCCESS }}
+                      style={{ color: colors.functional.success }}
                     >
                       Correct! 0.8 = 80/100 which is greater than 0.62 = 62/100.
                       Think in hundredths to compare!
@@ -1022,7 +954,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="max-w-sm text-center text-sm"
-                    style={{ color: ROSE }}
+                    style={{ color: colors.accent.rose }}
                   >
                     Not quite! Try thinking of both numbers as hundredths: 0.8 =
                     0.80 = 80 hundredths, and 0.62 = 62 hundredths. Now which is
@@ -1052,7 +984,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
             >
               <p
                 className="text-center text-lg font-medium"
-                style={{ color: TEXT }}
+                style={{ color: colors.text.primary }}
               >
                 Order from smallest to largest: 0.7, 0.07, 0.71
               </p>
@@ -1080,11 +1012,11 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                       style={{
                         minWidth: 72,
                         minHeight: 56,
-                        background: ELEVATED,
-                        color: TEXT,
+                        background: colors.bg.surface,
+                        color: colors.text.primary,
                         opacity: isPlaced ? 0.3 : 1,
                         border: isSelected
-                          ? `2px solid ${INDIGO}`
+                          ? `2px solid ${colors.accent.indigo}`
                           : "2px solid transparent",
                       }}
                       aria-label={`Chip ${chip}${isSelected ? ", selected" : ""}${isPlaced ? ", placed" : ""}`}
@@ -1116,7 +1048,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                       <span
                         className="text-xs"
                         style={{
-                          color: slotLabel ? MUTED : "transparent",
+                          color: slotLabel ? colors.text.secondary : "transparent",
                         }}
                       >
                         {slotLabel || "."}
@@ -1128,15 +1060,15 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                           minHeight: 56,
                           border: `2px ${placed ? "solid" : "dashed"} ${
                             isCorrectSlot
-                              ? SUCCESS
+                              ? colors.functional.success
                               : isWrongSlot
-                                ? ERROR
+                                ? THEME.error
                                 : selectedChip
-                                  ? INDIGO
-                                  : BORDER
+                                  ? colors.accent.indigo
+                                  : colors.bg.elevated
                           }`,
-                          background: placed ? ELEVATED : "transparent",
-                          color: TEXT,
+                          background: placed ? colors.bg.surface : "transparent",
+                          color: colors.text.primary,
                         }}
                       >
                         {placed ?? ""}
@@ -1147,7 +1079,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           className="text-xs"
-                          style={{ color: MUTED }}
+                          style={{ color: colors.text.secondary }}
                         >
                           {placed === "0.07"
                             ? "7/100"
@@ -1166,7 +1098,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 <button
                   onClick={checkP5}
                   className="rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-                  style={{ background: PRIMARY, minHeight: 48 }}
+                  style={{ background: THEME.primary, minHeight: 48 }}
                 >
                   Check Order
                 </button>
@@ -1179,7 +1111,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="max-w-sm text-center text-sm"
-                    style={{ color: ROSE }}
+                    style={{ color: colors.accent.rose }}
                   >
                     Try converting each number to hundredths first. How many
                     hundredths is 0.07? How many is 0.7?
@@ -1195,7 +1127,7 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                 >
                   <p
                     className="max-w-md text-center text-sm"
-                    style={{ color: SUCCESS }}
+                    style={{ color: colors.functional.success }}
                   >
                     0.07 has only 7 hundredths. 0.7 has 70 hundredths. 0.71 has
                     71 hundredths. Converting to the same unit makes comparison
@@ -1205,9 +1137,9 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                   <div
                     className="rounded-lg px-4 py-3 text-sm"
                     style={{
-                      background: `${PRIMARY}15`,
-                      borderLeft: `4px solid ${PURPLE}`,
-                      color: TEXT_SEC,
+                      background: `${THEME.primary}15`,
+                      borderLeft: `4px solid ${colors.accent.violet}`,
+                      color: THEME.textSecondary,
                     }}
                   >
                     <strong>Key Insight:</strong> To compare decimals, think in
@@ -1215,14 +1147,14 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
                     decimal point does NOT tell you which number is bigger.
                   </div>
 
-                  <ContinueButton onClick={onContinue} />
+                  <ContinueButton onClick={onComplete} />
                 </motion.div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -1249,7 +1181,7 @@ function TrailingZerosDemo({ reduced }: { reduced: boolean | null }) {
     <div className="flex flex-col items-center gap-4">
       <span
         className="font-mono font-bold tabular-nums"
-        style={{ color: TEXT, fontSize: "clamp(32px, 7vw, 48px)" }}
+        style={{ color: colors.text.primary, fontSize: "clamp(32px, 7vw, 48px)" }}
       >
         {displayValue}
       </span>
@@ -1257,7 +1189,7 @@ function TrailingZerosDemo({ reduced }: { reduced: boolean | null }) {
       <MiniGrid
         shadedCount={50}
         size={Math.min(220, 50 * 4.4)}
-        fillColor={`${CYAN}80`}
+        fillColor={`${colors.accent.cyan}80`}
       />
 
       {zeroCount >= 2 && (
@@ -1266,7 +1198,7 @@ function TrailingZerosDemo({ reduced }: { reduced: boolean | null }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="text-center text-lg font-semibold"
-          style={{ color: SUCCESS }}
+          style={{ color: colors.functional.success }}
         >
           Same amount shaded. Same value.
         </motion.p>
@@ -1279,7 +1211,7 @@ function TrailingZerosDemo({ reduced }: { reduced: boolean | null }) {
 /*  STAGE 4: Symbol Bridge                                             */
 /* ================================================================== */
 
-function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
+function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
   const reduced = useReducedMotion();
   const [step, setStep] = useState(0);
 
@@ -1299,29 +1231,29 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   }, [reduced]);
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         {/* Displayed value */}
         <span
           className="font-mono font-bold tabular-nums"
-          style={{ color: TEXT, fontSize: "clamp(36px, 8vw, 48px)" }}
+          style={{ color: colors.text.primary, fontSize: "clamp(36px, 8vw, 48px)" }}
         >
           <span style={{ opacity: 0.6 }}>0</span>
           <span>.</span>
           <span
             style={{
-              color: AMBER,
+              color: THEME.amber,
               textDecoration: step >= 1 ? "underline" : "none",
-              textDecorationColor: AMBER,
+              textDecorationColor: THEME.amber,
             }}
           >
             3
           </span>
           <span
             style={{
-              color: ROSE,
+              color: colors.accent.rose,
               textDecoration: step >= 2 ? "underline" : "none",
-              textDecorationColor: ROSE,
+              textDecorationColor: colors.accent.rose,
             }}
           >
             5
@@ -1336,7 +1268,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               style={{
                 gridTemplateColumns: "repeat(10, 20px)",
                 gap: 1,
-                background: ELEVATED,
+                background: colors.bg.surface,
                 borderRadius: 4,
                 overflow: "hidden",
               }}
@@ -1354,10 +1286,10 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                       width: 20,
                       height: 20,
                       background: isTenthsCol
-                        ? `${AMBER}80`
+                        ? `${THEME.amber}80`
                         : isHundredthsCell
-                          ? `${ROSE}80`
-                          : SURFACE,
+                          ? `${colors.accent.rose}80`
+                          : colors.bg.secondary,
                       borderRadius: 1,
                     }}
                   />
@@ -1374,7 +1306,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="text-sm"
-                style={{ color: TEXT, opacity: 0.6 }}
+                style={{ color: colors.text.primary, opacity: 0.6 }}
               >
                 0 ones
               </motion.p>
@@ -1389,14 +1321,14 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               >
                 <span
                   className="font-mono text-sm font-semibold"
-                  style={{ color: AMBER }}
+                  style={{ color: THEME.amber }}
                   aria-label="3 times one-tenth equals three-tenths equals 0.3"
                 >
                   {`3 \u00D7 1/10 = 3/10 = 0.3`}
                 </span>
                 <span
                   className="text-xs italic"
-                  style={{ color: AMBER, opacity: 0.7 }}
+                  style={{ color: THEME.amber, opacity: 0.7 }}
                 >
                   Tenths place: first digit right of the point
                 </span>
@@ -1412,14 +1344,14 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
               >
                 <span
                   className="font-mono text-sm font-semibold"
-                  style={{ color: ROSE }}
+                  style={{ color: colors.accent.rose }}
                   aria-label="5 times one-hundredth equals five-hundredths equals 0.05"
                 >
                   {`5 \u00D7 1/100 = 5/100 = 0.05`}
                 </span>
                 <span
                   className="text-xs italic"
-                  style={{ color: ROSE, opacity: 0.7 }}
+                  style={{ color: colors.accent.rose, opacity: 0.7 }}
                 >
                   Hundredths place: second digit right of the point
                 </span>
@@ -1432,14 +1364,14 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="flex flex-col gap-1 border-t pt-2"
-                style={{ borderColor: BORDER }}
+                style={{ borderColor: colors.bg.elevated }}
               >
                 <span className="font-mono text-sm font-semibold">
-                  <span style={{ color: TEXT }}>0.35 = </span>
-                  <span style={{ color: AMBER }}>{`3 \u00D7 1/10`}</span>
-                  <span style={{ color: TEXT }}>{" + "}</span>
-                  <span style={{ color: ROSE }}>{`5 \u00D7 1/100`}</span>
-                  <span style={{ color: TEXT }}>{" = 35/100"}</span>
+                  <span style={{ color: colors.text.primary }}>0.35 = </span>
+                  <span style={{ color: THEME.amber }}>{`3 \u00D7 1/10`}</span>
+                  <span style={{ color: colors.text.primary }}>{" + "}</span>
+                  <span style={{ color: colors.accent.rose }}>{`5 \u00D7 1/100`}</span>
+                  <span style={{ color: colors.text.primary }}>{" = 35/100"}</span>
                 </span>
               </motion.div>
             )}
@@ -1450,7 +1382,7 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="mt-2 text-xs italic leading-relaxed"
-                style={{ color: TEXT_SEC }}
+                style={{ color: THEME.textSecondary }}
               >
                 Each place is 1/10 of the place to its left — the same
                 {` \u00D710 pattern from place value, but going RIGHT!`}
@@ -1464,21 +1396,21 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="mt-2 flex flex-wrap items-center gap-2 text-xs"
               >
-                <span style={{ color: TEXT }}>Ones</span>
-                <span style={{ color: MUTED }}>{`\u00F710`}</span>
-                <span style={{ color: AMBER }}>Tenths</span>
-                <span style={{ color: MUTED }}>{`\u00F710`}</span>
-                <span style={{ color: ROSE }}>Hundredths</span>
-                <span style={{ color: MUTED }}>{`\u00F710`}</span>
-                <span style={{ color: PURPLE }}>Thousandths</span>
+                <span style={{ color: colors.text.primary }}>Ones</span>
+                <span style={{ color: colors.text.secondary }}>{`\u00F710`}</span>
+                <span style={{ color: THEME.amber }}>Tenths</span>
+                <span style={{ color: colors.text.secondary }}>{`\u00F710`}</span>
+                <span style={{ color: colors.accent.rose }}>Hundredths</span>
+                <span style={{ color: colors.text.secondary }}>{`\u00F710`}</span>
+                <span style={{ color: colors.accent.violet }}>Thousandths</span>
               </motion.div>
             )}
           </div>
         </div>
 
-        {step >= 5 && <ContinueButton onClick={onContinue} delay={1} />}
+        {step >= 5 && <ContinueButton onClick={onComplete} delay={1} />}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -1493,12 +1425,12 @@ interface ScenarioCard {
   iconColor: string;
 }
 
-function RealWorldStage({ onContinue }: { onContinue: () => void }) {
+function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   const cards: ScenarioCard[] = useMemo(
     () => [
       {
         title: "Every Hundredth Counts",
-        iconColor: CYAN,
+        iconColor: colors.accent.cyan,
         iconPath: (
           <circle
             cx="20"
@@ -1512,17 +1444,17 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         body: (
           <>
             {"Usain Bolt\u2019s world record 100m sprint: "}
-            <strong style={{ color: TEXT }}>9.58</strong> seconds. The silver
-            medalist ran <strong style={{ color: TEXT }}>9.69</strong> seconds.
+            <strong style={{ color: colors.text.primary }}>9.58</strong> seconds. The silver
+            medalist ran <strong style={{ color: colors.text.primary }}>9.69</strong> seconds.
             The difference? Just{" "}
-            <strong style={{ color: SUCCESS }}>0.11</strong> seconds — eleven
+            <strong style={{ color: colors.functional.success }}>0.11</strong> seconds — eleven
             hundredths of a second!
           </>
         ),
       },
       {
         title: "Dollars and Cents ARE Decimals",
-        iconColor: SUCCESS,
+        iconColor: colors.functional.success,
         iconPath: (
           <>
             <circle
@@ -1547,17 +1479,17 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         ),
         body: (
           <>
-            When you see <strong style={{ color: TEXT }}>$3.49</strong>, you are
+            When you see <strong style={{ color: colors.text.primary }}>$3.49</strong>, you are
             reading a decimal! The{" "}
-            <span style={{ color: TEXT }}>3</span> is 3 whole dollars. The{" "}
-            <span style={{ color: AMBER }}>4</span> is 4 tenths (40 cents). The{" "}
-            <span style={{ color: ROSE }}>9</span> is 9 hundredths (9 cents).
+            <span style={{ color: colors.text.primary }}>3</span> is 3 whole dollars. The{" "}
+            <span style={{ color: THEME.amber }}>4</span> is 4 tenths (40 cents). The{" "}
+            <span style={{ color: colors.accent.rose }}>9</span> is 9 hundredths (9 cents).
           </>
         ),
       },
       {
         title: "Tenths That Matter",
-        iconColor: ERROR,
+        iconColor: THEME.error,
         iconPath: (
           <rect
             x="16"
@@ -1573,10 +1505,10 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         body: (
           <>
             Normal body temperature is{" "}
-            <strong style={{ color: TEXT }}>{`98.6\u00B0F`}</strong>. A fever
+            <strong style={{ color: colors.text.primary }}>{`98.6\u00B0F`}</strong>. A fever
             starts at{" "}
-            <strong style={{ color: TEXT }}>{`100.4\u00B0F`}</strong>. That is
-            only a <strong style={{ color: AMBER }}>1.8</strong> degree
+            <strong style={{ color: colors.text.primary }}>{`100.4\u00B0F`}</strong>. That is
+            only a <strong style={{ color: THEME.amber }}>1.8</strong> degree
             difference! Doctors use tenths because whole numbers are not precise
             enough.
           </>
@@ -1584,7 +1516,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
       },
       {
         title: "Ratings Get Real",
-        iconColor: WARNING,
+        iconColor: colors.functional.warning,
         iconPath: (
           <polygon
             points="20,4 24,14 35,14 26,21 29,32 20,25 11,32 14,21 5,14 16,14"
@@ -1596,8 +1528,8 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         body: (
           <>
             Your favorite game has a{" "}
-            <strong style={{ color: TEXT }}>4.7</strong> star rating while
-            another has <strong style={{ color: TEXT }}>4.65</strong> stars.
+            <strong style={{ color: colors.text.primary }}>4.7</strong> star rating while
+            another has <strong style={{ color: colors.text.primary }}>4.65</strong> stars.
             Which is better? 4.7 = 4.70, and 4.70 {">"} 4.65. The trailing zero
             trick makes it clear!
           </>
@@ -1608,11 +1540,11 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   );
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-xl flex-col items-center gap-4">
         <h2
           className="mb-2 text-center text-xl font-semibold"
-          style={{ color: TEXT }}
+          style={{ color: colors.text.primary }}
         >
           Decimals Are Everywhere
         </h2>
@@ -1624,7 +1556,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, duration: 0.4, ease: "easeOut" }}
             className="flex w-full gap-4 rounded-2xl px-5 py-4"
-            style={{ background: SURFACE }}
+            style={{ background: colors.bg.secondary }}
             role="article"
           >
             <svg
@@ -1637,12 +1569,12 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
               {card.iconPath}
             </svg>
             <div className="flex flex-col gap-1">
-              <span className="text-base font-bold" style={{ color: TEXT }}>
+              <span className="text-base font-bold" style={{ color: colors.text.primary }}>
                 {card.title}
               </span>
               <span
                 className="text-sm leading-relaxed"
-                style={{ color: TEXT_SEC }}
+                style={{ color: THEME.textSecondary }}
               >
                 {card.body}
               </span>
@@ -1650,9 +1582,9 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
           </motion.article>
         ))}
 
-        <ContinueButton onClick={onContinue} delay={0.8} />
+        <ContinueButton onClick={onComplete} delay={0.8} />
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -1680,7 +1612,7 @@ interface PracticeProblemRenderProps {
   onCheck: () => void;
 }
 
-function PracticeStage({ onContinue }: { onContinue: () => void }) {
+function PracticeStage({ onComplete }: { onComplete: () => void }) {
   const [currentProblem, setCurrentProblem] = useState(0);
   const [answer, setAnswer] = useState<PracticeAnswer>(null);
   const [checked, setChecked] = useState(false);
@@ -1705,13 +1637,13 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
               className="font-mono font-bold tabular-nums"
               style={{ fontSize: "clamp(36px, 8vw, 48px)" }}
             >
-              <span style={{ color: TEXT, opacity: 0.6 }}>0</span>
-              <span style={{ color: TEXT }}>.</span>
-              <span style={{ color: AMBER }}>4</span>
+              <span style={{ color: colors.text.primary, opacity: 0.6 }}>0</span>
+              <span style={{ color: colors.text.primary }}>.</span>
+              <span style={{ color: THEME.amber }}>4</span>
               <span
                 style={{
-                  color: ROSE,
-                  boxShadow: `0 0 0 4px ${ROSE}40`,
+                  color: colors.accent.rose,
+                  boxShadow: `0 0 0 4px ${colors.accent.rose}40`,
                   borderRadius: 4,
                   padding: "0 4px",
                 }}
@@ -1752,7 +1684,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           "Careful! The whole grid equals 1.0, not 10. So 63 cells out of 100 = 63/100 = 0.63.",
         render: ({ answer: ans, setAnswer: setA, checked: chk, correct: cor }: PracticeProblemRenderProps) => (
           <div className="flex flex-col items-center gap-4">
-            <MiniGrid shadedCount={63} size={180} fillColor={`${CYAN}80`} />
+            <MiniGrid shadedCount={63} size={180} fillColor={`${colors.accent.cyan}80`} />
             <div
               className="flex flex-col gap-2"
               role="radiogroup"
@@ -1788,12 +1720,12 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           <div className="flex flex-col items-center gap-4">
             <span
               className="font-mono text-4xl font-bold"
-              style={{ color: AMBER }}
+              style={{ color: THEME.amber }}
               aria-label="Three tenths"
             >
               3/10
             </span>
-            <MiniGrid shadedCount={30} size={140} fillColor={`${AMBER}80`} />
+            <MiniGrid shadedCount={30} size={140} fillColor={`${THEME.amber}80`} />
             <div
               className="flex flex-wrap justify-center gap-2"
               role="radiogroup"
@@ -1829,29 +1761,29 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
             <div className="flex items-center gap-4">
               <span
                 className="font-mono text-3xl font-bold tabular-nums"
-                style={{ color: TEXT }}
+                style={{ color: colors.text.primary }}
               >
                 0.6
               </span>
               <span
                 className="text-2xl font-bold"
-                style={{ color: chk && cor ? SUCCESS : MUTED }}
+                style={{ color: chk && cor ? colors.functional.success : colors.text.secondary }}
               >
                 {chk && cor ? ">" : "?"}
               </span>
               <span
                 className="font-mono text-3xl font-bold tabular-nums"
-                style={{ color: TEXT }}
+                style={{ color: colors.text.primary }}
               >
                 0.52
               </span>
             </div>
             <div className="flex gap-4">
-              <MiniGrid shadedCount={60} size={120} fillColor={`${CYAN}80`} />
+              <MiniGrid shadedCount={60} size={120} fillColor={`${colors.accent.cyan}80`} />
               <MiniGrid
                 shadedCount={52}
                 size={120}
-                fillColor={`${PURPLE}80`}
+                fillColor={`${colors.accent.violet}80`}
               />
             </div>
             <div
@@ -2011,7 +1943,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
   const isLastProblem = currentProblem === problems.length - 1;
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-xl flex-col items-center gap-4">
         {/* Progress dots */}
         <div className="flex items-center gap-1.5">
@@ -2025,13 +1957,13 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                 background:
                   i < results.length
                     ? results[i]
-                      ? SUCCESS
-                      : ERROR
+                      ? colors.functional.success
+                      : THEME.error
                     : i === currentProblem
-                      ? PRIMARY
-                      : ELEVATED,
+                      ? THEME.primary
+                      : colors.bg.surface,
                 border:
-                  i === currentProblem ? `2px solid ${PRIMARY}` : "none",
+                  i === currentProblem ? `2px solid ${THEME.primary}` : "none",
               }}
             />
           ))}
@@ -2046,15 +1978,15 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
             exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.3 }}
             className="flex w-full flex-col gap-4 rounded-2xl px-5 py-5"
-            style={{ background: SURFACE }}
+            style={{ background: colors.bg.secondary }}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs" style={{ color: MUTED }}>
+              <span className="text-xs" style={{ color: colors.text.secondary }}>
                 Problem {currentProblem + 1} of {problems.length}
               </span>
               <span
                 className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: `${PRIMARY}20`, color: PURPLE }}
+                style={{ background: `${THEME.primary}20`, color: colors.accent.violet }}
               >
                 {problem.layer}
               </span>
@@ -2062,7 +1994,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
 
             <p
               className="text-center text-base font-medium leading-relaxed"
-              style={{ color: TEXT }}
+              style={{ color: colors.text.primary }}
             >
               {problem.prompt}
             </p>
@@ -2080,7 +2012,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
               <button
                 onClick={handleCheck}
                 className="mx-auto mt-2 rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-                style={{ background: PRIMARY, minHeight: 48 }}
+                style={{ background: THEME.primary, minHeight: 48 }}
               >
                 Check
               </button>
@@ -2096,7 +2028,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
               >
                 <p
                   className="text-center text-sm leading-relaxed"
-                  style={{ color: correct ? SUCCESS : ROSE }}
+                  style={{ color: correct ? colors.functional.success : colors.accent.rose }}
                 >
                   {correct
                     ? problem.correctFeedback
@@ -2105,9 +2037,9 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
 
                 {correct && (
                   <button
-                    onClick={isLastProblem ? onContinue : handleNext}
+                    onClick={isLastProblem ? onComplete : handleNext}
                     className="mt-2 rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-                    style={{ background: PRIMARY, minHeight: 48 }}
+                    style={{ background: THEME.primary, minHeight: 48 }}
                   >
                     {isLastProblem ? "Continue" : "Next \u2192"}
                   </button>
@@ -2120,7 +2052,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
                       setAnswer(null);
                     }}
                     className="mx-auto mt-1 text-sm underline"
-                    style={{ color: MUTED, minHeight: 44 }}
+                    style={{ color: colors.text.secondary, minHeight: 44 }}
                   >
                     Try again
                   </button>
@@ -2130,7 +2062,7 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
           </motion.div>
         </AnimatePresence>
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -2155,6 +2087,19 @@ function McButton({
   wide?: boolean;
   mono?: boolean;
 }) {
+  let bg: string = colors.bg.surface;
+  if (correct) bg = `${colors.functional.success}15`;
+  else if (wrong) bg = `${THEME.error}15`;
+
+  let textColor: string = colors.text.primary;
+  if (correct) textColor = colors.functional.success;
+  else if (wrong) textColor = THEME.error;
+
+  let borderColor: string = "transparent";
+  if (correct) borderColor = colors.functional.success;
+  else if (wrong) borderColor = THEME.error;
+  else if (selected) borderColor = colors.accent.indigo;
+
   return (
     <button
       role="radio"
@@ -2170,19 +2115,9 @@ function McButton({
         padding: "12px 16px",
         fontSize: wide ? 14 : 16,
         fontWeight: 600,
-        background: correct
-          ? `${SUCCESS}15`
-          : wrong
-            ? `${ERROR}15`
-            : ELEVATED,
-        color: correct ? SUCCESS : wrong ? ERROR : TEXT,
-        border: correct
-          ? `2px solid ${SUCCESS}`
-          : wrong
-            ? `2px solid ${ERROR}`
-            : selected
-              ? `2px solid ${INDIGO}`
-              : "2px solid transparent",
+        background: bg,
+        color: textColor,
+        border: `2px solid ${borderColor}`,
         opacity: disabled && !correct && !wrong ? 0.5 : 1,
       }}
     >
@@ -2227,7 +2162,7 @@ function NumberLineProblem({
     <div className="flex w-full flex-col items-center gap-4">
       <span
         className="font-mono text-base font-semibold tabular-nums"
-        style={{ color: TEXT }}
+        style={{ color: colors.text.primary }}
       >
         {pos.toFixed(2)}
       </span>
@@ -2244,7 +2179,7 @@ function NumberLineProblem({
       >
         <div
           className="absolute left-0 right-0 top-1/2"
-          style={{ height: 2, background: BORDER }}
+          style={{ height: 2, background: colors.bg.elevated }}
         />
 
         {Array.from({ length: 11 }, (_, i) => (
@@ -2260,13 +2195,13 @@ function NumberLineProblem({
               style={{
                 width: i === 0 || i === 5 || i === 10 ? 2 : 1.5,
                 height: i === 0 || i === 5 || i === 10 ? 12 : 8,
-                background: i === 0 || i === 5 || i === 10 ? TEXT : CYAN,
+                background: i === 0 || i === 5 || i === 10 ? colors.text.primary : colors.accent.cyan,
               }}
             />
             <span
               className="mt-1 font-mono text-xs tabular-nums"
               style={{
-                color: i === 0 || i === 5 || i === 10 ? TEXT : CYAN,
+                color: i === 0 || i === 5 || i === 10 ? colors.text.primary : colors.accent.cyan,
                 fontSize: 12,
               }}
             >
@@ -2286,7 +2221,7 @@ function NumberLineProblem({
               marginLeft: -8,
               marginTop: -8,
               borderRadius: "50%",
-              border: `2px dashed ${SUCCESS}`,
+              border: `2px dashed ${colors.functional.success}`,
               opacity: 0.6,
             }}
           />
@@ -2296,7 +2231,7 @@ function NumberLineProblem({
         <motion.div
           {...(checked ? {} : (bindDrag() as Record<string, unknown>))}
           animate={{ left: `${pos * 100}%` }}
-          transition={SPRING}
+          transition={springs.default}
           className="absolute top-1/2 cursor-grab active:cursor-grabbing"
           style={{
             width: 44,
@@ -2316,10 +2251,10 @@ function NumberLineProblem({
               borderRadius: "50%",
               background: checked
                 ? correct
-                  ? SUCCESS
-                  : ERROR
-                : INDIGO,
-              border: `2px solid ${checked ? (correct ? SUCCESS : ERROR) : "#c4b5fd"}`,
+                  ? colors.functional.success
+                  : THEME.error
+                : colors.accent.indigo,
+              border: `2px solid ${checked ? (correct ? colors.functional.success : THEME.error) : "#c4b5fd"}`,
               boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
             }}
           />
@@ -2330,7 +2265,7 @@ function NumberLineProblem({
         <button
           onClick={handleCheck}
           className="rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-          style={{ background: PRIMARY, minHeight: 48 }}
+          style={{ background: THEME.primary, minHeight: 48 }}
         >
           Check
         </button>
@@ -2407,11 +2342,11 @@ function OrderProblem({
                 minWidth: 72,
                 minHeight: 48,
                 padding: "8px 12px",
-                background: ELEVATED,
-                color: TEXT,
+                background: colors.bg.surface,
+                color: colors.text.primary,
                 opacity: isPlaced ? 0.3 : 1,
                 border: isSelected
-                  ? `2px solid ${INDIGO}`
+                  ? `2px solid ${colors.accent.indigo}`
                   : "2px solid transparent",
               }}
               aria-label={`${item}${isSelected ? ", selected" : ""}${isPlaced ? ", placed" : ""}`}
@@ -2436,7 +2371,7 @@ function OrderProblem({
               className="flex flex-col items-center gap-0.5"
               aria-label={`Slot ${idx + 1}, ${slotLabels[idx] ?? ""}${placed ? `, contains ${placed}` : ", empty"}`}
             >
-              <span className="text-[10px]" style={{ color: MUTED }}>
+              <span className="text-[10px]" style={{ color: colors.text.secondary }}>
                 {slotLabels[idx] ?? ""}
               </span>
               <div
@@ -2446,15 +2381,15 @@ function OrderProblem({
                   minHeight: 48,
                   border: `2px ${placed ? "solid" : "dashed"} ${
                     isCorrectSlot
-                      ? SUCCESS
+                      ? colors.functional.success
                       : isWrongSlot
-                        ? ERROR
+                        ? THEME.error
                         : selectedChip
-                          ? INDIGO
-                          : BORDER
+                          ? colors.accent.indigo
+                          : colors.bg.elevated
                   }`,
-                  background: placed ? ELEVATED : "transparent",
-                  color: TEXT,
+                  background: placed ? colors.bg.surface : "transparent",
+                  color: colors.text.primary,
                 }}
               >
                 {placed ?? ""}
@@ -2508,7 +2443,7 @@ function GridShadingProblem({
     <div className="flex flex-col items-center gap-3">
       <span
         className="font-mono text-2xl font-bold tabular-nums"
-        style={{ color: TEXT }}
+        style={{ color: colors.text.primary }}
       >
         Target: 0.0{targetCount}
       </span>
@@ -2518,7 +2453,7 @@ function GridShadingProblem({
         style={{
           gridTemplateColumns: "repeat(10, 18px)",
           gap: 1,
-          background: ELEVATED,
+          background: colors.bg.surface,
           borderRadius: 4,
           overflow: "hidden",
         }}
@@ -2539,10 +2474,10 @@ function GridShadingProblem({
                 background: isShaded
                   ? checked
                     ? correct
-                      ? SUCCESS
-                      : ERROR
-                    : INDIGO
-                  : SURFACE,
+                      ? colors.functional.success
+                      : THEME.error
+                    : colors.accent.indigo
+                  : colors.bg.secondary,
                 borderRadius: 1,
                 border: "none",
                 cursor: checked ? "default" : "pointer",
@@ -2552,7 +2487,7 @@ function GridShadingProblem({
         })}
       </div>
 
-      <span className="text-xs" style={{ color: MUTED }}>
+      <span className="text-xs" style={{ color: colors.text.secondary }}>
         {shadedCells.size} cells shaded
       </span>
 
@@ -2562,7 +2497,7 @@ function GridShadingProblem({
           disabled={shadedCells.size === 0}
           className="rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
           style={{
-            background: PRIMARY,
+            background: THEME.primary,
             minHeight: 48,
             opacity: shadedCells.size === 0 ? 0.4 : 1,
           }}
@@ -2635,19 +2570,18 @@ function TrueFalseProblem({
         return (
           <div
             key={stmt.text}
-            className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+            className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-nm-bg-primary"
             style={{
-              background: BG,
               border: `1px solid ${
                 isCorrectToggle
-                  ? SUCCESS
+                  ? colors.functional.success
                   : isWrongToggle
-                    ? ERROR
-                    : BORDER
+                    ? THEME.error
+                    : colors.bg.elevated
               }`,
             }}
           >
-            <span className="text-sm" style={{ color: TEXT_SEC }}>
+            <span className="text-sm" style={{ color: THEME.textSecondary }}>
               {stmt.text}
             </span>
             <div className="flex gap-1">
@@ -2665,26 +2599,26 @@ function TrueFalseProblem({
                     toggle === true
                       ? checked
                         ? stmt.correct
-                          ? `${SUCCESS}20`
-                          : `${ERROR}20`
-                        : `${SUCCESS}20`
-                      : ELEVATED,
+                          ? `${colors.functional.success}20`
+                          : `${THEME.error}20`
+                        : `${colors.functional.success}20`
+                      : colors.bg.surface,
                   color:
                     toggle === true
                       ? checked
                         ? stmt.correct
-                          ? SUCCESS
-                          : ERROR
-                        : SUCCESS
-                      : MUTED,
+                          ? colors.functional.success
+                          : THEME.error
+                        : colors.functional.success
+                      : colors.text.secondary,
                   border:
                     toggle === true
                       ? `1px solid ${
                           checked
                             ? stmt.correct
-                              ? SUCCESS
-                              : ERROR
-                            : SUCCESS
+                              ? colors.functional.success
+                              : THEME.error
+                            : colors.functional.success
                         }`
                       : "1px solid transparent",
                 }}
@@ -2705,26 +2639,26 @@ function TrueFalseProblem({
                     toggle === false
                       ? checked
                         ? !stmt.correct
-                          ? `${SUCCESS}20`
-                          : `${ERROR}20`
-                        : `${ERROR}20`
-                      : ELEVATED,
+                          ? `${colors.functional.success}20`
+                          : `${THEME.error}20`
+                        : `${THEME.error}20`
+                      : colors.bg.surface,
                   color:
                     toggle === false
                       ? checked
                         ? !stmt.correct
-                          ? SUCCESS
-                          : ERROR
-                        : ERROR
-                      : MUTED,
+                          ? colors.functional.success
+                          : THEME.error
+                        : THEME.error
+                      : colors.text.secondary,
                   border:
                     toggle === false
                       ? `1px solid ${
                           checked
                             ? !stmt.correct
-                              ? SUCCESS
-                              : ERROR
-                            : ERROR
+                              ? colors.functional.success
+                              : THEME.error
+                            : THEME.error
                         }`
                       : "1px solid transparent",
                 }}
@@ -2749,7 +2683,7 @@ function TrueFalseProblem({
               <p
                 key={fb}
                 className="text-xs leading-relaxed"
-                style={{ color: isCorrectToggle ? SUCCESS : TEXT_SEC }}
+                style={{ color: isCorrectToggle ? colors.functional.success : THEME.textSecondary }}
               >
                 {fb}
               </p>
@@ -2762,7 +2696,7 @@ function TrueFalseProblem({
         <button
           onClick={onCheck}
           className="mx-auto rounded-xl px-6 py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
-          style={{ background: PRIMARY, minHeight: 48 }}
+          style={{ background: THEME.primary, minHeight: 48 }}
         >
           Check All
         </button>
@@ -2791,20 +2725,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const showCompletion = submitted || skipped;
 
   return (
-    <StageWrapper>
+    <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-xl flex-col items-center gap-6">
         {!showCompletion && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex w-full flex-col gap-4 rounded-2xl px-5 py-5"
-            style={{ background: SURFACE }}
+            style={{ background: colors.bg.secondary }}
           >
             <span
               className="text-xs font-semibold uppercase tracking-wider"
               style={{
-                color: PURPLE,
-                background: `${PRIMARY}15`,
+                color: colors.accent.violet,
+                background: `${THEME.primary}15`,
                 padding: "4px 10px",
                 borderRadius: 12,
                 alignSelf: "flex-start",
@@ -2816,7 +2750,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <label
               htmlFor="reflection-textarea"
               className="text-lg font-medium leading-relaxed"
-              style={{ color: TEXT }}
+              style={{ color: colors.text.primary }}
             >
               Your friend says 0.45 is bigger than 0.9 &quot;because 45 is
               bigger than 9.&quot; How would you explain why they are wrong?
@@ -2827,19 +2761,19 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               <MiniGrid
                 shadedCount={90}
                 size={100}
-                fillColor={`${CYAN}80`}
+                fillColor={`${colors.accent.cyan}80`}
                 label="0.9"
               />
               <span
                 className="self-center text-2xl font-bold"
-                style={{ color: SUCCESS }}
+                style={{ color: colors.functional.success }}
               >
                 {">"}
               </span>
               <MiniGrid
                 shadedCount={45}
                 size={100}
-                fillColor={`${PURPLE}80`}
+                fillColor={`${colors.accent.violet}80`}
                 label="0.45"
               />
             </div>
@@ -2850,11 +2784,10 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="I would tell my friend that..."
-                className="w-full resize-none rounded-xl p-4 text-base leading-relaxed"
+                className="w-full resize-none rounded-xl p-4 text-base leading-relaxed bg-nm-bg-primary"
                 style={{
-                  background: BG,
-                  color: TEXT_SEC,
-                  border: `1px solid ${BORDER}`,
+                  color: THEME.textSecondary,
+                  border: `1px solid ${colors.bg.elevated}`,
                   minHeight: 120,
                   maxHeight: 240,
                 }}
@@ -2862,7 +2795,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               />
               <span
                 className="absolute bottom-2 right-3 text-xs"
-                style={{ color: canSubmit ? SUCCESS : MUTED }}
+                style={{ color: canSubmit ? colors.functional.success : colors.text.secondary }}
               >
                 {trimmedLength} / 20 minimum
               </span>
@@ -2873,7 +2806,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               disabled={!canSubmit}
               className="w-full rounded-xl py-3 text-base font-semibold text-white transition-colors active:scale-[0.97]"
               style={{
-                background: PRIMARY,
+                background: THEME.primary,
                 minHeight: 52,
                 opacity: canSubmit ? 1 : 0.4,
                 pointerEvents: canSubmit ? "auto" : "none",
@@ -2885,7 +2818,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={() => setSkipped(true)}
               className="mx-auto text-sm underline"
-              style={{ color: MUTED, minHeight: 36 }}
+              style={{ color: colors.text.secondary, minHeight: 36 }}
               aria-label="Skip reflection (0 XP earned)"
             >
               Skip
@@ -2903,11 +2836,11 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             {submitted && (
               <div
                 className="flex w-full flex-col gap-3 rounded-2xl px-5 py-5"
-                style={{ background: SURFACE }}
+                style={{ background: colors.bg.secondary }}
               >
                 <p
                   className="text-center text-base font-medium"
-                  style={{ color: SUCCESS }}
+                  style={{ color: colors.functional.success }}
                 >
                   Great reflection! Explaining concepts in your own words is one
                   of the most powerful ways to learn.
@@ -2916,19 +2849,19 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
                 <div className="flex justify-center gap-3">
                   <span
                     className="font-mono text-xl font-bold tabular-nums"
-                    style={{ color: CYAN }}
+                    style={{ color: colors.accent.cyan }}
                   >
                     0.9 = 90/100
                   </span>
                   <span
                     className="text-xl font-bold"
-                    style={{ color: SUCCESS }}
+                    style={{ color: colors.functional.success }}
                   >
                     {">"}
                   </span>
                   <span
                     className="font-mono text-xl font-bold tabular-nums"
-                    style={{ color: PURPLE }}
+                    style={{ color: colors.accent.violet }}
                   >
                     0.45 = 45/100
                   </span>
@@ -2936,7 +2869,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 
                 <p
                   className="text-center text-sm italic"
-                  style={{ color: TEXT_SEC }}
+                  style={{ color: THEME.textSecondary }}
                 >
                   90 hundredths {">"} 45 hundredths. Position, not digit count,
                   determines value.
@@ -2947,7 +2880,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             {skipped && (
               <p
                 className="text-center text-base"
-                style={{ color: MUTED }}
+                style={{ color: colors.text.secondary }}
               >
                 Reflection skipped. You can always revisit this lesson to try
                 explaining the concept.
@@ -2962,7 +2895,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           </motion.div>
         )}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -2971,63 +2904,32 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 /* ================================================================== */
 
 export function DecimalsLesson({ onComplete }: DecimalsLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const currentStage = STAGES[stageIndex];
-
-  const advance = useCallback(() => {
-    if (stageIndex < STAGES.length - 1) {
-      setStageIndex((i) => i + 1);
-    }
-  }, [stageIndex]);
-
-  const handleComplete = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
   return (
-    <div className="relative min-h-dvh" style={{ background: BG }}>
-      {/* Stage progress bar */}
-      <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-1.5 bg-black/30 py-2 backdrop-blur-sm">
-        {STAGES.map((s, i) => (
-          <div
-            key={s}
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: i <= stageIndex ? 32 : 16,
-              background:
-                i < stageIndex
-                  ? SUCCESS
-                  : i === stageIndex
-                    ? PRIMARY
-                    : ELEVATED,
-            }}
-          />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {currentStage === "hook" && (
-          <HookStage key="hook" onContinue={advance} />
-        )}
-        {currentStage === "spatial" && (
-          <SpatialStage key="spatial" onContinue={advance} />
-        )}
-        {currentStage === "discovery" && (
-          <DiscoveryStage key="discovery" onContinue={advance} />
-        )}
-        {currentStage === "symbol" && (
-          <SymbolBridgeStage key="symbol" onContinue={advance} />
-        )}
-        {currentStage === "realWorld" && (
-          <RealWorldStage key="realWorld" onContinue={advance} />
-        )}
-        {currentStage === "practice" && (
-          <PracticeStage key="practice" onContinue={advance} />
-        )}
-        {currentStage === "reflection" && (
-          <ReflectionStage key="reflection" onComplete={handleComplete} />
-        )}
-      </AnimatePresence>
-    </div>
+    <LessonShell
+      title="NO-1.2 Decimals"
+      stages={[...NLS_STAGES]}
+      onComplete={onComplete}
+    >
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":
+            return <HookStage onComplete={advance} />;
+          case "spatial":
+            return <SpatialStage onComplete={advance} />;
+          case "discovery":
+            return <DiscoveryStage onComplete={advance} />;
+          case "symbol":
+            return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld":
+            return <RealWorldStage onComplete={advance} />;
+          case "practice":
+            return <PracticeStage onComplete={advance} />;
+          case "reflection":
+            return <ReflectionStage onComplete={advance} />;
+          default:
+            return null;
+        }
+      }}
+    </LessonShell>
   );
 }

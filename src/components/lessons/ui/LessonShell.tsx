@@ -3,29 +3,34 @@
 import { useState, useCallback, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
+import { springs, slideVariants } from "@/lib/tokens/motion";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+
+/** Context object passed to the render-prop child. */
+export interface StageContext {
+  /** Current stage key, e.g. "spatial" */
+  stage: string;
+  /** Zero-based index of the current stage */
+  stageIndex: number;
+  /** Total number of stages */
+  totalStages: number;
+  /** Advance to the next stage (calls onComplete after the last stage) */
+  advance: () => void;
+  /** Go back to the previous stage (no-op on stage 0) */
+  goBack: () => void;
+}
 
 interface LessonShellProps {
   /** Lesson title, e.g. "GE-4.1 Angles" */
   title: string;
   /** Stage identifiers in order */
   stages: string[];
-  /** Render-prop receiving current stage key and advance callback */
-  children: (stage: string, advance: () => void) => ReactNode;
+  /** Render-prop receiving the current stage context */
+  children: (ctx: StageContext) => ReactNode;
   /** Fired after the last stage completes */
   onComplete?: () => void;
 }
-
-// ─── Animation variants ─────────────────────────────────────────────────────
-
-const slideVariants = {
-  enter: { opacity: 0, x: 40 },
-  center: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -40 },
-};
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
 
 // ─── Stage dot colors ───────────────────────────────────────────────────────
 
@@ -41,6 +46,23 @@ const STAGE_COLORS: Record<string, string> = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+/**
+ * Top-level shell for every lesson. Manages stage progression, renders the
+ * sticky progress header with colored dots, and handles slide transitions
+ * between stages via AnimatePresence.
+ *
+ * Usage:
+ * ```tsx
+ * <LessonShell title="NO-1.1 Place Value" stages={NLS_STAGES} onComplete={onComplete}>
+ *   {({ stage, advance }) => {
+ *     switch (stage) {
+ *       case "hook": return <HookStage onContinue={advance} />;
+ *       ...
+ *     }
+ *   }}
+ * </LessonShell>
+ * ```
+ */
 export function LessonShell({
   title,
   stages,
@@ -60,6 +82,18 @@ export function LessonShell({
       return next;
     });
   }, [stages.length, onComplete]);
+
+  const goBack = useCallback(() => {
+    setStageIdx((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const ctx: StageContext = {
+    stage: currentStage,
+    stageIndex: stageIdx,
+    totalStages: stages.length,
+    advance,
+    goBack,
+  };
 
   return (
     <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
@@ -105,10 +139,10 @@ export function LessonShell({
           initial="enter"
           animate="center"
           exit="exit"
-          transition={SPRING}
+          transition={springs.default}
           className="flex flex-1 flex-col"
         >
-          {children(currentStage, advance)}
+          {children(ctx)}
         </motion.div>
       </AnimatePresence>
     </div>

@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -8,7 +14,6 @@ import {
   useState,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -18,124 +23,39 @@ interface OrderOfOpsLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SPRING & ANIMATION CONFIGS
+// SHARED TOKEN ALIASES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-const FADE = { duration: 0.3, ease: "easeOut" as const };
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.surface;
+const BORDER_LIGHT = colors.bg.elevated;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
+const AMBER = colors.accent.amber;
+const PRIMARY = colors.accent.violet;
+
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COLORS
+// LESSON-SPECIFIC THEME
 // ═══════════════════════════════════════════════════════════════════════════
 
-const C = {
-  paren: "#a78bfa",      // violet — parentheses
-  exponent: "#fbbf24",   // amber — exponents
-  mulDiv: "#818cf8",     // indigo — multiply/divide
-  addSub: "#34d399",     // emerald — add/subtract
-  primary: "#8b5cf6",
-  primaryHover: "#7c3aed",
-  success: "#34d399",
-  error: "#f87171",
-  amber: "#fbbf24",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  border: "#334155",
-  borderLight: "#475569",
+const THEME = {
+  paren: colors.accent.violet,      // violet — parentheses
+  exponent: colors.accent.amber,    // amber — exponents
+  mulDiv: colors.accent.indigo,     // indigo — multiply/divide
+  addSub: colors.accent.emerald,    // emerald — add/subtract
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED SMALL COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
-
-function StageProgressDots({
-  currentIndex,
-  total,
-}: {
-  currentIndex: number;
-  total: number;
-}) {
-  return (
-    <div className="flex items-center gap-2 justify-center py-3">
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width: i === currentIndex ? 10 : 8,
-            height: i === currentIndex ? 10 : 8,
-            backgroundColor:
-              i < currentIndex
-                ? C.success
-                : i === currentIndex
-                  ? C.primary
-                  : C.border,
-            boxShadow:
-              i === currentIndex ? `0 0 8px ${C.primary}80` : "none",
-          }}
-          aria-label={
-            i < currentIndex
-              ? `Stage ${i + 1}: completed`
-              : i === currentIndex
-                ? `Stage ${i + 1}: current`
-                : `Stage ${i + 1}: upcoming`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  disabled = false,
-}: {
-  onClick: () => void;
-  label?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: disabled ? 0.4 : 1 }}
-      transition={FADE}
-      onClick={onClick}
-      disabled={disabled}
-      className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:pointer-events-none"
-      style={{ backgroundColor: C.primary }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      aria-label={label}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 function McButton({
   label,
@@ -164,17 +84,17 @@ function McButton({
         padding: "12px 16px",
         fontSize: 15,
         background: correct
-          ? `${C.success}15`
+          ? `${SUCCESS}15`
           : wrong
-            ? `${C.error}15`
-            : C.border,
-        color: correct ? C.success : wrong ? C.error : C.textPrimary,
+            ? `${ERROR}15`
+            : BORDER,
+        color: correct ? SUCCESS : wrong ? ERROR : TEXT,
         border: correct
-          ? `2px solid ${C.success}`
+          ? `2px solid ${SUCCESS}`
           : wrong
-            ? `2px solid ${C.error}`
+            ? `2px solid ${ERROR}`
             : selected
-              ? `2px solid ${C.mulDiv}`
+              ? `2px solid ${THEME.mulDiv}`
               : "2px solid transparent",
         opacity: disabled && !correct && !wrong ? 0.5 : 1,
       }}
@@ -306,9 +226,9 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 0.5 }}
             className="mb-2 text-center font-mono font-bold tabular-nums"
             style={{
-              color: C.textPrimary,
+              color: TEXT,
               fontSize: "clamp(28px, 7vw, 48px)",
-              textShadow: `0 0 24px ${C.mulDiv}40`,
+              textShadow: `0 0 24px ${THEME.mulDiv}40`,
             }}
           >
             {"2 + 3 \u00d7 4"}
@@ -320,7 +240,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mb-6 text-center font-mono text-2xl font-bold"
-            style={{ color: C.amber }}
+            style={{ color: AMBER }}
           >
             = ???
           </motion.p>
@@ -333,7 +253,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           style={{ maxWidth: 560 }}
           aria-label="Two calculators. Left computes 2+3=5, then 5 times 4 = 20. Right computes 3 times 4 = 12, then 2+12 = 14. The right answer is 14."
         >
-          <rect width="700" height="280" fill={C.bgPrimary} rx="8" />
+          <rect width="700" height="280" fill={BG} rx="8" />
 
           {/* Left calculator */}
           {phase >= 3 && (
@@ -342,23 +262,23 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <rect x={40} y={20} width={280} height={200} rx={16} fill={C.bgSurface} stroke={C.borderLight} strokeWidth={2} />
-              <text x={180} y={55} textAnchor={"middle" as const} fill={C.textMuted} fontSize={13} fontWeight={600}>
+              <rect x={40} y={20} width={280} height={200} rx={16} fill={SURFACE} stroke={BORDER_LIGHT} strokeWidth={2} />
+              <text x={180} y={55} textAnchor={"middle" as const} fill={MUTED} fontSize={13} fontWeight={600}>
                 Calculator A
               </text>
               {phase >= 4 && (
                 <>
-                  <text x={180} y={90} textAnchor={"middle" as const} fill={C.textSecondary} fontSize={14} fontFamily="monospace">
+                  <text x={180} y={90} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={14} fontFamily="monospace">
                     {"2 + 3 = 5"}
                   </text>
-                  <text x={180} y={115} textAnchor={"middle" as const} fill={C.textSecondary} fontSize={14} fontFamily="monospace">
+                  <text x={180} y={115} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={14} fontFamily="monospace">
                     {"5 \u00d7 4 = ..."}
                   </text>
                   <motion.text
                     x={180}
                     y={165}
                     textAnchor={"middle" as const}
-                    fill={C.error}
+                    fill={ERROR}
                     fontSize={40}
                     fontWeight={800}
                     fontFamily="monospace"
@@ -376,7 +296,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   animate={{ scale: 1 }}
                   transition={SPRING_POP}
                 >
-                  <circle cx={290} cy={30} r={18} fill={C.error} />
+                  <circle cx={290} cy={30} r={18} fill={ERROR} />
                   <text x={290} y={36} textAnchor={"middle" as const} fill="white" fontSize={18} fontWeight={800}>
                     {"\u2717"}
                   </text>
@@ -392,23 +312,23 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <rect x={380} y={20} width={280} height={200} rx={16} fill={C.bgSurface} stroke={C.borderLight} strokeWidth={2} />
-              <text x={520} y={55} textAnchor={"middle" as const} fill={C.textMuted} fontSize={13} fontWeight={600}>
+              <rect x={380} y={20} width={280} height={200} rx={16} fill={SURFACE} stroke={BORDER_LIGHT} strokeWidth={2} />
+              <text x={520} y={55} textAnchor={"middle" as const} fill={MUTED} fontSize={13} fontWeight={600}>
                 Calculator B
               </text>
               {phase >= 5 && (
                 <>
-                  <text x={520} y={90} textAnchor={"middle" as const} fill={C.textSecondary} fontSize={14} fontFamily="monospace">
+                  <text x={520} y={90} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={14} fontFamily="monospace">
                     {"3 \u00d7 4 = 12"}
                   </text>
-                  <text x={520} y={115} textAnchor={"middle" as const} fill={C.textSecondary} fontSize={14} fontFamily="monospace">
+                  <text x={520} y={115} textAnchor={"middle" as const} fill={TEXT_SEC} fontSize={14} fontFamily="monospace">
                     {"2 + 12 = ..."}
                   </text>
                   <motion.text
                     x={520}
                     y={165}
                     textAnchor={"middle" as const}
-                    fill={C.success}
+                    fill={SUCCESS}
                     fontSize={40}
                     fontWeight={800}
                     fontFamily="monospace"
@@ -426,7 +346,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
                   animate={{ scale: 1 }}
                   transition={SPRING_POP}
                 >
-                  <circle cx={630} cy={30} r={18} fill={C.success} />
+                  <circle cx={630} cy={30} r={18} fill={SUCCESS} />
                   <text x={630} y={36} textAnchor={"middle" as const} fill="white" fontSize={18} fontWeight={800}>
                     {"\u2713"}
                   </text>
@@ -441,7 +361,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               x={350}
               y={255}
               textAnchor={"middle" as const}
-              fill={C.amber}
+              fill={AMBER}
               fontSize={20}
               fontWeight={700}
               fontStyle="italic"
@@ -459,7 +379,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               x={350}
               y={260}
               textAnchor={"middle" as const}
-              fill={C.textMuted}
+              fill={MUTED}
               fontSize={16}
               fontStyle="italic"
               initial={{ opacity: 0 }}
@@ -528,14 +448,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <div className="w-full max-w-lg" aria-live="polite">
         <h2
           className="mb-2 text-center text-xl font-bold"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
         >
           Tap operations in the correct order!
         </h2>
 
         <p
           className="mb-4 text-center font-mono text-2xl font-bold tabular-nums"
-          style={{ color: C.textSecondary }}
+          style={{ color: TEXT_SEC }}
         >
           {expr.display}
         </p>
@@ -560,7 +480,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                         y1={node.y + NODE_R}
                         x2={child.x}
                         y2={child.y - NODE_R}
-                        stroke={C.borderLight}
+                        stroke={BORDER_LIGHT}
                         strokeWidth={2}
                       />
                     );
@@ -574,7 +494,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                         y1={node.y + NODE_R}
                         x2={child.x}
                         y2={child.y - NODE_R}
-                        stroke={C.borderLight}
+                        stroke={BORDER_LIGHT}
                         strokeWidth={2}
                       />
                     );
@@ -590,16 +510,16 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               const isCurrent = node.id === currentTarget;
               const isShaking = node.id === shakeId;
 
-              let fillColor: string = C.bgSurface;
-              let strokeColor: string = C.borderLight;
-              let textColor: string = C.textPrimary;
+              let fillColor: string = SURFACE;
+              let strokeColor: string = BORDER_LIGHT;
+              let textColor: string = TEXT;
 
               if (isDone) {
-                fillColor = `${C.success}30`;
-                strokeColor = C.success;
-                textColor = C.success;
+                fillColor = `${SUCCESS}30`;
+                strokeColor = SUCCESS;
+                textColor = SUCCESS;
               } else if (isCurrent && !isExprDone) {
-                strokeColor = C.amber;
+                strokeColor = AMBER;
               }
 
               return (
@@ -617,7 +537,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                     cy={node.y}
                     r={NODE_R}
                     fill={fillColor}
-                    stroke={isShaking ? C.error : strokeColor}
+                    stroke={isShaking ? ERROR : strokeColor}
                     strokeWidth={2}
                     style={{ cursor: node.isOp && !isDone ? "pointer" : "default" }}
                     onClick={() => handleNodeTap(node.id)}
@@ -627,7 +547,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
                     y={node.y + 1}
                     textAnchor={"middle" as const}
                     dominantBaseline="central"
-                    fill={isShaking ? C.error : textColor}
+                    fill={isShaking ? ERROR : textColor}
                     fontSize={node.isOp ? 20 : 16}
                     fontWeight={700}
                     fontFamily="monospace"
@@ -641,7 +561,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           </svg>
         </div>
 
-        <p className="text-center text-sm mb-2" style={{ color: C.textDim }}>
+        <p className="text-center text-sm mb-2" style={{ color: MUTED }}>
           Step: {Math.min(evalStep + 1, expr.evalOrder.length)}/{expr.evalOrder.length}
         </p>
 
@@ -651,14 +571,14 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-4"
           >
-            <p className="font-mono text-lg font-bold" style={{ color: C.success }}>
+            <p className="font-mono text-lg font-bold" style={{ color: SUCCESS }}>
               {expr.display} = {expr.finalResult}
             </p>
             {exprIdx < expressions.length - 1 && (
               <button
                 onClick={handleNextExpr}
                 className="mt-3 min-h-[44px] min-w-[44px] rounded-lg px-4 py-2 text-sm font-semibold active:scale-95"
-                style={{ background: C.border, color: C.textPrimary }}
+                style={{ background: BORDER, color: TEXT }}
               >
                 New Expression
               </button>
@@ -666,14 +586,12 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           </motion.div>
         )}
 
-        <p className="text-center text-sm mb-4" style={{ color: C.textDim }}>
-          Interactions: {Math.min(interactions, 8)}/8
-        </p>
+        <div className="flex justify-center mb-4">
+          <InteractionDots count={Math.min(interactions, 8)} total={8} />
+        </div>
 
         {interactions >= 8 && (
-          <div className="flex justify-center">
-            <ContinueButton onClick={onComplete} />
-          </div>
+          <ContinueButton onClick={onComplete} />
         )}
       </div>
     </div>
@@ -735,7 +653,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           >
             <p
               className="mb-6 text-lg font-semibold"
-              style={{ color: C.textPrimary, fontSize: "clamp(16px, 4vw, 20px)" }}
+              style={{ color: TEXT, fontSize: "clamp(16px, 4vw, 20px)" }}
             >
               {prompt.text}
             </p>
@@ -745,10 +663,10 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               <div className="flex justify-center mb-6">
                 <div className="space-y-2">
                   {[
-                    { label: "P \u2014 Parentheses ( )", color: C.paren },
-                    { label: "E \u2014 Exponents", color: C.exponent },
-                    { label: "MD \u2014 Multiply / Divide", color: C.mulDiv },
-                    { label: "AS \u2014 Add / Subtract", color: C.addSub },
+                    { label: "P \u2014 Parentheses ( )", color: THEME.paren },
+                    { label: "E \u2014 Exponents", color: THEME.exponent },
+                    { label: "MD \u2014 Multiply / Divide", color: THEME.mulDiv },
+                    { label: "AS \u2014 Add / Subtract", color: THEME.addSub },
                   ].map((level, i) => (
                     <motion.div
                       key={i}
@@ -776,7 +694,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 transition={{ delay: 0.8 }}
                 onClick={() => setShowDetail(true)}
                 className="mx-auto mb-4 block min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold"
-                style={{ background: C.border, color: C.amber }}
+                style={{ background: BORDER, color: AMBER }}
               >
                 Reveal insight
               </motion.button>
@@ -788,7 +706,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <p className="mb-6 text-base" style={{ color: C.amber }}>
+                <p className="mb-6 text-base" style={{ color: AMBER }}>
                   {prompt.detail}
                 </p>
                 <ContinueButton onClick={handleAck} label={prompt.button} />
@@ -806,10 +724,10 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SYMBOL_STEPS = [
-  { label: "P \u2014 Parentheses ( )", color: C.paren, example: "(2 + 3) = 5 first" },
-  { label: "E \u2014 Exponents", color: C.exponent, example: "4\u00B2 = 16" },
-  { label: "M/D \u2014 Multiply & Divide (left \u2192 right)", color: C.mulDiv, example: "3 \u00d7 16 = 48" },
-  { label: "A/S \u2014 Add & Subtract (left \u2192 right)", color: C.addSub, example: "2 + 48 = 50" },
+  { label: "P \u2014 Parentheses ( )", color: THEME.paren, example: "(2 + 3) = 5 first" },
+  { label: "E \u2014 Exponents", color: THEME.exponent, example: "4\u00B2 = 16" },
+  { label: "M/D \u2014 Multiply & Divide (left \u2192 right)", color: THEME.mulDiv, example: "3 \u00d7 16 = 48" },
+  { label: "A/S \u2014 Add & Subtract (left \u2192 right)", color: THEME.addSub, example: "2 + 48 = 50" },
 ] as const;
 
 function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
@@ -827,14 +745,14 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
       <div className="w-full max-w-lg text-center">
         <h2
           className="mb-4 text-xl font-bold"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
         >
           PEMDAS
         </h2>
 
         <p
           className="mb-6 font-mono text-lg font-bold tabular-nums"
-          style={{ color: C.textSecondary }}
+          style={{ color: TEXT_SEC }}
         >
           {"2 + 3 \u00d7 4\u00B2"}
         </p>
@@ -856,7 +774,7 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
                 <p className="font-mono text-sm font-bold" style={{ color: s.color }}>
                   {s.label}
                 </p>
-                <p className="font-mono text-xs mt-1 tabular-nums" style={{ color: C.textSecondary }}>
+                <p className="font-mono text-xs mt-1 tabular-nums" style={{ color: TEXT_SEC }}>
                   {s.example}
                 </p>
               </motion.div>
@@ -873,9 +791,9 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
           >
             <div
               className="rounded-xl p-4 mb-6"
-              style={{ background: `${C.amber}15`, border: `1px solid ${C.amber}40` }}
+              style={{ background: `${AMBER}15`, border: `1px solid ${AMBER}40` }}
             >
-              <p className="font-mono text-sm font-semibold" style={{ color: C.amber }}>
+              <p className="font-mono text-sm font-semibold" style={{ color: AMBER }}>
                 {"2 + 3 \u00d7 4\u00B2 = 2 + 3 \u00d7 16 = 2 + 48 = 50"}
               </p>
             </div>
@@ -892,10 +810,10 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const REAL_WORLD = [
-  { title: "Shopping", text: "2 shirts at $15 + $5 shipping", math: "2 \u00d7 15 + 5 = $35, not $40", color: C.mulDiv },
-  { title: "Recipes", text: "Double a recipe: 2 \u00d7 (3+4) cups", math: "Parentheses change the meaning!", color: C.paren },
-  { title: "Gaming", text: "Score: base 100 + 3 \u00d7 bonus 50", math: "100 + 150 = 250, not 7500", color: C.addSub },
-  { title: "Coding", text: "Every programming language", math: "Computers follow these EXACT rules", color: C.exponent },
+  { title: "Shopping", text: "2 shirts at $15 + $5 shipping", math: "2 \u00d7 15 + 5 = $35, not $40", color: THEME.mulDiv },
+  { title: "Recipes", text: "Double a recipe: 2 \u00d7 (3+4) cups", math: "Parentheses change the meaning!", color: THEME.paren },
+  { title: "Gaming", text: "Score: base 100 + 3 \u00d7 bonus 50", math: "100 + 150 = 250, not 7500", color: THEME.addSub },
+  { title: "Coding", text: "Every programming language", math: "Computers follow these EXACT rules", color: THEME.exponent },
 ] as const;
 
 function RealWorldStage({ onComplete }: { onComplete: () => void }) {
@@ -904,7 +822,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
       <div className="w-full max-w-lg">
         <h2
           className="mb-6 text-center text-xl font-bold"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT }}
         >
           Order of Operations Is Everywhere
         </h2>
@@ -916,25 +834,22 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15, duration: 0.3 }}
-              className="rounded-xl p-4"
-              style={{ background: C.bgSurface, border: `1px solid ${C.border}` }}
+              className="rounded-xl p-4 bg-nm-bg-secondary border border-nm-bg-surface/40"
             >
               <p className="text-sm font-bold mb-1" style={{ color: item.color }}>
                 {item.title}
               </p>
-              <p className="text-sm mb-2" style={{ color: C.textSecondary }}>
+              <p className="text-sm mb-2" style={{ color: TEXT_SEC }}>
                 {item.text}
               </p>
-              <p className="font-mono text-xs tabular-nums" style={{ color: C.amber }}>
+              <p className="font-mono text-xs tabular-nums" style={{ color: AMBER }}>
                 {item.math}
               </p>
             </motion.div>
           ))}
         </div>
 
-        <div className="flex justify-center mt-6">
-          <ContinueButton onClick={onComplete} />
-        </div>
+        <ContinueButton onClick={onComplete} />
       </div>
     </div>
   );
@@ -1089,10 +1004,10 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
     <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.textDim }}>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: MUTED }}>
             {problem.layer}
           </span>
-          <span className="font-mono text-xs tabular-nums" style={{ color: C.textDim }}>
+          <span className="font-mono text-xs tabular-nums" style={{ color: MUTED }}>
             {qIdx + 1}/{PROBLEMS.length}
           </span>
         </div>
@@ -1105,7 +1020,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.25 }}
           >
-            <p className="mb-5 text-base font-semibold" style={{ color: C.textPrimary }}>
+            <p className="mb-5 text-base font-semibold" style={{ color: TEXT }}>
               {problem.prompt}
             </p>
 
@@ -1135,10 +1050,10 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   disabled={answered}
                   className="flex-1 rounded-xl px-4 py-3 font-mono text-base tabular-nums min-h-[48px]"
                   style={{
-                    background: C.border,
-                    color: C.textPrimary,
+                    background: BORDER,
+                    color: TEXT,
                     border: answered
-                      ? `2px solid ${isCorrect ? C.success : C.error}`
+                      ? `2px solid ${isCorrect ? SUCCESS : ERROR}`
                       : `2px solid transparent`,
                   }}
                   aria-label="Your answer"
@@ -1147,7 +1062,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   <button
                     onClick={handleNumericSubmit}
                     className="min-h-[48px] min-w-[48px] rounded-xl px-4 font-semibold text-white active:scale-95"
-                    style={{ background: C.primary }}
+                    style={{ background: PRIMARY }}
                   >
                     Check
                   </button>
@@ -1162,26 +1077,24 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                 transition={{ duration: 0.25 }}
                 className="mt-4 rounded-xl p-4"
                 style={{
-                  background: isCorrect ? `${C.success}15` : `${C.error}15`,
-                  border: `1px solid ${isCorrect ? C.success : C.error}40`,
+                  background: isCorrect ? `${SUCCESS}15` : `${ERROR}15`,
+                  border: `1px solid ${isCorrect ? SUCCESS : ERROR}40`,
                 }}
               >
-                <p className="text-sm font-semibold" style={{ color: isCorrect ? C.success : C.error }}>
+                <p className="text-sm font-semibold" style={{ color: isCorrect ? SUCCESS : ERROR }}>
                   {isCorrect ? "Correct!" : "Not quite."}
                 </p>
-                <p className="text-sm mt-1" style={{ color: C.textSecondary }}>
+                <p className="text-sm mt-1" style={{ color: TEXT_SEC }}>
                   {problem.feedback}
                 </p>
               </motion.div>
             )}
 
             {answered && (
-              <div className="flex justify-center mt-5">
-                <ContinueButton
-                  onClick={handleNext}
-                  label={isLast ? "Finish Practice" : "Next \u2192"}
-                />
-              </div>
+              <ContinueButton
+                onClick={handleNext}
+                label={isLast ? "Finish Practice" : "Next \u2192"}
+              />
             )}
           </motion.div>
         </AnimatePresence>
@@ -1209,10 +1122,10 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="w-full max-w-lg text-center">
-        <h2 className="mb-4 text-xl font-bold" style={{ color: C.textPrimary }}>
+        <h2 className="mb-4 text-xl font-bold" style={{ color: TEXT }}>
           Reflect
         </h2>
-        <p className="mb-6 text-base" style={{ color: C.textSecondary }}>
+        <p className="mb-6 text-base" style={{ color: TEXT_SEC }}>
           Explain in your own words why we need an agreed-upon order of operations. What would happen without it?
         </p>
 
@@ -1221,16 +1134,12 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full rounded-xl p-4 text-sm min-h-[100px] resize-none"
-              style={{
-                background: C.bgSurface,
-                color: C.textPrimary,
-                border: `1px solid ${C.border}`,
-              }}
+              className="w-full rounded-xl p-4 text-sm min-h-[100px] resize-none bg-nm-bg-secondary border border-nm-bg-surface/40"
+              style={{ color: TEXT }}
               placeholder="Type your explanation here..."
               aria-label="Your reflection"
             />
-            <p className="mt-1 text-xs" style={{ color: C.textDim }}>
+            <p className="mt-1 text-xs" style={{ color: MUTED }}>
               {text.length < 20
                 ? `${20 - text.length} more characters needed`
                 : "Ready to submit!"}
@@ -1239,7 +1148,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
               <button
                 onClick={handleSkip}
                 className="min-h-[44px] rounded-lg px-4 py-2 text-sm"
-                style={{ color: C.textDim }}
+                style={{ color: MUTED }}
               >
                 Skip
               </button>
@@ -1258,12 +1167,12 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           >
             <div
               className="rounded-xl p-6 mb-6"
-              style={{ background: `${C.success}15`, border: `1px solid ${C.success}40` }}
+              style={{ background: `${SUCCESS}15`, border: `1px solid ${SUCCESS}40` }}
             >
-              <p className="text-base font-semibold" style={{ color: C.success }}>
+              <p className="text-base font-semibold" style={{ color: SUCCESS }}>
                 Great thinking!
               </p>
-              <p className="text-sm mt-2" style={{ color: C.textSecondary }}>
+              <p className="text-sm mt-2" style={{ color: TEXT_SEC }}>
                 Without agreed rules, the same expression could give different answers. Your explanation shows you understand why order matters! +15 XP
               </p>
             </div>
@@ -1280,45 +1189,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function OrderOfOpsLesson({ onComplete }: OrderOfOpsLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const stage = STAGE_ORDER[stageIndex]!;
-
-  const advanceStage = useCallback(() => {
-    setStageIndex((i) => {
-      const next = i + 1;
-      if (next >= STAGE_ORDER.length) {
-        onComplete?.();
-        return i;
-      }
-      return next;
-    });
-  }, [onComplete]);
-
   return (
-    <div
-      className="flex min-h-dvh flex-col"
-      style={{ backgroundColor: C.bgPrimary }}
-    >
-      <StageProgressDots currentIndex={stageIndex} total={STAGE_ORDER.length} />
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-1 flex-col"
-        >
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={advanceStage} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-2.1 Order of Operations" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

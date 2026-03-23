@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useState,
@@ -18,50 +23,33 @@ import {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
+/* ── Lesson-specific semantic colors ── */
 const COLORS = {
-  thousands: "#a78bfa",
-  hundreds: "#60a5fa",
-  tens: "#22d3ee",
-  ones: "#34d399",
+  thousands: colors.accent.violet,
+  hundreds: colors.functional.info,
+  tens: colors.accent.cyan,
+  ones: colors.accent.emerald,
 } as const;
 
 const COLOR_LIST = [COLORS.thousands, COLORS.hundreds, COLORS.tens, COLORS.ones] as const;
 const PLACE_NAMES = ["Thousands", "Hundreds", "Tens", "Ones"] as const;
 const PLACE_VALUES = [1000, 100, 10, 1] as const;
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const TEXT_SEC = "#e2e8f0";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const ELEVATED = "#334155";
-const PRIMARY = "#8b5cf6";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const BORDER = colors.bg.elevated;
+const ELEVATED = colors.bg.surface;
+const PRIMARY = colors.accent.violet;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_BOUNCY = { type: "spring" as const, damping: 12, stiffness: 400 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-];
+const SPRING = springs.default;
+const SPRING_BOUNCY = springs.bouncy;
+const SPRING_POP = springs.pop;
 
 interface PlaceValueLessonProps {
   onComplete?: () => void;
@@ -71,28 +59,7 @@ interface PlaceValueLessonProps {
 /*  Shared sub-components                                              */
 /* ------------------------------------------------------------------ */
 
-function ContinueButton({
-  onClick,
-  label = "Continue",
-  delay = 0,
-}: {
-  onClick: () => void;
-  label?: string;
-  delay?: number;
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      onClick={onClick}
-      className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]"
-      style={{ background: PRIMARY, minHeight: 48 }}
-    >
-      {label}
-    </motion.button>
-  );
-}
+/* ContinueButton is now imported from @/components/lessons/ui/ContinueButton */
 
 function ColoredDigit({
   digit,
@@ -2216,58 +2183,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 /* ================================================================== */
 
 export function PlaceValueLesson({ onComplete }: PlaceValueLessonProps) {
-  const [stageIndex, setStageIndex] = useState(0);
-  const currentStage = STAGES[stageIndex]!;
-
-  const advance = useCallback(() => {
-    if (stageIndex < STAGES.length - 1) {
-      setStageIndex((i) => i + 1);
-    }
-  }, [stageIndex]);
-
-  const handleComplete = useCallback(() => {
-    onComplete?.();
-  }, [onComplete]);
-
   return (
-    <div className="relative min-h-dvh" style={{ background: BG }}>
-      {/* Stage progress bar */}
-      <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-1.5 bg-black/30 py-2 backdrop-blur-sm">
-        {STAGES.map((s, i) => (
-          <div
-            key={s}
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: i <= stageIndex ? 32 : 16,
-              background: i < stageIndex ? SUCCESS : i === stageIndex ? PRIMARY : ELEVATED,
-            }}
-          />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {currentStage === "hook" && (
-          <HookStage key="hook" onContinue={advance} />
-        )}
-        {currentStage === "spatial" && (
-          <SpatialStage key="spatial" onContinue={advance} />
-        )}
-        {currentStage === "discovery" && (
-          <DiscoveryStage key="discovery" onContinue={advance} />
-        )}
-        {currentStage === "symbol" && (
-          <SymbolBridgeStage key="symbol" onContinue={advance} />
-        )}
-        {currentStage === "realWorld" && (
-          <RealWorldStage key="realWorld" onContinue={advance} />
-        )}
-        {currentStage === "practice" && (
-          <PracticeStage key="practice" onContinue={advance} />
-        )}
-        {currentStage === "reflection" && (
-          <ReflectionStage key="reflection" onComplete={handleComplete} />
-        )}
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-1.1 Place Value" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

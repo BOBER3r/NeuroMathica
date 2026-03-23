@@ -1,5 +1,11 @@
 "use client";
 
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
+
 import {
   useCallback,
   useEffect,
@@ -22,25 +28,6 @@ interface FactorsLessonProps {
   onComplete?: () => void;
 }
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
 interface DotPos {
   x: number;
   y: number;
@@ -53,31 +40,36 @@ interface FactorPair {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SPRING CONFIGS  (per NT-2.1 spec)
+   SPRING ALIASES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const SNAP_SPRING   = { type: "spring" as const, damping: 25, stiffness: 400 };
-const GENTLE_SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const BOUNCY_SPRING = { type: "spring" as const, damping: 15, stiffness: 350 };
-const _QUICK_SPRING  = { type: "spring" as const, damping: 30, stiffness: 500, mass: 0.8 };
+const SNAP_SPRING   = springs.stiff;
+const GENTLE_SPRING = springs.default;
+const BOUNCY_SPRING = springs.pop;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLORS  (per NT-2.1 colour palette)
+   COLOR ALIASES  (shared tokens + lesson-specific overrides in THEME)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const C = {
-  dotPrimary:   "#818cf8",
+/** Lesson-specific colours that have no shared-token equivalent. */
+const THEME = {
   dotStroke:    "#6366f1",
-  valid:        "#34d399",
-  invalid:      "#fb7185",
-  highlight:    "#fbbf24",
-  textPrimary:  "#f1f5f9",
-  textSecondary:"#e2e8f0",
-  textMuted:    "#94a3b8",
-  textDim:      "#64748b",
-  surface:      "#1e293b",
-  surfaceDeep:  "#0f172a",
-  border:       "#334155",
+  textSecondary:"#e2e8f0",   // slate-200 — lighter than tokens.text.secondary
+} as const;
+
+const C = {
+  dotPrimary:   colors.accent.indigo,
+  dotStroke:    THEME.dotStroke,
+  valid:        colors.functional.success,
+  invalid:      colors.functional.error,
+  highlight:    colors.accent.amber,
+  textPrimary:  colors.text.primary,
+  textSecondary:THEME.textSecondary,
+  textMuted:    colors.text.secondary,
+  textDim:      colors.text.muted,
+  surface:      colors.bg.secondary,
+  surfaceDeep:  colors.bg.primary,
+  border:       colors.bg.surface,
 } as const;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -206,35 +198,7 @@ function XpFloat({ amount }: { amount: number }) {
   );
 }
 
-/** Standard bottom-action CTA button (44px+ touch target). */
-function CTAButton({
-  label, onClick, disabled = false, ariaLabel,
-}: {
-  label: string; onClick: () => void; disabled?: boolean; ariaLabel?: string;
-}) {
-  return (
-    <motion.div
-      className="w-full max-w-sm mx-auto pb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={disabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-    >
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          "w-full rounded-xl px-6 py-3 text-lg font-semibold text-white transition-all duration-150",
-          "min-h-[44px] min-w-[44px] select-none",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
-          disabled && "opacity-40 cursor-not-allowed pointer-events-none",
-        )}
-        style={{ backgroundColor: C.dotPrimary }}
-      >
-        {label}
-      </button>
-    </motion.div>
-  );
-}
+/* CTAButton replaced by shared <ContinueButton> from @/components/lessons/ui/ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STAGE 1 — HOOK
@@ -475,11 +439,9 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 
       {/* continue */}
       {phase === "ready" && (
-        <CTAButton
-          label="Let's explore"
-          onClick={onComplete}
-          ariaLabel="Continue to interactive exploration"
-        />
+        <ContinueButton onClick={onComplete}>
+          Let&apos;s explore
+        </ContinueButton>
       )}
     </div>
   );
@@ -806,7 +768,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         )}
       </AnimatePresence>
 
-      <CTAButton label="Ready to learn more?" onClick={onComplete} disabled={!canContinue} />
+      <ContinueButton onClick={onComplete} disabled={!canContinue}>Ready to learn more?</ContinueButton>
     </div>
   );
 }
@@ -972,7 +934,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           className="mb-4 rounded-2xl p-5 text-center"
           style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
           <p className="mb-4" style={{ color: C.textSecondary }}>Let&apos;s write this down properly.</p>
-          <CTAButton label="Continue" onClick={onComplete} />
+          <ContinueButton onClick={onComplete}>Continue</ContinueButton>
         </motion.div>
       )}
     </div>
@@ -1132,7 +1094,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
         )}
       </AnimatePresence>
 
-      <CTAButton label="Continue" onClick={onComplete} disabled={phase !== "done"} />
+      <ContinueButton onClick={onComplete} disabled={phase !== "done"}>Continue</ContinueButton>
     </div>
   );
 }
@@ -1153,8 +1115,8 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
     },
     {
       title: "Music & Rhythm",
-      accent: "#a78bfa",
-      icon: <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth={2} strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx={6} cy={18} r={3}/><circle cx={18} cy={16} r={3}/></svg>,
+      accent: colors.accent.violet,
+      icon: <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={colors.accent.violet} strokeWidth={2} strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx={6} cy={18} r={3}/><circle cx={18} cy={16} r={3}/></svg>,
       body: <>In 4/4 time a measure has 4 beats. Split into: 1 group of 4, 2 groups of 2, or 4 groups of 1. These are the factors of 4!</>,
     },
     {
@@ -1211,7 +1173,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         )}
       </div>
 
-      <CTAButton label="Continue" onClick={onComplete} disabled={!allSeen} />
+      <ContinueButton onClick={onComplete} disabled={!allSeen}>Continue</ContinueButton>
     </div>
   );
 }
@@ -1303,7 +1265,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
   const toggle = (o: string) => setSel((prev) => { const s = new Set(prev); s.has(o) ? s.delete(o) : s.add(o); return s; });
 
-  const layerClr = ["#60a5fa","#a78bfa","#f59e0b"];
+  const layerClr = [colors.functional.info, colors.accent.violet, colors.accent.amber];
 
   if (done) {
     const acc = Math.round((ok / total) * 100);
@@ -1316,7 +1278,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
         </div>
         <h2 className="mb-2 text-xl font-bold" style={{ color: C.textPrimary }}>Practice Complete!</h2>
         <p className="mb-6" style={{ color: C.textMuted }}>{ok}/{total} correct ({acc}%)</p>
-        <CTAButton label="Continue" onClick={onComplete} />
+        <ContinueButton onClick={onComplete}>Continue</ContinueButton>
       </motion.div>
     );
   }
@@ -1327,7 +1289,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       <div className="mb-4 mt-2">
         <div className="mb-2 flex justify-between text-xs" style={{ color: C.textDim }}>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layerClr[p.layer] ?? "#60a5fa" }} aria-hidden="true" />
+            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layerClr[p.layer] ?? colors.functional.info }} aria-hidden="true" />
             Problem {ci + 1} / {total}
           </span>
           <span>{ok} correct</span>
@@ -1458,7 +1420,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         {/* icon */}
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl"
           style={{ backgroundColor: "rgba(167,139,250,0.1)" }}>
-          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth={2}>
+          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={colors.accent.violet} strokeWidth={2}>
             <path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 013.002 3.002L7.368 18.635a2 2 0 01-.855.506l-2.872.838a.5.5 0 01-.62-.62l.838-2.872a2 2 0 01.506-.854z"/>
           </svg>
         </div>
@@ -1488,8 +1450,7 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         </div>
       </motion.div>
 
-      <CTAButton label="Share My Thinking" onClick={onComplete} disabled={!ok}
-        ariaLabel="Submit your reflection" />
+      <ContinueButton onClick={onComplete} disabled={!ok}>Share My Thinking</ContinueButton>
     </div>
   );
 }
@@ -1499,66 +1460,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export function FactorsLesson({ onComplete }: FactorsLessonProps) {
-  const [si, setSi] = useState(0);
-  const stage = STAGE_ORDER[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    setSi((prev) => {
-      if (prev + 1 >= STAGE_ORDER.length) { onComplete?.(); return prev; }
-      return prev + 1;
-    });
-  }, [onComplete]);
-
-  const finish = useCallback(() => { onComplete?.(); }, [onComplete]);
-
-  function renderStage() {
-    switch (stage) {
-      case "hook":       return <HookStage onComplete={advance} />;
-      case "spatial":    return <SpatialStage onComplete={advance} />;
-      case "discovery":  return <DiscoveryStage onComplete={advance} />;
-      case "symbol":     return <SymbolStage onComplete={advance} />;
-      case "realWorld":  return <RealWorldStage onComplete={advance} />;
-      case "practice":   return <PracticeStage onComplete={advance} />;
-      case "reflection": return <ReflectionStage onComplete={finish} />;
-      default:           return null;
-    }
-  }
-
   return (
-    <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
-      {/* stage progress indicator */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 bg-nm-bg-primary/95 px-4 py-3 backdrop-blur-sm">
-        {STAGE_ORDER.map((s, i) => (
-          <div key={s}
-            className="flex-1 h-1.5 rounded-full transition-colors duration-300"
-            style={{
-              backgroundColor: i <= si ? C.dotPrimary : C.border,
-              opacity: i <= si ? 1 : 0.3,
-            }}
-            role="progressbar"
-            aria-valuenow={i <= si ? 100 : 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Stage ${i + 1}: ${s}`}
-          />
-        ))}
-      </div>
-
-      {/* active stage */}
-      <main className="flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={stage}
-            className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          >
-            {renderStage()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
+    <LessonShell title="NT-2.1 Factors" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

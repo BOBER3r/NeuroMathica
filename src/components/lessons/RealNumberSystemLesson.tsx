@@ -1,38 +1,42 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const COLORS = {
-  natural: "#34d399",
-  whole: "#60a5fa",
-  integer: "#818cf8",
-  rational: "#f59e0b",
-  irrational: "#ec4899",
-  real: "#a78bfa",
-  bgPrimary: "#0f172a",
-  bgSurface: "#1e293b",
-  bgElevated: "#334155",
-  textPrimary: "#f8fafc",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  success: "#34d399",
-  error: "#f87171",
-  primary: "#818cf8",
+/* ── Lesson-specific semantic colors (aliases to shared tokens) ── */
+const THEME = {
+  natural: colors.accent.emerald,
+  whole: colors.functional.info,
+  integer: colors.accent.indigo,
+  rational: "#f59e0b",          // lesson-specific amber
+  irrational: "#ec4899",        // lesson-specific pink
+  real: colors.accent.violet,
 } as const;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const BG = colors.bg.primary;
+const SURFACE = colors.bg.secondary;
+const ELEVATED = colors.bg.surface;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const MUTED = colors.text.muted;
+const PRIMARY = colors.accent.indigo;
+const SUCCESS = colors.functional.success;
+const ERROR = colors.functional.error;
 
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
+const SPRING = springs.default;
 
 // ---------------------------------------------------------------------------
 // Practice problems
@@ -95,35 +99,6 @@ const PRACTICE_PROBLEMS: PracticeProblem[] = [
     feedback: "Real = Rational \u222A Irrational. Every point on the number line is a real number." },
 ];
 
-// ---------------------------------------------------------------------------
-// Shared micro-components
-// ---------------------------------------------------------------------------
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: {
-  onClick: () => void; label?: string; delay?: number;
-}) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut", delay }}
-      className="w-full flex justify-center pt-4 pb-8">
-      <Button size="lg" onClick={onClick} className="min-w-[160px]"
-        style={{ backgroundColor: COLORS.primary }}>{label}</Button>
-    </motion.div>
-  );
-}
-
-function InteractionDots({ count, total }: { count: number; total: number }) {
-  return (
-    <div className="flex items-center gap-1 justify-center">
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} className="rounded-full transition-colors duration-200"
-          style={{ width: 6, height: 6,
-            backgroundColor: i < count ? COLORS.primary : COLORS.bgElevated }} />
-      ))}
-    </div>
-  );
-}
-
 // ===========================================================================
 // STAGE 1: HOOK
 // ===========================================================================
@@ -147,16 +122,16 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const sets = [
-    { label: "Natural", examples: "1, 2, 3, ...", color: COLORS.natural },
-    { label: "Whole", examples: "0, 1, 2, 3, ...", color: COLORS.whole },
-    { label: "Integer", examples: "..., \u22122, \u22121, 0, 1, 2, ...", color: COLORS.integer },
-    { label: "Rational", examples: "\u00BD, 0.75, \u22123, ...", color: COLORS.rational },
-    { label: "Real", examples: "\u03C0, \u221A2, and ALL above", color: COLORS.real },
+    { label: "Natural", examples: "1, 2, 3, ...", color: THEME.natural },
+    { label: "Whole", examples: "0, 1, 2, 3, ...", color: THEME.whole },
+    { label: "Integer", examples: "..., \u22122, \u22121, 0, 1, 2, ...", color: THEME.integer },
+    { label: "Rational", examples: "\u00BD, 0.75, \u22123, ...", color: THEME.rational },
+    { label: "Real", examples: "\u03C0, \u221A2, and ALL above", color: THEME.real },
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
 
       <div className="relative mb-6" style={{ width: 280, height: 280 }}>
         {/* Render largest circle first (behind), smallest last (on top) */}
@@ -190,7 +165,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
         {phase >= 6 && (
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="text-center font-medium"
-            style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             Every number has a home. Some belong to many sets at once!
           </motion.p>
         )}
@@ -213,21 +188,21 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   const interact = useCallback(() => { setInteractions((i) => i + 1); }, []);
 
   const numbers: Array<{ value: string; sets: string[]; color: string }> = [
-    { value: "5", sets: ["Natural", "Whole", "Integer", "Rational", "Real"], color: COLORS.natural },
-    { value: "0", sets: ["Whole", "Integer", "Rational", "Real"], color: COLORS.whole },
-    { value: "\u22123", sets: ["Integer", "Rational", "Real"], color: COLORS.integer },
-    { value: "3/4", sets: ["Rational", "Real"], color: COLORS.rational },
-    { value: "\u221A2", sets: ["Irrational", "Real"], color: COLORS.irrational },
-    { value: "\u03C0", sets: ["Irrational", "Real"], color: COLORS.irrational },
+    { value: "5", sets: ["Natural", "Whole", "Integer", "Rational", "Real"], color: THEME.natural },
+    { value: "0", sets: ["Whole", "Integer", "Rational", "Real"], color: THEME.whole },
+    { value: "\u22123", sets: ["Integer", "Rational", "Real"], color: THEME.integer },
+    { value: "3/4", sets: ["Rational", "Real"], color: THEME.rational },
+    { value: "\u221A2", sets: ["Irrational", "Real"], color: THEME.irrational },
+    { value: "\u03C0", sets: ["Irrational", "Real"], color: THEME.irrational },
   ];
 
   const selected = numbers.find((n) => n.value === selectedNumber);
 
   return (
-    <section className="flex flex-1 flex-col items-center px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center px-4 pt-4 bg-nm-bg-primary"
+      aria-live="polite">
       <p className="text-center mb-3 font-medium"
-        style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+        style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
         Tap a number to see which sets it belongs to
       </p>
 
@@ -236,8 +211,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           <button key={n.value} onClick={() => { setSelectedNumber(n.value); interact(); }}
             className="rounded-xl px-4 py-2 font-mono font-bold min-h-[44px] min-w-[44px] transition-colors active:scale-95"
             style={{
-              backgroundColor: n.value === selectedNumber ? n.color : COLORS.bgSurface,
-              color: n.value === selectedNumber ? COLORS.bgPrimary : COLORS.textPrimary,
+              backgroundColor: n.value === selectedNumber ? n.color : SURFACE,
+              color: n.value === selectedNumber ? BG : TEXT,
             }}>
             {n.value}
           </button>
@@ -247,7 +222,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       {selected && (
         <motion.div key={selected.value} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           transition={SPRING} className="w-full max-w-sm">
-          <div className="rounded-xl p-4" style={{ backgroundColor: COLORS.bgSurface }}>
+          <div className="rounded-xl p-4" style={{ backgroundColor: SURFACE }}>
             <p className="font-bold text-lg text-center mb-3" style={{ color: selected.color }}>
               {selected.value}
             </p>
@@ -289,35 +264,35 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   const current = prompts[step];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
 
       <div className="mb-6 w-full max-w-sm">
         {step === 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col gap-2 items-center">
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.natural}`, backgroundColor: `${COLORS.natural}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.natural }}>Natural: 1, 2, 3, 4, ...</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.natural}`, backgroundColor: `${THEME.natural}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.natural }}>Natural: 1, 2, 3, 4, ...</span>
             </div>
-            <span className="text-lg font-bold" style={{ color: COLORS.textMuted }}>{"\u2193"} add 0</span>
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.whole}`, backgroundColor: `${COLORS.whole}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.whole }}>Whole: 0, 1, 2, 3, ...</span>
+            <span className="text-lg font-bold" style={{ color: MUTED }}>{"\u2193"} add 0</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.whole}`, backgroundColor: `${THEME.whole}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.whole }}>Whole: 0, 1, 2, 3, ...</span>
             </div>
           </motion.div>
         )}
         {step === 1 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col gap-2 items-center">
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.whole}`, backgroundColor: `${COLORS.whole}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.whole }}>Whole numbers</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.whole}`, backgroundColor: `${THEME.whole}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.whole }}>Whole numbers</span>
             </div>
-            <span className="text-lg font-bold" style={{ color: COLORS.textMuted }}>{"\u2193"} add negatives</span>
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.integer}`, backgroundColor: `${COLORS.integer}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.integer }}>Integers: ..., {"\u2212"}2, {"\u2212"}1, 0, 1, 2, ...</span>
+            <span className="text-lg font-bold" style={{ color: MUTED }}>{"\u2193"} add negatives</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.integer}`, backgroundColor: `${THEME.integer}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.integer }}>Integers: ..., {"\u2212"}2, {"\u2212"}1, 0, 1, 2, ...</span>
             </div>
-            <span className="text-lg font-bold" style={{ color: COLORS.textMuted }}>{"\u2193"} add fractions</span>
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.rational}`, backgroundColor: `${COLORS.rational}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.rational }}>Rational: a/b</span>
+            <span className="text-lg font-bold" style={{ color: MUTED }}>{"\u2193"} add fractions</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.rational}`, backgroundColor: `${THEME.rational}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.rational }}>Rational: a/b</span>
             </div>
           </motion.div>
         )}
@@ -325,17 +300,17 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col gap-2 items-center">
             <div className="flex gap-3">
-              <div className="rounded-xl px-3 py-2" style={{ border: `2px solid ${COLORS.rational}`, backgroundColor: `${COLORS.rational}15` }}>
-                <span className="font-mono font-bold text-xs" style={{ color: COLORS.rational }}>Rational</span>
+              <div className="rounded-xl px-3 py-2" style={{ border: `2px solid ${THEME.rational}`, backgroundColor: `${THEME.rational}15` }}>
+                <span className="font-mono font-bold text-xs" style={{ color: THEME.rational }}>Rational</span>
               </div>
-              <span className="font-bold text-lg self-center" style={{ color: COLORS.textMuted }}>+</span>
-              <div className="rounded-xl px-3 py-2" style={{ border: `2px solid ${COLORS.irrational}`, backgroundColor: `${COLORS.irrational}15` }}>
-                <span className="font-mono font-bold text-xs" style={{ color: COLORS.irrational }}>Irrational</span>
+              <span className="font-bold text-lg self-center" style={{ color: MUTED }}>+</span>
+              <div className="rounded-xl px-3 py-2" style={{ border: `2px solid ${THEME.irrational}`, backgroundColor: `${THEME.irrational}15` }}>
+                <span className="font-mono font-bold text-xs" style={{ color: THEME.irrational }}>Irrational</span>
               </div>
             </div>
-            <span className="text-lg font-bold" style={{ color: COLORS.textMuted }}>=</span>
-            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${COLORS.real}`, backgroundColor: `${COLORS.real}15` }}>
-              <span className="font-mono font-bold text-sm" style={{ color: COLORS.real }}>Real Numbers</span>
+            <span className="text-lg font-bold" style={{ color: MUTED }}>=</span>
+            <div className="rounded-xl px-4 py-2" style={{ border: `2px solid ${THEME.real}`, backgroundColor: `${THEME.real}15` }}>
+              <span className="font-mono font-bold text-sm" style={{ color: THEME.real }}>Real Numbers</span>
             </div>
           </motion.div>
         )}
@@ -345,12 +320,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={SPRING} className="max-w-md text-center px-4">
           <p className="font-medium mb-4"
-            style={{ color: COLORS.textPrimary, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
+            style={{ color: TEXT, fontSize: "clamp(14px, 3.5vw, 18px)" }}>
             {current.text}
           </p>
           <Button size="lg"
             onClick={() => { if (step < prompts.length - 1) setStep((s) => s + 1); else onComplete(); }}
-            className="min-w-[140px]" style={{ backgroundColor: COLORS.primary }}>
+            className="min-w-[140px]" style={{ backgroundColor: PRIMARY }}>
             {current.btn}
           </Button>
         </motion.div>
@@ -376,17 +351,17 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   const notations = [
-    { formula: "\u2115 \u2282 \u2124\u2080 \u2282 \u2124 \u2282 \u211A \u2282 \u211D", desc: "Natural \u2282 Whole \u2282 Integer \u2282 Rational \u2282 Real", color: COLORS.real },
-    { formula: "\u211A = {a/b : a,b \u2208 \u2124, b \u2260 0}", desc: "Rationals are fractions of integers", color: COLORS.rational },
-    { formula: "Irrational = \u211D \\ \u211A", desc: "Irrationals are reals that aren't rational", color: COLORS.irrational },
-    { formula: "\u211D = \u211A \u222A Irrational", desc: "Every real number is rational OR irrational", color: COLORS.real },
+    { formula: "\u2115 \u2282 \u2124\u2080 \u2282 \u2124 \u2282 \u211A \u2282 \u211D", desc: "Natural \u2282 Whole \u2282 Integer \u2282 Rational \u2282 Real", color: THEME.real },
+    { formula: "\u211A = {a/b : a,b \u2208 \u2124, b \u2260 0}", desc: "Rationals are fractions of integers", color: THEME.rational },
+    { formula: "Irrational = \u211D \\ \u211A", desc: "Irrationals are reals that aren't rational", color: THEME.irrational },
+    { formula: "\u211D = \u211A \u222A Irrational", desc: "Every real number is rational OR irrational", color: THEME.real },
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <h2 className="text-center font-bold mb-8"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Set Notation
       </h2>
       <div className="space-y-5 w-full max-w-md">
@@ -395,9 +370,9 @@ function SymbolBridgeStage({ onComplete }: { onComplete: () => void }) {
             {revealed > i && (
               <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING}
                 className="rounded-xl p-4"
-                style={{ backgroundColor: COLORS.bgSurface, borderLeft: `4px solid ${n.color}` }}>
+                style={{ backgroundColor: SURFACE, borderLeft: `4px solid ${n.color}` }}>
                 <p className="font-bold font-mono text-lg" style={{ color: n.color }}>{n.formula}</p>
-                <p className="text-sm mt-1" style={{ color: COLORS.textMuted }}>{n.desc}</p>
+                <p className="text-sm mt-1" style={{ color: MUTED }}>{n.desc}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -420,10 +395,10 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   ];
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <h2 className="text-center font-bold mb-6"
-        style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>
+        style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>
         Numbers All Around Us
       </h2>
       <div className="space-y-4 w-full max-w-md">
@@ -431,12 +406,12 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.2, ...SPRING }}
             className="rounded-xl p-4 flex gap-3 items-start"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            style={{ backgroundColor: SURFACE }}>
             <span className="text-2xl" role="img" aria-hidden="true">{s.icon}</span>
             <div>
-              <p className="font-semibold" style={{ color: COLORS.textPrimary }}>{s.title}</p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{s.desc}</p>
-              <p className="text-xs font-mono mt-1" style={{ color: COLORS.real }}>{s.math}</p>
+              <p className="font-semibold" style={{ color: TEXT }}>{s.title}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{s.desc}</p>
+              <p className="text-xs font-mono mt-1" style={{ color: THEME.real }}>{s.math}</p>
             </div>
           </motion.div>
         ))}
@@ -472,42 +447,42 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
   }, [isLast, onComplete]);
 
   return (
-    <section className="flex flex-1 flex-col px-4 pt-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col px-4 pt-4 bg-nm-bg-primary"
+      aria-live="polite">
       <div className="flex items-center gap-1.5 justify-center mb-4">
         {PRACTICE_PROBLEMS.map((_, i) => {
           const r = results[i];
-          let bg: string = COLORS.bgElevated;
-          if (r === true) bg = COLORS.success;
-          else if (r === false) bg = COLORS.error;
+          let bg: string = ELEVATED;
+          if (r === true) bg = SUCCESS;
+          else if (r === false) bg = ERROR;
           return <div key={i} className="rounded-full transition-colors duration-200"
             style={{ width: 10, height: 10, backgroundColor: bg,
-              border: i === currentQ ? `2px solid ${COLORS.primary}` : "none" }} />;
+              border: i === currentQ ? `2px solid ${PRIMARY}` : "none" }} />;
         })}
       </div>
 
       <motion.div key={currentQ} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
         transition={SPRING} className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: COLORS.textMuted }}>
+        <p className="text-xs font-medium mb-1 uppercase tracking-wide" style={{ color: MUTED }}>
           {problem.layer} {"\u2022"} {currentQ + 1}/{PRACTICE_PROBLEMS.length}
         </p>
         <p className="text-center font-medium mb-6"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
+          style={{ color: TEXT, fontSize: "clamp(15px, 3.5vw, 18px)" }}>
           {problem.prompt}
         </p>
 
         <div className="space-y-2 w-full">
           {problem.options.map((opt) => {
-            let bg: string = COLORS.bgSurface; let border: string = COLORS.bgElevated;
+            let bg: string = SURFACE; let border: string = ELEVATED;
             if (submitted) {
-              if (opt === problem.correctAnswer) { bg = "#34d39933"; border = COLORS.success; }
-              else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = COLORS.error; }
-            } else if (opt === selected) { bg = "#818cf833"; border = COLORS.primary; }
+              if (opt === problem.correctAnswer) { bg = "#34d39933"; border = SUCCESS; }
+              else if (opt === selected && opt !== problem.correctAnswer) { bg = "#f8717133"; border = ERROR; }
+            } else if (opt === selected) { bg = "#818cf833"; border = PRIMARY; }
             return (
               <button key={opt} onClick={() => { if (!submitted) setSelected(opt); }}
                 disabled={submitted}
                 className="w-full text-left rounded-xl px-4 py-3 transition-colors min-h-[44px] active:scale-[0.97]"
-                style={{ backgroundColor: bg, border: `2px solid ${border}`, color: COLORS.textPrimary }}>
+                style={{ backgroundColor: bg, border: `2px solid ${border}`, color: TEXT }}>
                 {opt}
               </button>
             );
@@ -519,11 +494,11 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}
               className="mt-4 rounded-xl p-4 w-full"
               style={{ backgroundColor: isCorrect ? "#34d39920" : "#f8717120",
-                border: `1px solid ${isCorrect ? COLORS.success : COLORS.error}` }}>
-              <p className="font-bold mb-1" style={{ color: isCorrect ? COLORS.success : COLORS.error }}>
+                border: `1px solid ${isCorrect ? SUCCESS : ERROR}` }}>
+              <p className="font-bold mb-1" style={{ color: isCorrect ? SUCCESS : ERROR }}>
                 {isCorrect ? "Correct!" : "Not quite"}
               </p>
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>{problem.feedback}</p>
+              <p className="text-sm" style={{ color: TEXT_SEC }}>{problem.feedback}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -531,11 +506,11 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
         <div className="w-full mt-4 pb-8">
           {!submitted ? (
             <Button size="lg" onClick={handleSubmit} disabled={!selected} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: selected ? 1 : 0.4 }}>
+              style={{ backgroundColor: PRIMARY, opacity: selected ? 1 : 0.4 }}>
               Check Answer
             </Button>
           ) : (
-            <Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <Button size="lg" onClick={handleNext} className="w-full" style={{ backgroundColor: PRIMARY }}>
               {isLast ? "Continue" : "Next \u2192"}
             </Button>
           )}
@@ -558,14 +533,14 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
   const handleSkip = useCallback(() => { setSubmitted(true); }, []);
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4"
-      style={{ backgroundColor: COLORS.bgPrimary }} aria-live="polite">
+    <section className="flex flex-1 flex-col items-center justify-center px-4 bg-nm-bg-primary"
+      aria-live="polite">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={SPRING} className="w-full max-w-md">
         <h2 className="text-center font-bold mb-2"
-          style={{ color: COLORS.textPrimary, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
+          style={{ color: TEXT, fontSize: "clamp(20px, 5vw, 28px)" }}>Reflect</h2>
         <p className="text-center mb-6"
-          style={{ color: COLORS.textSecondary, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
+          style={{ color: TEXT_SEC, fontSize: "clamp(14px, 3.5vw, 16px)" }}>
           Why do mathematicians organize numbers into nested sets? How does knowing which set a number belongs to help you?
         </p>
 
@@ -574,20 +549,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
             <textarea value={text} onChange={(e) => setText(e.target.value)}
               placeholder="Type your explanation here..." rows={4}
               className="w-full rounded-xl px-4 py-3 resize-none min-h-[120px]"
-              style={{ backgroundColor: COLORS.bgSurface, color: COLORS.textPrimary,
-                border: `2px solid ${COLORS.bgElevated}`, outline: "none" }} />
+              style={{ backgroundColor: SURFACE, color: TEXT,
+                border: `2px solid ${ELEVATED}`, outline: "none" }} />
             <p className="text-xs mt-1 text-right"
-              style={{ color: text.trim().length >= 20 ? COLORS.success : COLORS.textMuted }}>
+              style={{ color: text.trim().length >= 20 ? SUCCESS : MUTED }}>
               {text.trim().length}/20 characters minimum
             </p>
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             transition={SPRING} className="rounded-xl p-6 text-center"
-            style={{ backgroundColor: COLORS.bgSurface }}>
+            style={{ backgroundColor: SURFACE }}>
             <p className="text-2xl mb-2" role="img" aria-label="Star">{"\u2B50"}</p>
-            <p className="font-bold" style={{ color: COLORS.success }}>Great thinking!</p>
-            <p className="text-sm mt-1" style={{ color: COLORS.textSecondary }}>
+            <p className="font-bold" style={{ color: SUCCESS }}>Great thinking!</p>
+            <p className="text-sm mt-1" style={{ color: TEXT_SEC }}>
               Reflecting on concepts deepens your understanding.
             </p>
           </motion.div>
@@ -598,17 +573,17 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         {!submitted ? (
           <>
             <Button size="lg" onClick={handleSubmit} disabled={!canSubmit} className="w-full"
-              style={{ backgroundColor: COLORS.primary, opacity: canSubmit ? 1 : 0.4 }}>
+              style={{ backgroundColor: PRIMARY, opacity: canSubmit ? 1 : 0.4 }}>
               Submit Reflection
             </Button>
             <button onClick={handleSkip} className="w-full text-center py-2 min-h-[44px]"
-              style={{ color: COLORS.textMuted, fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
+              style={{ color: MUTED, fontSize: 13, background: "none", border: "none", cursor: "pointer" }}>
               Skip
             </button>
           </>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-            <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: COLORS.primary }}>
+            <Button size="lg" onClick={onComplete} className="w-full" style={{ backgroundColor: PRIMARY }}>
               Complete Lesson
             </Button>
           </motion.div>
@@ -623,40 +598,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
 // ===========================================================================
 
 export function RealNumberSystemLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stageIdx, setStageIdx] = useState(0);
-  const stage = STAGES[stageIdx] ?? ("hook" as Stage);
-
-  const advanceStage = useCallback(() => {
-    setStageIdx((i) => { const next = i + 1; if (next >= STAGES.length) { onComplete?.(); return i; } return next; });
-  }, [onComplete]);
-
-  const handleReflectionComplete = useCallback(() => { onComplete?.(); }, [onComplete]);
-  const stageProgress = ((stageIdx + 1) / STAGES.length) * 100;
-
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: COLORS.bgPrimary }}>
-      <div className="sticky top-0 z-10 backdrop-blur-sm px-4 py-2"
-        style={{ backgroundColor: `${COLORS.bgPrimary}e6`, borderBottom: `1px solid ${COLORS.bgSurface}` }}>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium" style={{ color: COLORS.textMuted }}>NO-1.10 Real Number System</span>
-          <span className="text-xs tabular-nums" style={{ color: COLORS.bgElevated }}>{stageIdx + 1}/{STAGES.length}</span>
-        </div>
-        <ProgressBar value={stageProgress} variant="xp" size="sm" />
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }} transition={SPRING_GENTLE}>
-          {stage === "hook" && <HookStage onComplete={advanceStage} />}
-          {stage === "spatial" && <SpatialStage onComplete={advanceStage} />}
-          {stage === "discovery" && <DiscoveryStage onComplete={advanceStage} />}
-          {stage === "symbol" && <SymbolBridgeStage onComplete={advanceStage} />}
-          {stage === "realWorld" && <RealWorldStage onComplete={advanceStage} />}
-          {stage === "practice" && <PracticeStage onComplete={advanceStage} />}
-          {stage === "reflection" && <ReflectionStage onComplete={handleReflectionComplete} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-1.10 Real Number System" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

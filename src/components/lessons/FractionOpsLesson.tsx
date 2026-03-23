@@ -1,5 +1,10 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -11,7 +16,6 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
-import { cn } from "@/lib/utils/cn";
 
 /* ═══════════════════════════════════════════════════════════════════════
    TYPES
@@ -21,24 +25,7 @@ interface FractionOpsLessonProps {
   onComplete?: () => void;
 }
 
-type Stage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
-
-const STAGES: readonly Stage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
+/* Stage type & STAGES constant replaced by NLS_STAGES from @/lib/tokens/stages */
 
 interface Fraction {
   numerator: number;
@@ -63,24 +50,30 @@ interface PracticeProblem {
    CONSTANTS
    ═══════════════════════════════════════════════════════════════════════ */
 
-const INDIGO = "#818cf8";
-const VIOLET = "#a78bfa";
-const PURPLE = "#c084fc";
-const EMERALD = "#34d399";
-const RED = "#f87171";
-const AMBER = "#fbbf24";
-const BLUE = "#60a5fa";
-const CYAN = "#22d3ee";
+/* ── Lesson-specific colors (no shared token equivalent) ── */
+const THEME = {
+  purple: "#c084fc",
+  red: "#f87171",
+} as const;
 
-const UNSHADED = "#334155";
-const BORDER = "#64748b";
-const SURFACE = "#1e293b";
-const BG = "#0f172a";
-const TEXT = "#e2e8f0";
-const TEXT_SEC = "#94a3b8";
+/* ── Aliases for shared tokens (keeps inline style refs short) ── */
+const INDIGO = colors.accent.indigo;
+const VIOLET = colors.accent.violet;
+const PURPLE = THEME.purple;
+const EMERALD = colors.accent.emerald;
+const RED = THEME.red;
+const AMBER = colors.accent.amber;
+const BLUE = colors.functional.info;
+const CYAN = colors.accent.cyan;
 
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+const UNSHADED = colors.bg.surface;
+const BORDER = colors.text.muted;
+const BG = colors.bg.primary;
+const TEXT = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+
+const SPRING = springs.default;
+const SPRING_GENTLE = springs.gentle;
 const EASE = {
   type: "tween" as const,
   duration: 0.3,
@@ -355,75 +348,7 @@ function lcmOf(a: number, b: number): number {
   return (a * b) / gcd(a, b);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   SHARED SUB-COMPONENTS
-   ═══════════════════════════════════════════════════════════════════════ */
-
-function ContinueButton({
-  onClick,
-  disabled = false,
-  children = "Continue" as ReactNode,
-  progress,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-  progress?: number;
-}) {
-  return (
-    <motion.button
-      className="relative inline-flex items-center justify-center gap-2 rounded-xl font-medium px-6 py-3 text-base select-none"
-      style={{
-        minHeight: 48,
-        minWidth: 48,
-        background: disabled ? `${INDIGO}66` : INDIGO,
-        color: "#fff",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onClick={disabled ? undefined : onClick}
-      whileHover={disabled ? undefined : { scale: 1.04 }}
-      whileTap={disabled ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", damping: 15, stiffness: 400 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: disabled ? 0.5 : 1, y: 0 }}
-      aria-label={typeof children === "string" ? children : "Continue"}
-      aria-disabled={disabled}
-    >
-      {progress !== undefined && progress < 1 && (
-        <svg
-          className="absolute -top-1 -right-1"
-          width={24}
-          height={24}
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={UNSHADED}
-            strokeWidth={2}
-          />
-          <motion.circle
-            cx={12}
-            cy={12}
-            r={10}
-            fill="none"
-            stroke={INDIGO}
-            strokeWidth={2}
-            strokeDasharray={62.83}
-            strokeLinecap="round"
-            transform="rotate(-90 12 12)"
-            animate={{ strokeDashoffset: 62.83 * (1 - progress) }}
-            transition={SPRING_GENTLE}
-          />
-        </svg>
-      )}
-      {children}
-    </motion.button>
-  );
-}
+/* ContinueButton is now imported from @/components/lessons/ui/ContinueButton */
 
 /* ── Fraction Bar ─────────────────────────────────────────────────── */
 
@@ -1016,7 +941,6 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       <ContinueButton
         onClick={onComplete}
         disabled={progress < 1}
-        progress={progress}
       >
         {progress < 1 ? "Keep exploring..." : "Continue"}
       </ContinueButton>
@@ -1882,11 +1806,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentPrompt.id}
-          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
-          style={{
-            background: SURFACE,
-            border: `1px solid ${UNSHADED}`,
-          }}
+          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4 bg-nm-bg-secondary border border-nm-bg-surface"
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
@@ -1980,11 +1900,7 @@ function SymbolBridgeStage({
         {step === 0 && (
           <motion.div
             key="s0"
-            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5"
-            style={{
-              background: SURFACE,
-              border: `1px solid ${UNSHADED}`,
-            }}
+            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5 bg-nm-bg-secondary border border-nm-bg-surface"
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
@@ -2067,11 +1983,7 @@ function SymbolBridgeStage({
         {step === 1 && (
           <motion.div
             key="s1"
-            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5"
-            style={{
-              background: SURFACE,
-              border: `1px solid ${UNSHADED}`,
-            }}
+            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5 bg-nm-bg-secondary border border-nm-bg-surface"
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
@@ -2191,11 +2103,7 @@ function SymbolBridgeStage({
         {step === 2 && (
           <motion.div
             key="s2"
-            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5"
-            style={{
-              background: SURFACE,
-              border: `1px solid ${UNSHADED}`,
-            }}
+            className="w-full max-w-md rounded-xl p-5 flex flex-col gap-5 bg-nm-bg-secondary border border-nm-bg-surface"
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
@@ -2391,11 +2299,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={card.title}
-            className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4"
-            style={{
-              background: SURFACE,
-              border: `1px solid ${UNSHADED}`,
-            }}
+            className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4 bg-nm-bg-secondary border border-nm-bg-surface"
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -60 }}
@@ -2584,11 +2488,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
       <AnimatePresence mode="wait">
         <motion.div
           key={pi}
-          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
-          style={{
-            background: SURFACE,
-            border: `1px solid ${UNSHADED}`,
-          }}
+          className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4 bg-nm-bg-secondary border border-nm-bg-surface"
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -60 }}
@@ -2758,11 +2658,7 @@ function ReflectionStage({
       </h2>
 
       <div
-        className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4"
-        style={{
-          background: SURFACE,
-          border: `1px solid ${UNSHADED}`,
-        }}
+        className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4 bg-nm-bg-secondary border border-nm-bg-surface"
       >
         <p
           className="text-base font-medium leading-relaxed"
@@ -2888,112 +2784,21 @@ function ReflectionStage({
    MAIN EXPORT
    ═══════════════════════════════════════════════════════════════════════ */
 
-export function FractionOpsLesson({
-  onComplete,
-}: FractionOpsLessonProps) {
-  const [si, setSi] = useState(0);
-  const stage = STAGES[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    if (si >= STAGES.length - 1) {
-      onComplete?.();
-      return;
-    }
-    setSi((i) => i + 1);
-  }, [si, onComplete]);
-
-  const stageView = useMemo((): ReactNode => {
-    switch (stage) {
-      case "hook":
-        return <HookStage onComplete={advance} />;
-      case "spatial":
-        return <SpatialStage onComplete={advance} />;
-      case "discovery":
-        return <DiscoveryStage onComplete={advance} />;
-      case "symbol":
-        return <SymbolBridgeStage onComplete={advance} />;
-      case "realWorld":
-        return <RealWorldStage onComplete={advance} />;
-      case "practice":
-        return <PracticeStage onComplete={advance} />;
-      case "reflection":
-        return <ReflectionStage onComplete={advance} />;
-      default:
-        return null;
-    }
-  }, [stage, advance]);
-
+export function FractionOpsLesson({ onComplete }: FractionOpsLessonProps) {
   return (
-    <div
-      className={cn("flex min-h-screen flex-col")}
-      style={{ background: BG }}
-    >
-      {/* Progress nav */}
-      <nav
-        className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3"
-        style={{ background: SURFACE }}
-        aria-label="Lesson progress"
-      >
-        <span
-          className="text-sm font-medium tabular-nums"
-          style={{ color: TEXT_SEC }}
-        >
-          {si + 1}/{STAGES.length}
-        </span>
-        <div
-          className="flex-1 h-1.5 rounded-full overflow-hidden"
-          style={{ background: UNSHADED }}
-        >
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: INDIGO }}
-            animate={{
-              width: `${((si + 1) / STAGES.length) * 100}%`,
-            }}
-            transition={SPRING_GENTLE}
-          />
-        </div>
-
-        {/* Stage dots */}
-        <div className="flex gap-1.5">
-          {STAGES.map((s, i) => (
-            <div
-              key={s}
-              className="w-2 h-2 rounded-full"
-              style={{
-                background:
-                  i < si
-                    ? EMERALD
-                    : i === si
-                      ? INDIGO
-                      : UNSHADED,
-              }}
-              aria-label={`Stage ${i + 1}: ${s === "realWorld" ? "real world" : s}${i === si ? " (current)" : ""}`}
-            />
-          ))}
-        </div>
-
-        <span
-          className="text-xs capitalize"
-          style={{ color: TEXT_SEC }}
-        >
-          {stage === "realWorld" ? "real world" : stage}
-        </span>
-      </nav>
-
-      {/* Stage content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          className="flex flex-1 flex-col"
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={SPRING_GENTLE}
-        >
-          {stageView}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="NO-2.3 Fraction Operations" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onComplete={advance} />;
+          case "spatial": return <SpatialStage onComplete={advance} />;
+          case "discovery": return <DiscoveryStage onComplete={advance} />;
+          case "symbol": return <SymbolBridgeStage onComplete={advance} />;
+          case "realWorld": return <RealWorldStage onComplete={advance} />;
+          case "practice": return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

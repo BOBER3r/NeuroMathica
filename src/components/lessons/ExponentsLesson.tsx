@@ -1,5 +1,11 @@
 "use client";
 import { VideoHook } from "@/components/lessons/VideoHook";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 import {
   useCallback,
@@ -13,59 +19,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TYPES
+   SHARED TOKEN ALIASES
    ═══════════════════════════════════════════════════════════════════════════ */
 
-type NLSStage =
-  | "hook"
-  | "spatial"
-  | "discovery"
-  | "symbol"
-  | "realWorld"
-  | "practice"
-  | "reflection";
+const TEXT_PRIMARY = colors.text.primary;
+const TEXT_SEC = colors.text.secondary;
+const TEXT_MUTED = colors.text.muted;
+const SURFACE = colors.bg.secondary;
+const SURFACE_DEEP = colors.bg.primary;
+const BORDER = colors.bg.surface;
 
-const STAGE_ORDER: readonly NLSStage[] = [
-  "hook",
-  "spatial",
-  "discovery",
-  "symbol",
-  "realWorld",
-  "practice",
-  "reflection",
-] as const;
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SPRING CONFIGS (per NT-2.4 spec)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-const SPRING_POP = { type: "spring" as const, damping: 15, stiffness: 400 };
-const _SPRING_GENTLE = { type: "spring" as const, damping: 25, stiffness: 200 };
+const SPRING = springs.default;
+const SPRING_POP = springs.pop;
 const FADE = { duration: 0.3, ease: "easeOut" as const };
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   COLORS (per NT-2.4 colour palette)
+   LESSON-SPECIFIC THEME
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const C = {
-  base: "#818cf8",        // indigo-400 — base colour
-  baseStroke: "#6366f1",  // indigo-500
-  exponent: "#fbbf24",    // amber-400 — exponent colour
-  exponentDark: "#d97706",// amber-600
-  result: "#34d399",      // emerald-400 — results colour
-  penny: "#d97706",       // amber-600 — penny fill
-  pennyStroke: "#b45309", // amber-700
-  pennyText: "#451a03",   // amber-900
-  textPrimary: "#f1f5f9",
-  textSecondary: "#e2e8f0",
-  textMuted: "#94a3b8",
-  textDim: "#64748b",
-  surface: "#1e293b",
-  surfaceDeep: "#0f172a",
-  border: "#334155",
-  wrong: "#fb7185",       // rose-400 (only for wrong equation strikethrough)
-  violet: "#a78bfa",      // violet-400
+const THEME = {
+  base: colors.accent.indigo,        // indigo-400 — base colour
+  baseStroke: "#6366f1",             // indigo-500
+  exponent: colors.accent.amber,     // amber-400 — exponent colour
+  exponentDark: "#d97706",           // amber-600
+  result: colors.accent.emerald,     // emerald-400 — results colour
+  penny: "#d97706",                  // amber-600 — penny fill
+  pennyStroke: "#b45309",            // amber-700
+  pennyText: "#451a03",              // amber-900
+  wrong: colors.accent.rose,         // rose-400
+  violet: colors.accent.violet,      // violet-400
+  textSecondary: "#e2e8f0",          // slate-200 — lesson body text
 } as const;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -94,47 +77,14 @@ function XpFloat({ amount }: { amount: number }) {
       animate={{ opacity: 0, y: -24 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 text-xs font-bold"
-      style={{ color: C.exponent }}
+      style={{ color: THEME.exponent }}
     >
       +{amount} XP
     </motion.span>
   );
 }
 
-function CTAButton({
-  label,
-  onClick,
-  disabled = false,
-  ariaLabel,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  ariaLabel?: string;
-}) {
-  return (
-    <motion.div
-      className="w-full max-w-sm mx-auto pb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={disabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-    >
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          "w-full rounded-xl px-6 py-3 text-lg font-semibold text-white transition-all duration-150",
-          "min-h-[44px] min-w-[44px] select-none",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400",
-          disabled && "opacity-40 cursor-not-allowed pointer-events-none",
-        )}
-        style={{ backgroundColor: C.base }}
-      >
-        {label}
-      </button>
-    </motion.div>
-  );
-}
+/* CTAButton removed — using shared ContinueButton from @/components/lessons/ui/ContinueButton */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BRANCHING TREE — layout helpers
@@ -325,14 +275,14 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
   const valueFontSize =
     day <= 10 ? 24 : day <= 20 ? 28 : day <= 28 ? 32 : 36;
 
-  const valueColor = day >= 28 ? C.result : C.exponent;
+  const valueColor = day >= 28 ? THEME.result : THEME.exponent;
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4">
       <svg viewBox="0 0 400 400" className="w-full max-w-md" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="pennyGrad" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor={C.penny} />
+            <stop offset="0%" stopColor={THEME.penny} />
             <stop offset="100%" stopColor="#f59e0b" />
           </linearGradient>
         </defs>
@@ -344,8 +294,8 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
             animate={{ scale: 1, opacity: 1 }}
             transition={SPRING}
           >
-            <circle cx={200} cy={60} r={18} fill={C.penny} stroke={C.pennyStroke} strokeWidth={2} />
-            <text x={200} y={65} textAnchor={"middle" as const} fill={C.pennyText} fontSize={12} fontWeight={700}>
+            <circle cx={200} cy={60} r={18} fill={THEME.penny} stroke={THEME.pennyStroke} strokeWidth={2} />
+            <text x={200} y={65} textAnchor={"middle" as const} fill={THEME.pennyText} fontSize={12} fontWeight={700}>
               1c
             </text>
           </motion.g>
@@ -356,7 +306,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           <motion.text
             x={200} y={100}
             textAnchor={"middle" as const}
-            fill={C.textMuted} fontSize={16} fontStyle="italic"
+            fill={TEXT_SEC} fontSize={16} fontStyle="italic"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ delay: 0.3, ...FADE }}
           >
@@ -369,7 +319,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           <>
             <motion.text
               x={200} y={50}
-              textAnchor={"middle" as const} fill={C.textPrimary} fontSize={14}
+              textAnchor={"middle" as const} fill={TEXT_PRIMARY} fontSize={14}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE}
             >
               {`Day ${day}`}
@@ -391,7 +341,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
               <motion.text
                 key={`ms-${day}`}
                 x={200} y={125}
-                textAnchor={"middle" as const} fill={C.textMuted}
+                textAnchor={"middle" as const} fill={TEXT_SEC}
                 fontSize={13} fontStyle="italic"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={FADE}
@@ -416,7 +366,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           <>
             <motion.text
               x={200} y={140}
-              textAnchor={"middle" as const} fill={C.textPrimary} fontSize={18}
+              textAnchor={"middle" as const} fill={TEXT_PRIMARY} fontSize={18}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ delay: 0.2, ...FADE }}
             >
@@ -425,7 +375,7 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
 
             <motion.text
               x={200} y={175}
-              textAnchor={"middle" as const} fill={C.exponent} fontSize={16} fontWeight={600}
+              textAnchor={"middle" as const} fill={THEME.exponent} fontSize={16} fontWeight={600}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, ...SPRING }}
@@ -442,11 +392,10 @@ function HookStage({ onComplete }: { onComplete: () => void }) {
           "A single penny doubles every day. After 30 days it becomes over 5 million dollars. The equation 2 to the power of 30 creates this explosive growth."}
       </div>
 
-      <CTAButton
-        label="Learn the power of powers"
+      <ContinueButton
         onClick={onComplete}
         disabled={!showBtn}
-        ariaLabel="Continue to interactive exploration of exponents"
+        label="Learn the power of powers"
       />
     </div>
   );
@@ -568,11 +517,11 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
         <motion.p
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="mb-8 text-center text-lg"
-          style={{ color: C.textPrimary }}
+          style={{ color: TEXT_PRIMARY }}
         >
           Now let&apos;s see exponents as shapes...
         </motion.p>
-        <CTAButton label="Continue" onClick={() => setSpatialPhase("tower")} />
+        <ContinueButton onClick={() => setSpatialPhase("tower")} />
       </div>
     );
   }
@@ -592,19 +541,22 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="flex flex-1 flex-col px-4">
       {/* Instruction + Stats */}
-      <div className="mb-2 mt-2 rounded-xl p-3" style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-        <p className="mb-2 text-sm" style={{ color: C.textSecondary }}>{instruction}</p>
+      <div className="mb-2 mt-2 rounded-xl p-3" style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
+        <p className="mb-2 text-sm" style={{ color: THEME.textSecondary }}>{instruction}</p>
+        <div className="mb-2">
+          <InteractionDots count={Math.min(interactions, 10)} total={10} activeColor={THEME.base} />
+        </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="rounded-full px-3 py-1 font-semibold" style={{ backgroundColor: "rgba(129,140,248,0.15)", color: C.base }}>
+          <span className="rounded-full px-3 py-1 font-semibold" style={{ backgroundColor: "rgba(129,140,248,0.15)", color: THEME.base }}>
             Base: {base}
           </span>
-          <span className="rounded-full px-3 py-1 font-semibold" style={{ backgroundColor: "rgba(251,191,36,0.15)", color: C.exponent }}>
+          <span className="rounded-full px-3 py-1 font-semibold" style={{ backgroundColor: "rgba(251,191,36,0.15)", color: THEME.exponent }}>
             Levels: {levels}
           </span>
           <motion.span
             key={leafCount}
             className="font-bold text-lg"
-            style={{ color: C.result }}
+            style={{ color: THEME.result }}
             initial={{ scale: 1.3 }} animate={{ scale: 1 }}
             transition={SPRING}
           >
@@ -627,7 +579,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               <motion.line
                 key={`line-${n.id}`}
                 x1={n.parentX} y1={n.parentY} x2={n.x} y2={n.y}
-                stroke={C.border} strokeWidth={1.5}
+                stroke={BORDER} strokeWidth={1.5}
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
@@ -639,8 +591,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
             <motion.circle
               key={`node-${n.id}`}
               r={n.r}
-              fill={n.isLeaf ? C.exponent : C.base}
-              stroke={n.isLeaf ? C.exponentDark : C.baseStroke}
+              fill={n.isLeaf ? THEME.exponent : THEME.base}
+              stroke={n.isLeaf ? THEME.exponentDark : THEME.baseStroke}
               strokeWidth={2}
               style={
                 n.isLeaf
@@ -656,8 +608,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           {/* Cluster bar for large trees */}
           {isCluster && (
             <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE}>
-              <rect x={VB_W * 0.1} y={VB_H - 60} width={VB_W * 0.8} height={24} rx={6} fill={C.exponent} opacity={0.3} />
-              <text x={VB_W / 2} y={VB_H - 44} textAnchor={"middle" as const} fill={C.result} fontSize={14} fontWeight={700}>
+              <rect x={VB_W * 0.1} y={VB_H - 60} width={VB_W * 0.8} height={24} rx={6} fill={THEME.exponent} opacity={0.3} />
+              <text x={VB_W / 2} y={VB_H - 44} textAnchor={"middle" as const} fill={THEME.result} fontSize={14} fontWeight={700}>
                 {leafCount} leaves
               </text>
             </motion.g>
@@ -666,18 +618,18 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Expanded equation bar */}
-      <div className="mb-2 text-center" style={{ color: C.textSecondary }}>
+      <div className="mb-2 text-center" style={{ color: THEME.textSecondary }}>
         <motion.span
           key={`eq-${base}-${levels}`}
           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
           transition={SPRING}
           className="text-base"
         >
-          <span style={{ color: C.base }}>{expandedForm(base, levels)}</span>
+          <span style={{ color: THEME.base }}>{expandedForm(base, levels)}</span>
           {levels > 0 && (
             <>
               {" = "}
-              <span className="font-bold" style={{ color: C.result }}>{leafCount}</span>
+              <span className="font-bold" style={{ color: THEME.result }}>{leafCount}</span>
             </>
           )}
         </motion.span>
@@ -694,8 +646,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           )}
           style={{
             backgroundColor: "rgba(129,140,248,0.15)",
-            border: `2px solid ${C.base}`,
-            color: C.base,
+            border: `2px solid ${THEME.base}`,
+            color: THEME.base,
             animation: levels === 0 ? "pulse 1.5s ease-in-out infinite" : undefined,
           }}
           aria-label="Add one branching level"
@@ -713,8 +665,8 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           )}
           style={{
             backgroundColor: "rgba(129,140,248,0.08)",
-            border: `2px solid ${C.border}`,
-            color: C.textMuted,
+            border: `2px solid ${BORDER}`,
+            color: TEXT_SEC,
           }}
           aria-label="Remove one branching level"
           data-interactive="true"
@@ -737,7 +689,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               "flex items-center justify-center rounded-lg min-h-[44px] min-w-[44px] text-xl font-bold transition-all",
               (base <= 2 || debouncing) && "opacity-30 cursor-not-allowed",
             )}
-            style={{ border: `2px solid ${C.border}`, color: C.textSecondary }}
+            style={{ border: `2px solid ${BORDER}`, color: THEME.textSecondary }}
             aria-label="Decrease base"
             data-interactive="true"
           >
@@ -745,7 +697,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
           </button>
           <span
             className="text-xl font-bold min-w-[44px] text-center"
-            style={{ color: C.base }}
+            style={{ color: THEME.base }}
             role="spinbutton"
             aria-valuemin={2} aria-valuemax={5} aria-valuenow={base}
             aria-label="Base value"
@@ -759,7 +711,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
               "flex items-center justify-center rounded-lg min-h-[44px] min-w-[44px] text-xl font-bold transition-all",
               (base >= 5 || debouncing || !freeExplore) && "opacity-30 cursor-not-allowed",
             )}
-            style={{ border: `2px solid ${C.border}`, color: C.textSecondary }}
+            style={{ border: `2px solid ${BORDER}`, color: THEME.textSecondary }}
             aria-label="Increase base"
             data-interactive="true"
           >
@@ -770,7 +722,7 @@ function SpatialStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Continue to tower */}
       {canContinueTree && (
-        <CTAButton label="Continue to Tower of Powers" onClick={() => setSpatialPhase("transition")} ariaLabel="Continue to tower visualization" />
+        <ContinueButton onClick={() => setSpatialPhase("transition")} label="Continue to Tower of Powers" />
       )}
 
       {/* aria-live for stats changes */}
@@ -819,8 +771,8 @@ function TowerPhase({
 
   return (
     <div className="flex flex-1 flex-col px-4">
-      <div className="mb-3 mt-2 rounded-xl p-3" style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-        <p className="text-sm" style={{ color: C.textSecondary }}>
+      <div className="mb-3 mt-2 rounded-xl p-3" style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
+        <p className="text-sm" style={{ color: THEME.textSecondary }}>
           Build the tower! Tap each shape to see exponents as geometry.
         </p>
       </div>
@@ -828,12 +780,12 @@ function TowerPhase({
       <div className="flex flex-1 items-start justify-center gap-6 pt-4">
         {shapes.map((shape) => {
           const isBuilt = built.has(shape.key);
-          const colors =
+          const shapeColors =
             shape.exp === 1
-              ? { fill: "rgba(129,140,248,0.12)", stroke: C.base }
+              ? { fill: "rgba(129,140,248,0.12)", stroke: THEME.base }
               : shape.exp === 2
-                ? { fill: "rgba(251,191,36,0.12)", stroke: C.exponent }
-                : { fill: "rgba(52,211,153,0.12)", stroke: C.result };
+                ? { fill: "rgba(251,191,36,0.12)", stroke: THEME.exponent }
+                : { fill: "rgba(52,211,153,0.12)", stroke: THEME.result };
 
           return (
             <div key={shape.key} className="flex flex-col items-center gap-2">
@@ -842,8 +794,8 @@ function TowerPhase({
                 disabled={isBuilt}
                 className="min-h-[44px] min-w-[44px] rounded-xl p-3 transition-all"
                 style={{
-                  backgroundColor: isBuilt ? colors.fill : "transparent",
-                  border: `2px solid ${isBuilt ? colors.stroke : C.border}`,
+                  backgroundColor: isBuilt ? shapeColors.fill : "transparent",
+                  border: `2px solid ${isBuilt ? shapeColors.stroke : BORDER}`,
                 }}
                 aria-label={`Build ${shape.label} shown as ${shape.desc}`}
                 data-interactive="true"
@@ -864,8 +816,8 @@ function TowerPhase({
                           key={i}
                           x={2 + i * unitSize} y={2}
                           width={unitSize} height={unitSize} rx={2}
-                          fill={isBuilt ? colors.fill : "transparent"}
-                          stroke={isBuilt ? colors.stroke : C.border}
+                          fill={isBuilt ? shapeColors.fill : "transparent"}
+                          stroke={isBuilt ? shapeColors.stroke : BORDER}
                           strokeWidth={1}
                           initial={{ scale: 0 }}
                           animate={{ scale: isBuilt ? 1 : 0.3 }}
@@ -883,8 +835,8 @@ function TowerPhase({
                             key={`${r}-${col}`}
                             x={2 + col * unitSize} y={2 + r * unitSize}
                             width={unitSize} height={unitSize} rx={2}
-                            fill={isBuilt ? colors.fill : "transparent"}
-                            stroke={isBuilt ? colors.stroke : C.border}
+                            fill={isBuilt ? shapeColors.fill : "transparent"}
+                            stroke={isBuilt ? shapeColors.stroke : BORDER}
                             strokeWidth={1}
                             initial={{ scale: 0 }}
                             animate={{ scale: isBuilt ? 1 : 0.3 }}
@@ -900,21 +852,21 @@ function TowerPhase({
                       <motion.polygon
                         points="10,30 40,30 40,60 10,60"
                         fill={isBuilt ? "rgba(52,211,153,0.2)" : "transparent"}
-                        stroke={isBuilt ? C.result : C.border} strokeWidth={1}
+                        stroke={isBuilt ? THEME.result : BORDER} strokeWidth={1}
                         initial={{ opacity: 0 }} animate={{ opacity: isBuilt ? 1 : 0.3 }}
-                        transition={{ ...SPRING, delay: 0 }}
+                        transition={SPRING}
                       />
                       <motion.polygon
                         points="10,30 40,30 60,15 30,15"
                         fill={isBuilt ? "rgba(52,211,153,0.3)" : "transparent"}
-                        stroke={isBuilt ? C.result : C.border} strokeWidth={1}
+                        stroke={isBuilt ? THEME.result : BORDER} strokeWidth={1}
                         initial={{ opacity: 0 }} animate={{ opacity: isBuilt ? 1 : 0.3 }}
                         transition={{ ...SPRING, delay: 0.1 }}
                       />
                       <motion.polygon
                         points="40,30 60,15 60,45 40,60"
                         fill={isBuilt ? "rgba(52,211,153,0.1)" : "transparent"}
-                        stroke={isBuilt ? C.result : C.border} strokeWidth={1}
+                        stroke={isBuilt ? THEME.result : BORDER} strokeWidth={1}
                         initial={{ opacity: 0 }} animate={{ opacity: isBuilt ? 1 : 0.3 }}
                         transition={{ ...SPRING, delay: 0.2 }}
                       />
@@ -923,10 +875,10 @@ function TowerPhase({
                 </svg>
               </button>
 
-              <span className="text-sm font-semibold" style={{ color: isBuilt ? colors.stroke : C.textDim }}>
+              <span className="text-sm font-semibold" style={{ color: isBuilt ? shapeColors.stroke : TEXT_MUTED }}>
                 {shape.label}
               </span>
-              <span className="text-xs italic" style={{ color: C.textMuted }}>
+              <span className="text-xs italic" style={{ color: TEXT_SEC }}>
                 {shape.desc}
               </span>
             </div>
@@ -938,14 +890,14 @@ function TowerPhase({
         <motion.p
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="mt-4 text-center font-semibold"
-          style={{ color: C.exponent, fontSize: 16 }}
+          style={{ color: THEME.exponent, fontSize: 16 }}
         >
           Each exponent adds a DIMENSION
         </motion.p>
       )}
 
       {canFinish && (
-        <CTAButton label="Ready to discover the patterns?" onClick={onComplete} ariaLabel="Continue to guided discovery" />
+        <ContinueButton onClick={onComplete} label="Ready to discover the patterns?" />
       )}
     </div>
   );
@@ -961,7 +913,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
   const [microRevealed, setMicroRevealed] = useState(false);
 
   const HL = useCallback(
-    (t: string, color: string = C.base) => (
+    (t: string, color: string = THEME.base) => (
       <span className="font-semibold" style={{ color }}>{t}</span>
     ),
     [],
@@ -990,12 +942,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             {microAnswer === "6" && (
               <>
                 That&apos;s 2 {"\u00d7"} 3 {"\u2014"} a common mistake! But exponents mean{" "}
-                {HL("REPEATED multiplication", C.exponent)}: 2 {"\u00d7"} 2 {"\u00d7"} 2 = 8.
+                {HL("REPEATED multiplication", THEME.exponent)}: 2 {"\u00d7"} 2 {"\u00d7"} 2 = 8.
               </>
             )}
             {microAnswer === "8" && (
               <>
-                {HL("Exactly right!", C.result)} Let&apos;s see why...
+                {HL("Exactly right!", THEME.result)} Let&apos;s see why...
               </>
             )}
             {microAnswer === "9" && (
@@ -1007,8 +959,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
             {microAnswer !== null && (
               <>
                 {" "}
-                The exponent tells you {HL("how many times", C.exponent)} to multiply the base by
-                itself: 2 {"\u00d7"} 2 {"\u00d7"} 2 = {HL("8", C.result)}.
+                The exponent tells you {HL("how many times", THEME.exponent)} to multiply the base by
+                itself: 2 {"\u00d7"} 2 {"\u00d7"} 2 = {HL("8", THEME.result)}.
               </>
             )}
           </>
@@ -1017,18 +969,18 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <svg viewBox="0 0 360 120" className="w-full max-w-md">
             {microRevealed && (
               <>
-                <text x={180} y={30} textAnchor={"middle" as const} fill={C.wrong} fontSize={20}>
+                <text x={180} y={30} textAnchor={"middle" as const} fill={THEME.wrong} fontSize={20}>
                   {"2\u00b3 \u2260 2 \u00d7 3 = 6"}
                 </text>
                 <motion.line
                   x1={80} y1={30} x2={280} y2={30}
-                  stroke={C.wrong} strokeWidth={2}
+                  stroke={THEME.wrong} strokeWidth={2}
                   initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                   transition={{ duration: 0.3 }}
                 />
                 <motion.text
                   x={180} y={70}
-                  textAnchor={"middle" as const} fill={C.result} fontSize={22}
+                  textAnchor={"middle" as const} fill={THEME.result} fontSize={22}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, scale: [1, 1.05, 1] }}
                   transition={{ delay: 0.3, ...SPRING }}
@@ -1045,26 +997,26 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         body: (
           <>
             In 2{"\u00b3"}, the big number (2) is called the{" "}
-            {HL("base", C.base)} {"\u2014"} it&apos;s WHAT you multiply. The small raised number (3)
-            is called the {HL("exponent", C.exponent)} or{" "}
-            {HL("power", C.exponent)} {"\u2014"} it&apos;s HOW MANY TIMES you
+            {HL("base", THEME.base)} {"\u2014"} it&apos;s WHAT you multiply. The small raised number (3)
+            is called the {HL("exponent", THEME.exponent)} or{" "}
+            {HL("power", THEME.exponent)} {"\u2014"} it&apos;s HOW MANY TIMES you
             multiply. Think of it like the tree: the base is how many{" "}
             {HL("branches")} each node has, and the exponent is how many{" "}
-            {HL("levels", C.exponent)} deep you go.
+            {HL("levels", THEME.exponent)} deep you go.
           </>
         ),
         visual: (
           <svg viewBox="0 0 360 100" className="w-full max-w-md">
-            <text x={140} y={55} fill={C.base} fontSize={48} fontWeight={700}>
+            <text x={140} y={55} fill={THEME.base} fontSize={48} fontWeight={700}>
               2
             </text>
-            <text x={175} y={35} fill={C.exponent} fontSize={28} fontWeight={700}>
+            <text x={175} y={35} fill={THEME.exponent} fontSize={28} fontWeight={700}>
               3
             </text>
-            <text x={148} y={80} textAnchor={"middle" as const} fill={C.base} fontSize={14}>
+            <text x={148} y={80} textAnchor={"middle" as const} fill={THEME.base} fontSize={14}>
               base
             </text>
-            <text x={185} y={18} textAnchor={"middle" as const} fill={C.exponent} fontSize={14}>
+            <text x={185} y={18} textAnchor={"middle" as const} fill={THEME.exponent} fontSize={14}>
               exponent
             </text>
           </svg>
@@ -1076,31 +1028,31 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <>
             Watch what happens when you add one more level. With base 2: 1
             level = 2 leaves, 2 levels = 4 leaves, 3 levels = 8 leaves. Each
-            time, the count {HL("doubles", C.exponent)} {"\u2014"} it MULTIPLIES
+            time, the count {HL("doubles", THEME.exponent)} {"\u2014"} it MULTIPLIES
             by 2, not adds 2. That&apos;s why exponents grow so fast!
           </>
         ),
         visual: (
           <svg viewBox="0 0 360 80" className="w-full max-w-md">
-            <text x={50} y={30} fill={C.textSecondary} fontSize={14}>
+            <text x={50} y={30} fill={THEME.textSecondary} fontSize={14}>
               {"2\u00b9 = 2"}
             </text>
-            <text x={120} y={22} fill={C.exponent} fontSize={16} fontWeight={600}>
+            <text x={120} y={22} fill={THEME.exponent} fontSize={16} fontWeight={600}>
               {"\u00d72"}
             </text>
-            <text x={160} y={30} fill={C.textSecondary} fontSize={14}>
+            <text x={160} y={30} fill={THEME.textSecondary} fontSize={14}>
               {"2\u00b2 = 4"}
             </text>
-            <text x={230} y={22} fill={C.exponent} fontSize={16} fontWeight={600}>
+            <text x={230} y={22} fill={THEME.exponent} fontSize={16} fontWeight={600}>
               {"\u00d72"}
             </text>
-            <text x={270} y={30} fill={C.textSecondary} fontSize={14}>
+            <text x={270} y={30} fill={THEME.textSecondary} fontSize={14}>
               {"2\u00b3 = 8"}
             </text>
-            <text x={20} y={60} fill={C.textMuted} fontSize={12}>
+            <text x={20} y={60} fill={TEXT_SEC} fontSize={12}>
               Addition: 2, 4, 6, 8, 10 (+2)
             </text>
-            <text x={20} y={75} fill={C.exponent} fontSize={12} fontWeight={600}>
+            <text x={20} y={75} fill={THEME.exponent} fontSize={12} fontWeight={600}>
               {"Exponents: 2, 4, 8, 16, 32 (\u00d72)"}
             </text>
           </svg>
@@ -1112,8 +1064,8 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
           <>
             Here&apos;s a puzzle: what is 2{"\u2070"}? Look at the pattern
             going backward: 2{"\u00b3"} = 8, 2{"\u00b2"} = 4, 2{"\u00b9"} = 2.
-            Each step we {HL("divide by 2", C.exponent)}. So 2{"\u2070"} = 2{" "}
-            {"\u00f7"} 2 = {HL("1", C.result)}. Any number (except 0) raised to
+            Each step we {HL("divide by 2", THEME.exponent)}. So 2{"\u2070"} = 2{" "}
+            {"\u00f7"} 2 = {HL("1", THEME.result)}. Any number (except 0) raised to
             the power 0 equals 1!
           </>
         ),
@@ -1132,14 +1084,14 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               >
                 <text
                   x={100} y={step.y}
-                  fill={i === 3 ? C.result : C.textSecondary}
+                  fill={i === 3 ? THEME.result : THEME.textSecondary}
                   fontSize={i === 3 ? 22 : 18}
                   fontWeight={i === 3 ? 700 : 400}
                 >
                   {step.exp}
                 </text>
                 {i < 3 && (
-                  <text x={220} y={step.y + 15} fill={C.exponent} fontSize={14} fontWeight={600}>
+                  <text x={220} y={step.y + 15} fill={THEME.exponent} fontSize={14} fontWeight={600}>
                     {"\u00f7 2"}
                   </text>
                 )}
@@ -1153,28 +1105,28 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         body: (
           <>
             Does a bigger exponent always give a bigger result? Not always!
-            Compare: {HL("10\u00b2 = 100")} vs {HL("2\u00b9\u2070 = 1024", C.result)}.
+            Compare: {HL("10\u00b2 = 100")} vs {HL("2\u00b9\u2070 = 1024", THEME.result)}.
             The base matters too! And what about{" "}
-            {HL("1\u00b9\u2070\u2070", C.exponent)}? No matter how many times
-            you multiply 1 by itself, you still get {HL("1", C.result)}. The
+            {HL("1\u00b9\u2070\u2070", THEME.exponent)}? No matter how many times
+            you multiply 1 by itself, you still get {HL("1", THEME.result)}. The
             base and exponent work TOGETHER.
           </>
         ),
         visual: (
           <svg viewBox="0 0 360 100" className="w-full max-w-md">
             <motion.g initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={SPRING}>
-              <text x={30} y={25} fill={C.textSecondary} fontSize={14}>{"10\u00b2 = 100"}</text>
-              <text x={170} y={25} fill={C.textMuted} fontSize={14}>vs</text>
-              <text x={210} y={25} fill={C.result} fontSize={14} fontWeight={600}>{"2\u00b9\u2070 = 1024"}</text>
+              <text x={30} y={25} fill={THEME.textSecondary} fontSize={14}>{"10\u00b2 = 100"}</text>
+              <text x={170} y={25} fill={TEXT_SEC} fontSize={14}>vs</text>
+              <text x={210} y={25} fill={THEME.result} fontSize={14} fontWeight={600}>{"2\u00b9\u2070 = 1024"}</text>
             </motion.g>
             <motion.g initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ ...SPRING, delay: 0.3 }}>
-              <text x={30} y={55} fill={C.textSecondary} fontSize={14}>{"100\u00b9 = 100"}</text>
-              <text x={170} y={55} fill={C.textMuted} fontSize={14}>vs</text>
-              <text x={210} y={55} fill={C.result} fontSize={14} fontWeight={600}>{"2\u2077 = 128"}</text>
+              <text x={30} y={55} fill={THEME.textSecondary} fontSize={14}>{"100\u00b9 = 100"}</text>
+              <text x={170} y={55} fill={TEXT_SEC} fontSize={14}>vs</text>
+              <text x={210} y={55} fill={THEME.result} fontSize={14} fontWeight={600}>{"2\u2077 = 128"}</text>
             </motion.g>
             <motion.text
               x={180} y={88}
-              textAnchor={"middle" as const} fill={C.exponent} fontSize={14}
+              textAnchor={"middle" as const} fill={THEME.exponent} fontSize={14}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ ...SPRING, delay: 0.6 }}
             >
@@ -1217,10 +1169,10 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
               key={idx}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               className="rounded-2xl p-5"
-              style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}
+              style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
               aria-live="polite"
             >
-              <p className="mb-4 leading-relaxed" style={{ color: C.textSecondary, fontSize: 16 }}>
+              <p className="mb-4 leading-relaxed" style={{ color: THEME.textSecondary, fontSize: 16 }}>
                 {cur.body}
               </p>
 
@@ -1231,7 +1183,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                       key={opt.value}
                       onClick={() => handleMicroAnswer(opt.value)}
                       className="flex-1 rounded-xl py-3 text-lg font-semibold min-h-[48px] min-w-[44px]"
-                      style={{ backgroundColor: C.surface, border: `2px solid ${C.border}`, color: C.textSecondary }}
+                      style={{ backgroundColor: SURFACE, border: `2px solid ${BORDER}`, color: THEME.textSecondary }}
                       aria-label={`I think 2 to the power of 3 equals ${opt.label}`}
                     >
                       {opt.label}
@@ -1244,7 +1196,7 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
                 <button
                   onClick={handleNext}
                   className="rounded-xl px-6 py-2 text-sm font-medium min-h-[44px] min-w-[44px]"
-                  style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${C.border}`, color: C.textPrimary }}
+                  style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}
                 >
                   Next
                 </button>
@@ -1258,12 +1210,12 @@ function DiscoveryStage({ onComplete }: { onComplete: () => void }) {
         <motion.div
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="mb-4 rounded-2xl p-5 text-center"
-          style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}
+          style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
         >
-          <p className="mb-4" style={{ color: C.textSecondary }}>
+          <p className="mb-4" style={{ color: THEME.textSecondary }}>
             Now let&apos;s connect what you discovered to the proper math notation.
           </p>
-          <CTAButton label="Continue" onClick={onComplete} />
+          <ContinueButton onClick={onComplete} />
         </motion.div>
       )}
     </div>
@@ -1298,22 +1250,22 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             <svg viewBox="0 0 360 120" className="w-full max-w-md mb-6">
               <motion.text
                 x={180} y={40}
-                textAnchor={"middle" as const} fontSize={20} fill={C.textPrimary}
+                textAnchor={"middle" as const} fontSize={20} fill={TEXT_PRIMARY}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={{ ...FADE, delay: 0.2 }}
               >
-                <tspan fill={C.base}>b</tspan>
-                <tspan dy={-8} fontSize={14} fill={C.exponent}>n</tspan>
+                <tspan fill={THEME.base}>b</tspan>
+                <tspan dy={-8} fontSize={14} fill={THEME.exponent}>n</tspan>
                 <tspan dy={8}>{" = "}</tspan>
-                <tspan fill={C.base}>b</tspan>
+                <tspan fill={THEME.base}>b</tspan>
                 {" \u00d7 "}
-                <tspan fill={C.base}>b</tspan>
+                <tspan fill={THEME.base}>b</tspan>
                 {" \u00d7 \u2026 \u00d7 "}
-                <tspan fill={C.base}>b</tspan>
+                <tspan fill={THEME.base}>b</tspan>
               </motion.text>
               <motion.text
                 x={180} y={75}
-                textAnchor={"middle" as const} fontSize={14} fill={C.exponent}
+                textAnchor={"middle" as const} fontSize={14} fill={THEME.exponent}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={{ ...FADE, delay: 0.6 }}
               >
@@ -1321,17 +1273,17 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
               </motion.text>
               <motion.line
                 x1={110} y1={55} x2={250} y2={55}
-                stroke={C.exponent} strokeWidth={1} strokeDasharray="4 2"
+                stroke={THEME.exponent} strokeWidth={1} strokeDasharray="4 2"
                 initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               />
             </svg>
 
-            <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-              <p className="text-sm leading-relaxed" style={{ color: C.textSecondary }}>
-                The <span style={{ color: C.base }} className="font-semibold">base</span> is
+            <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}>
+              <p className="text-sm leading-relaxed" style={{ color: THEME.textSecondary }}>
+                The <span style={{ color: THEME.base }} className="font-semibold">base</span> is
                 the number being multiplied. The{" "}
-                <span style={{ color: C.exponent }} className="font-semibold">exponent</span>{" "}
+                <span style={{ color: THEME.exponent }} className="font-semibold">exponent</span>{" "}
                 tells how many times.
               </p>
             </div>
@@ -1339,7 +1291,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleNext}
               className="rounded-xl px-6 py-2 text-sm font-medium min-h-[44px] min-w-[44px]"
-              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${C.border}`, color: C.textPrimary }}
+              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}
             >
               Next
             </button>
@@ -1355,20 +1307,20 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
           >
             <div className="w-full max-w-md space-y-3 mb-6">
               {[
-                { expr: "2\u00b2", say: "two squared", color: C.exponent },
-                { expr: "2\u00b3", say: "two cubed", color: C.result },
-                { expr: "2\u2074", say: "two to the fourth power", color: C.base },
-                { expr: "b\u207f", say: "b to the n-th power", color: C.textSecondary },
+                { expr: "2\u00b2", say: "two squared", color: THEME.exponent },
+                { expr: "2\u00b3", say: "two cubed", color: THEME.result },
+                { expr: "2\u2074", say: "two to the fourth power", color: THEME.base },
+                { expr: "b\u207f", say: "b to the n-th power", color: THEME.textSecondary },
               ].map((row, i) => (
                 <motion.div
                   key={row.expr}
                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                   transition={{ ...SPRING, delay: i * 0.3 }}
                   className="flex items-center justify-between rounded-xl px-4 py-3"
-                  style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}
+                  style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
                 >
                   <span className="text-lg font-bold" style={{ color: row.color }}>{row.expr}</span>
-                  <span className="text-sm italic" style={{ color: C.textMuted }}>{row.say}</span>
+                  <span className="text-sm italic" style={{ color: TEXT_SEC }}>{row.say}</span>
                 </motion.div>
               ))}
             </div>
@@ -1376,7 +1328,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleNext}
               className="rounded-xl px-6 py-2 text-sm font-medium min-h-[44px] min-w-[44px]"
-              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${C.border}`, color: C.textPrimary }}
+              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}
             >
               Next
             </button>
@@ -1391,7 +1343,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             className="flex flex-1 flex-col items-center justify-center"
           >
             <div className="w-full max-w-md mb-6">
-              <div className="flex items-center px-4 py-2 text-xs font-semibold" style={{ color: C.textDim }}>
+              <div className="flex items-center px-4 py-2 text-xs font-semibold" style={{ color: TEXT_MUTED }}>
                 <span className="flex-1">Expression</span>
                 <span className="flex-1 text-center">Expanded</span>
                 <span className="flex-1 text-right">Value</span>
@@ -1408,12 +1360,12 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ ...SPRING, delay: i * 0.4 }}
                   className="flex items-center rounded-xl px-4 py-3 mb-1"
-                  style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}
+                  style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
                   role="row"
                 >
-                  <span className="flex-1 text-lg font-bold" style={{ color: C.base }}>{row.expr}</span>
-                  <span className="flex-1 text-center text-sm" style={{ color: C.textSecondary }}>{row.expanded}</span>
-                  <span className="flex-1 text-right text-lg font-bold" style={{ color: row.special ? C.exponent : C.result }}>
+                  <span className="flex-1 text-lg font-bold" style={{ color: THEME.base }}>{row.expr}</span>
+                  <span className="flex-1 text-center text-sm" style={{ color: THEME.textSecondary }}>{row.expanded}</span>
+                  <span className="flex-1 text-right text-lg font-bold" style={{ color: row.special ? THEME.exponent : THEME.result }}>
                     {row.value}
                   </span>
                 </motion.div>
@@ -1423,7 +1375,7 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
             <button
               onClick={handleNext}
               className="rounded-xl px-6 py-2 text-sm font-medium min-h-[44px] min-w-[44px]"
-              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${C.border}`, color: C.textPrimary }}
+              style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}
             >
               Next
             </button>
@@ -1439,33 +1391,33 @@ function SymbolStage({ onComplete }: { onComplete: () => void }) {
           >
             <motion.div
               className="w-full max-w-md rounded-2xl p-6 mb-4"
-              style={{ border: `2px solid ${C.exponent}`, backgroundColor: "rgba(251,191,36,0.06)" }}
+              style={{ border: `2px solid ${THEME.exponent}`, backgroundColor: "rgba(251,191,36,0.06)" }}
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               transition={SPRING}
             >
-              <p className="text-center text-lg leading-relaxed" style={{ color: C.textPrimary }}>
-                <span style={{ color: C.base }} className="font-bold">b</span>
-                <sup style={{ color: C.exponent }} className="font-bold">n</sup>
+              <p className="text-center text-lg leading-relaxed" style={{ color: TEXT_PRIMARY }}>
+                <span style={{ color: THEME.base }} className="font-bold">b</span>
+                <sup style={{ color: THEME.exponent }} className="font-bold">n</sup>
                 {" = "}
-                <span style={{ color: C.base }}>b</span>
+                <span style={{ color: THEME.base }}>b</span>
                 {" \u00d7 "}
-                <span style={{ color: C.base }}>b</span>
+                <span style={{ color: THEME.base }}>b</span>
                 {" \u00d7 \u2026 \u00d7 "}
-                <span style={{ color: C.base }}>b</span>
+                <span style={{ color: THEME.base }}>b</span>
               </p>
-              <p className="mt-2 text-center font-bold" style={{ color: C.exponent }}>
+              <p className="mt-2 text-center font-bold" style={{ color: THEME.exponent }}>
                 (n factors of b)
               </p>
             </motion.div>
 
-            <p className="mb-6 text-center text-sm italic" style={{ color: C.textMuted }}>
+            <p className="mb-6 text-center text-sm italic" style={{ color: TEXT_SEC }}>
               The exponent counts the multiplications. That&apos;s it!
             </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {allDone && <CTAButton label="Continue" onClick={onComplete} />}
+      {allDone && <ContinueButton onClick={onComplete} />}
     </div>
   );
 }
@@ -1487,10 +1439,10 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
   const cards: RWCard[] = useMemo(
     () => [
       {
-        accent: C.base,
+        accent: THEME.base,
         title: "The Paper Folding Puzzle",
         icon: (
-          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={C.base} strokeWidth={2}>
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={THEME.base} strokeWidth={2}>
             <rect x={4} y={4} width={16} height={16} rx={2} />
             <path d="M4 12h16" />
           </svg>
@@ -1500,19 +1452,19 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             If you fold a piece of paper in half, you get 2 layers. Fold again: 4
             layers. Again: 8. Each fold DOUBLES the layers {"\u2014"} that&apos;s 2
             raised to the number of folds. After just 7 folds, you have{" "}
-            <span style={{ color: C.exponent }} className="font-semibold">
+            <span style={{ color: THEME.exponent }} className="font-semibold">
               2{"\u2077"} = 128 layers
             </span>
             ! After 42 folds (if you could), the paper would{" "}
-            <span style={{ color: C.result }} className="font-semibold">reach the Moon</span>.
+            <span style={{ color: THEME.result }} className="font-semibold">reach the Moon</span>.
           </>
         ),
       },
       {
-        accent: C.result,
+        accent: THEME.result,
         title: "How Things Go Viral",
         icon: (
-          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={C.result} strokeWidth={2}>
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={THEME.result} strokeWidth={2}>
             <circle cx={12} cy={5} r={3} />
             <circle cx={5} cy={18} r={3} />
             <circle cx={19} cy={18} r={3} />
@@ -1525,18 +1477,18 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
             You share a video with 3 friends. Each of them shares it with 3 more.
             That&apos;s 3{"\u00b9"} = 3 people, then 3{"\u00b2"} = 9, then 3{"\u00b3"} = 27.
             After 10 rounds of sharing (
-            <span style={{ color: C.exponent }} className="font-semibold">3{"\u00b9\u2070"}</span>
+            <span style={{ color: THEME.exponent }} className="font-semibold">3{"\u00b9\u2070"}</span>
             ), over{" "}
-            <span style={{ color: C.result }} className="font-semibold">59,000 people</span>{" "}
+            <span style={{ color: THEME.result }} className="font-semibold">59,000 people</span>{" "}
             have seen it! That&apos;s the power of exponential growth.
           </>
         ),
       },
       {
-        accent: C.violet,
+        accent: THEME.violet,
         title: "How Big Is a Minecraft World?",
         icon: (
-          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={C.violet} strokeWidth={2}>
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={THEME.violet} strokeWidth={2}>
             <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
           </svg>
         ),
@@ -1544,12 +1496,12 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
           <>
             A chunk in Minecraft is 16 {"\u00d7"} 16 {"\u00d7"} 384 blocks.
             That&apos;s{" "}
-            <span style={{ color: C.exponent }} className="font-semibold">
+            <span style={{ color: THEME.exponent }} className="font-semibold">
               16{"\u00b2"} = 256
             </span>{" "}
             blocks per layer times 384 layers. A full world has 14.4 TRILLION
             blocks {"\u2014"}{" "}
-            <span style={{ color: C.violet }} className="font-semibold">powers of 2</span>{" "}
+            <span style={{ color: THEME.violet }} className="font-semibold">powers of 2</span>{" "}
             are everywhere in games because computers think in powers of 2!
           </>
         ),
@@ -1571,20 +1523,20 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
               initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}
               transition={SPRING}
               className="w-full max-w-md rounded-2xl p-5"
-              style={{ backgroundColor: C.surface, borderLeft: `4px solid ${cur.accent}`, border: `1px solid ${C.border}` }}
+              style={{ backgroundColor: SURFACE, borderLeft: `4px solid ${cur.accent}`, border: `1px solid ${BORDER}` }}
               role="article"
             >
               <div className="mb-3 flex items-center gap-3">
                 {cur.icon}
-                <h3 className="text-lg font-bold" style={{ color: C.textPrimary }}>{cur.title}</h3>
+                <h3 className="text-lg font-bold" style={{ color: TEXT_PRIMARY }}>{cur.title}</h3>
               </div>
-              <p className="mb-5 text-sm leading-relaxed" style={{ color: C.textSecondary }}>
+              <p className="mb-5 text-sm leading-relaxed" style={{ color: THEME.textSecondary }}>
                 {cur.body}
               </p>
               <button
                 onClick={() => setCard((c) => c + 1)}
                 className="rounded-xl px-6 py-2 text-sm font-medium min-h-[44px] min-w-[44px]"
-                style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${C.border}`, color: C.textPrimary }}
+                style={{ backgroundColor: "rgba(129,140,248,0.1)", border: `1px solid ${BORDER}`, color: TEXT_PRIMARY }}
               >
                 {card < cards.length - 1 ? "Next" : "Got it!"}
               </button>
@@ -1593,7 +1545,7 @@ function RealWorldStage({ onComplete }: { onComplete: () => void }) {
         </AnimatePresence>
       </div>
 
-      {allSeen && <CTAButton label="Continue" onClick={onComplete} />}
+      {allSeen && <ContinueButton onClick={onComplete} />}
     </div>
   );
 }
@@ -1784,20 +1736,20 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
     return prob.feedbackDefault;
   }, [ci, correct, answer]);
 
-  const layerClr = ["#60a5fa", "#a78bfa", "#f59e0b"];
+  const layerClr = [colors.functional.info, colors.accent.violet, "#f59e0b"];
 
   if (done) {
     const acc = Math.round((ok / total) * 100);
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-1 flex-col items-center justify-center px-4">
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full" style={{ backgroundColor: "rgba(52,211,153,0.1)" }}>
-          <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={C.result} strokeWidth={2.5}>
+          <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={THEME.result} strokeWidth={2.5}>
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </div>
-        <h2 className="mb-2 text-xl font-bold" style={{ color: C.textPrimary }}>Practice Complete!</h2>
-        <p className="mb-6" style={{ color: C.textMuted }}>{ok}/{total} correct ({acc}%)</p>
-        <CTAButton label="Continue" onClick={onComplete} />
+        <h2 className="mb-2 text-xl font-bold" style={{ color: TEXT_PRIMARY }}>Practice Complete!</h2>
+        <p className="mb-6" style={{ color: TEXT_SEC }}>{ok}/{total} correct ({acc}%)</p>
+        <ContinueButton onClick={onComplete} />
       </motion.div>
     );
   }
@@ -1808,16 +1760,16 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
 
       {/* Progress */}
       <div className="mb-4 mt-2">
-        <div className="mb-2 flex justify-between text-xs" style={{ color: C.textDim }}>
+        <div className="mb-2 flex justify-between text-xs" style={{ color: TEXT_MUTED }}>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layerClr[p.layer] ?? "#60a5fa" }} aria-hidden="true" />
+            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layerClr[p.layer] ?? colors.functional.info }} aria-hidden="true" />
             Problem {ci + 1} / {total}
           </span>
           <span>{ok} correct</span>
         </div>
-        <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
+        <div className="h-1.5 w-full rounded-full overflow-hidden bg-nm-bg-surface">
           <motion.div
-            className="h-full rounded-full" style={{ backgroundColor: C.base }}
+            className="h-full rounded-full bg-nm-accent-indigo"
             initial={{ width: 0 }} animate={{ width: `${pct}%` }}
             transition={{ type: "spring", damping: 20, stiffness: 100 }}
           />
@@ -1832,10 +1784,10 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
         >
           <div
             className="w-full rounded-2xl p-5"
-            style={{ backgroundColor: C.surfaceDeep, border: `1px solid ${C.surface}` }}
+            style={{ backgroundColor: SURFACE_DEEP, border: `1px solid ${SURFACE}` }}
             role="form" aria-label={p.prompt}
           >
-            <p className="mb-5 text-base font-medium leading-relaxed" style={{ color: C.textPrimary }}>
+            <p className="mb-5 text-base font-medium leading-relaxed" style={{ color: TEXT_PRIMARY }}>
               {p.prompt}
             </p>
 
@@ -1850,9 +1802,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                         role="radio" aria-checked={answer === o}
                         className="w-full rounded-xl py-3 px-4 text-base font-semibold min-h-[44px] text-left transition-colors"
                         style={{
-                          border: `2px solid ${answer === o ? C.base : C.border}`,
-                          backgroundColor: answer === o ? "rgba(129,140,248,0.12)" : C.surface,
-                          color: answer === o ? C.base : C.textSecondary,
+                          border: `2px solid ${answer === o ? THEME.base : BORDER}`,
+                          backgroundColor: answer === o ? "rgba(129,140,248,0.12)" : SURFACE,
+                          color: answer === o ? THEME.base : THEME.textSecondary,
                         }}
                       >
                         {o}
@@ -1869,7 +1821,7 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="?"
                       className="min-h-[44px] w-28 rounded-xl px-4 py-3 text-center text-2xl font-bold outline-none"
-                      style={{ backgroundColor: C.surface, border: `2px solid ${answer ? C.base : C.border}`, color: C.textPrimary }}
+                      style={{ backgroundColor: SURFACE, border: `2px solid ${answer ? THEME.base : BORDER}`, color: TEXT_PRIMARY }}
                       onKeyDown={(e) => { if (e.key === "Enter" && answer.trim()) check(); }}
                       aria-label="Type your numeric answer"
                     />
@@ -1880,10 +1832,9 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   onClick={check}
                   disabled={!answer.trim()}
                   className={cn(
-                    "w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px] transition-all",
+                    "w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px] transition-all bg-nm-accent-indigo",
                     !answer.trim() && "opacity-40 cursor-not-allowed",
                   )}
-                  style={{ backgroundColor: C.base }}
                   aria-disabled={!answer.trim()}
                 >
                   Check Answer
@@ -1897,19 +1848,18 @@ function PracticeStage({ onComplete }: { onComplete: () => void }) {
                   className="mb-4 rounded-xl px-4 py-3 text-sm font-medium"
                   style={{
                     backgroundColor: correct ? "rgba(52,211,153,0.15)" : "rgba(148,163,184,0.15)",
-                    color: correct ? C.result : C.textMuted,
+                    color: correct ? THEME.result : TEXT_SEC,
                   }}
                   aria-live="assertive"
                 >
                   {correct ? "Correct! Nice work." : "Not quite \u2014 let\u2019s think about this..."}
                 </div>
-                <p className="mb-4 text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                <p className="mb-4 text-sm leading-relaxed" style={{ color: TEXT_SEC }}>
                   {getFeedback()}
                 </p>
                 <button
                   onClick={next}
-                  className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px]"
-                  style={{ backgroundColor: C.base }}
+                  className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white min-h-[44px] bg-nm-accent-indigo"
                 >
                   {"Next \u2192"}
                 </button>
@@ -1942,19 +1892,19 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
         className="flex flex-1 flex-col justify-center"
       >
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(167,139,250,0.1)" }}>
-          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth={2}>
+          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={THEME.violet} strokeWidth={2}>
             <path d="M12 20h9" />
             <path d="M16.376 3.622a1 1 0 013.002 3.002L7.368 18.635a2 2 0 01-.855.506l-2.872.838a.5.5 0 01-.62-.62l.838-2.872a2 2 0 01.506-.854z" />
           </svg>
         </div>
 
-        <h2 className="mb-2 text-lg font-bold" style={{ color: C.textPrimary }}>Reflect &amp; Explain</h2>
+        <h2 className="mb-2 text-lg font-bold" style={{ color: TEXT_PRIMARY }}>Reflect &amp; Explain</h2>
 
         <div
           className="mb-6 rounded-2xl p-4"
-          style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.exponent}` }}
+          style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, borderLeft: `4px solid ${THEME.exponent}` }}
         >
-          <p className="text-sm leading-relaxed" style={{ color: C.textSecondary }}>{REFL_PROMPT}</p>
+          <p className="text-sm leading-relaxed" style={{ color: THEME.textSecondary }}>{REFL_PROMPT}</p>
         </div>
 
         <textarea
@@ -1964,9 +1914,9 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           rows={5}
           className="w-full resize-none rounded-xl px-4 py-3 outline-none"
           style={{
-            backgroundColor: C.surfaceDeep,
-            border: `1px solid ${C.border}`,
-            color: C.textPrimary,
+            backgroundColor: SURFACE_DEEP,
+            border: `1px solid ${BORDER}`,
+            color: TEXT_PRIMARY,
             fontSize: 16,
             minHeight: 120,
             maxHeight: 300,
@@ -1974,22 +1924,22 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
           aria-label="Explain why 2 to the third power equals 8, not 6, and what exponents really mean"
         />
         <div className="mt-2 flex justify-between">
-          <span className="text-xs" style={{ color: canSubmit ? C.result : C.textDim }}>
+          <span className="text-xs" style={{ color: canSubmit ? THEME.result : TEXT_MUTED }}>
             {charCount}/{REFL_MIN} min characters
           </span>
-          <span className="text-xs" style={{ color: C.textDim }}>
+          <span className="text-xs" style={{ color: TEXT_MUTED }}>
             {text.length}/{REFL_MAX}
           </span>
         </div>
       </motion.div>
 
       <div className="pb-4">
-        <CTAButton label="Share My Thinking" onClick={onComplete} disabled={!canSubmit} ariaLabel="Submit your reflection" />
+        <ContinueButton onClick={onComplete} disabled={!canSubmit} label="Share My Thinking" />
         <div className="flex justify-center">
           <button
             onClick={onComplete}
             className="min-h-[44px] px-4 py-2 text-sm"
-            style={{ color: C.textDim }}
+            style={{ color: TEXT_MUTED }}
             aria-label="Skip reflection"
           >
             Skip
@@ -2005,64 +1955,20 @@ function ReflectionStage({ onComplete }: { onComplete: () => void }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export function ExponentsLesson({ onComplete }: { onComplete?: () => void }) {
-  const [si, setSi] = useState(0);
-  const stage = STAGE_ORDER[si] ?? "hook";
-
-  const advance = useCallback(() => {
-    setSi((prev) => {
-      if (prev + 1 >= STAGE_ORDER.length) { onComplete?.(); return prev; }
-      return prev + 1;
-    });
-  }, [onComplete]);
-
-  const finish = useCallback(() => { onComplete?.(); }, [onComplete]);
-
-  function renderStage() {
-    switch (stage) {
-      case "hook":       return <HookStage onComplete={advance} />;
-      case "spatial":    return <SpatialStage onComplete={advance} />;
-      case "discovery":  return <DiscoveryStage onComplete={advance} />;
-      case "symbol":     return <SymbolStage onComplete={advance} />;
-      case "realWorld":  return <RealWorldStage onComplete={advance} />;
-      case "practice":   return <PracticeStage onComplete={advance} />;
-      case "reflection": return <ReflectionStage onComplete={finish} />;
-      default:           return null;
-    }
-  }
-
   return (
-    <div className="flex min-h-dvh flex-col bg-nm-bg-primary">
-      {/* Stage progress indicator */}
-      <div className="sticky top-0 z-10 flex items-center gap-2 bg-nm-bg-primary/95 px-4 py-3 backdrop-blur-sm">
-        {STAGE_ORDER.map((s, i) => (
-          <div
-            key={s}
-            className="flex-1 h-1.5 rounded-full transition-colors duration-300"
-            style={{ backgroundColor: i <= si ? C.base : C.border, opacity: i <= si ? 1 : 0.3 }}
-            role="progressbar"
-            aria-valuenow={i <= si ? 100 : 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Stage ${i + 1}: ${s}`}
-          />
-        ))}
-      </div>
-
-      {/* Active stage */}
-      <main className="flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={stage}
-            className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          >
-            {renderStage()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
+    <LessonShell title="NO-2.6 Exponents" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook":       return <HookStage onComplete={advance} />;
+          case "spatial":    return <SpatialStage onComplete={advance} />;
+          case "discovery":  return <DiscoveryStage onComplete={advance} />;
+          case "symbol":     return <SymbolStage onComplete={advance} />;
+          case "realWorld":  return <RealWorldStage onComplete={advance} />;
+          case "practice":   return <PracticeStage onComplete={advance} />;
+          case "reflection": return <ReflectionStage onComplete={onComplete ?? (() => {})} />;
+          default:           return null;
+        }
+      }}
+    </LessonShell>
   );
 }

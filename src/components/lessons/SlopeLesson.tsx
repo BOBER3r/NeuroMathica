@@ -21,61 +21,26 @@ import { VideoHook } from "@/components/lessons/VideoHook";
  *  7. Reflection — explain in own words
  */
 
-import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils/cn";
+import { LessonShell } from "@/components/lessons/ui/LessonShell";
+import { ContinueButton } from "@/components/lessons/ui/ContinueButton";
+import { InteractionDots } from "@/components/lessons/ui/InteractionDots";
+import { colors } from "@/lib/tokens/colors";
+import { springs } from "@/lib/tokens/motion";
+import { NLS_STAGES } from "@/lib/tokens/stages";
 
 /* ------------------------------------------------------------------ */
-/*  Constants                                                          */
+/*  Lesson-specific semantic theme                                      */
 /* ------------------------------------------------------------------ */
 
-const BG = "#0f172a";
-const SURFACE = "#1e293b";
-const TEXT = "#f8fafc";
-const MUTED = "#94a3b8";
-const BORDER = "#475569";
-const PRIMARY = "#818cf8";
-const SUCCESS = "#34d399";
-const ERROR = "#f87171";
+const THEME = {
+  rise: colors.accent.violet,      // #a78bfa
+  run: colors.functional.info,     // #60a5fa
+  line: "#f472b6",                 // lesson-specific pink
+} as const;
 
-const RISE_COLOR = "#a78bfa";
-const RUN_COLOR = "#60a5fa";
-const LINE_COLOR = "#f472b6";
-
-const SPRING = { type: "spring" as const, damping: 20, stiffness: 300 };
-
-type Stage = "hook" | "spatial" | "discovery" | "symbol" | "realWorld" | "practice" | "reflection";
-const STAGES: Stage[] = ["hook", "spatial", "discovery", "symbol", "realWorld", "practice", "reflection"];
-
-/* ------------------------------------------------------------------ */
-/*  Shared sub-components                                              */
-/* ------------------------------------------------------------------ */
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-center gap-2 py-3" style={{ background: BG }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} className="h-2 w-2 rounded-full transition-all duration-300" style={{ background: i <= current ? PRIMARY : BORDER, transform: i === current ? "scale(1.4)" : "scale(1)" }} />
-      ))}
-    </div>
-  );
-}
-
-function ContinueButton({ onClick, label = "Continue", delay = 0 }: { onClick: () => void; label?: string; delay?: number }) {
-  return (
-    <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay, duration: 0.5, ease: "easeOut" }} onClick={onClick} className="mx-auto mt-8 block min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.97]" style={{ background: PRIMARY, minHeight: 48 }} aria-label={label}>
-      {label}
-    </motion.button>
-  );
-}
-
-function StageWrapper({ children }: { children: ReactNode }) {
-  return (
-    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4, ease: "easeInOut" }} className="flex min-h-dvh flex-col items-center justify-center px-4 py-12" style={{ background: BG }}>
-      {children}
-    </motion.div>
-  );
-}
+const SPRING = springs.default;
 
 /* ================================================================== */
 /*  STAGE 1: Hook                                                      */
@@ -94,20 +59,20 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   const slopes = [
-    { label: "Gentle hill", x1: 40, y1: 200, x2: 200, y2: 160, color: SUCCESS },
-    { label: "Steep hill", x1: 220, y1: 200, x2: 320, y2: 80, color: PRIMARY },
-    { label: "Downhill", x1: 340, y1: 100, x2: 460, y2: 200, color: ERROR },
+    { label: "Gentle hill", x1: 40, y1: 200, x2: 200, y2: 160, color: colors.functional.success },
+    { label: "Steep hill", x1: 220, y1: 200, x2: 320, y2: 80, color: colors.accent.indigo },
+    { label: "Downhill", x1: 340, y1: 100, x2: 460, y2: 200, color: colors.functional.error },
   ];
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center" aria-live="polite">
-        <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 text-center text-[clamp(20px,5vw,32px)] font-bold" style={{ color: TEXT }}>
+        <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 text-center text-[clamp(20px,5vw,32px)] font-bold text-nm-text-primary">
           Which hill is steepest?
         </motion.h2>
 
         <svg viewBox="0 0 500 260" className="w-full max-w-md" aria-label="Three hills of different steepness">
-          <line x1={20} y1={220} x2={480} y2={220} stroke={BORDER} strokeWidth={1} />
+          <line x1={20} y1={220} x2={480} y2={220} stroke={colors.bg.elevated} strokeWidth={1} />
           {slopes.map((s, i) =>
             phase >= i + 1 ? (
               <motion.g key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -120,13 +85,13 @@ function HookStage({ onContinue }: { onContinue: () => void }) {
         </svg>
 
         {phase >= 4 && (
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm" style={{ color: MUTED }}>
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center text-sm" style={{ color: colors.text.secondary }}>
             Steepness has a name in math: slope. It measures how much a line rises (or falls) for each step forward.
           </motion.p>
         )}
         {phase >= 4 && <ContinueButton onClick={onContinue} delay={0.3} />}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -165,23 +130,23 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
   const ticks = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-3">
-        <h2 className="text-center text-[clamp(16px,4vw,24px)] font-bold" style={{ color: TEXT }}>Tap to place two points and see the slope</h2>
-        <p className="text-xs" style={{ color: MUTED }}>{selectingP1 ? "Tap to place Point 1 (blue)" : "Tap to place Point 2 (pink)"}</p>
+        <h2 className="text-center text-[clamp(16px,4vw,24px)] font-bold text-nm-text-primary">Tap to place two points and see the slope</h2>
+        <p className="text-xs" style={{ color: colors.text.secondary }}>{selectingP1 ? "Tap to place Point 1 (blue)" : "Tap to place Point 2 (pink)"}</p>
 
         <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-md" aria-label="Interactive coordinate graph for slope">
-          <line x1={margin} y1={originY} x2={svgW - margin} y2={originY} stroke={MUTED} strokeWidth={1.5} />
-          <line x1={originX} y1={margin} x2={originX} y2={svgH - margin} stroke={MUTED} strokeWidth={1.5} />
+          <line x1={margin} y1={originY} x2={svgW - margin} y2={originY} stroke={colors.text.secondary} strokeWidth={1.5} />
+          <line x1={originX} y1={margin} x2={originX} y2={svgH - margin} stroke={colors.text.secondary} strokeWidth={1.5} />
 
           {ticks.map((t) => (
             <g key={`t${t}`}>
-              <line x1={toSvgX(t)} y1={margin} x2={toSvgX(t)} y2={svgH - margin} stroke={BORDER} strokeWidth={0.3} />
-              <line x1={margin} y1={toSvgY(t)} x2={svgW - margin} y2={toSvgY(t)} stroke={BORDER} strokeWidth={0.3} />
+              <line x1={toSvgX(t)} y1={margin} x2={toSvgX(t)} y2={svgH - margin} stroke={colors.bg.elevated} strokeWidth={0.3} />
+              <line x1={margin} y1={toSvgY(t)} x2={svgW - margin} y2={toSvgY(t)} stroke={colors.bg.elevated} strokeWidth={0.3} />
               {t !== 0 && (
                 <>
-                  <text x={toSvgX(t)} y={originY + 16} textAnchor={"middle" as const} fill={MUTED} fontSize={10}>{t}</text>
-                  <text x={originX - 14} y={toSvgY(t) + 4} textAnchor={"middle" as const} fill={MUTED} fontSize={10}>{t}</text>
+                  <text x={toSvgX(t)} y={originY + 16} textAnchor={"middle" as const} fill={colors.text.secondary} fontSize={10}>{t}</text>
+                  <text x={originX - 14} y={toSvgY(t) + 4} textAnchor={"middle" as const} fill={colors.text.secondary} fontSize={10}>{t}</text>
                 </>
               )}
             </g>
@@ -193,39 +158,39 @@ function SpatialStage({ onContinue }: { onContinue: () => void }) {
             )),
           )}
 
-          <line x1={toSvgX(p2.x)} y1={toSvgY(p1.y)} x2={toSvgX(p2.x)} y2={toSvgY(p2.y)} stroke={RISE_COLOR} strokeWidth={2} strokeDasharray="5 3" />
-          <line x1={toSvgX(p1.x)} y1={toSvgY(p1.y)} x2={toSvgX(p2.x)} y2={toSvgY(p1.y)} stroke={RUN_COLOR} strokeWidth={2} strokeDasharray="5 3" />
+          <line x1={toSvgX(p2.x)} y1={toSvgY(p1.y)} x2={toSvgX(p2.x)} y2={toSvgY(p2.y)} stroke={THEME.rise} strokeWidth={2} strokeDasharray="5 3" />
+          <line x1={toSvgX(p1.x)} y1={toSvgY(p1.y)} x2={toSvgX(p2.x)} y2={toSvgY(p1.y)} stroke={THEME.run} strokeWidth={2} strokeDasharray="5 3" />
 
           {run !== 0 && (
-            <line x1={toSvgX(-6)} y1={toSvgY(p1.y + ((-6 - p1.x) * rise) / run)} x2={toSvgX(6)} y2={toSvgY(p1.y + ((6 - p1.x) * rise) / run)} stroke={LINE_COLOR} strokeWidth={2} opacity={0.5} />
+            <line x1={toSvgX(-6)} y1={toSvgY(p1.y + ((-6 - p1.x) * rise) / run)} x2={toSvgX(6)} y2={toSvgY(p1.y + ((6 - p1.x) * rise) / run)} stroke={THEME.line} strokeWidth={2} opacity={0.5} />
           )}
           {run === 0 && (
-            <line x1={toSvgX(p1.x)} y1={margin} x2={toSvgX(p1.x)} y2={svgH - margin} stroke={LINE_COLOR} strokeWidth={2} opacity={0.5} />
+            <line x1={toSvgX(p1.x)} y1={margin} x2={toSvgX(p1.x)} y2={svgH - margin} stroke={THEME.line} strokeWidth={2} opacity={0.5} />
           )}
 
-          <circle cx={toSvgX(p1.x)} cy={toSvgY(p1.y)} r={6} fill={RUN_COLOR} />
-          <circle cx={toSvgX(p2.x)} cy={toSvgY(p2.y)} r={6} fill={LINE_COLOR} />
-          <text x={toSvgX(p1.x)} y={toSvgY(p1.y) - 10} textAnchor={"middle" as const} fill={RUN_COLOR} fontSize={11} fontWeight="bold">{`(${p1.x},${p1.y})`}</text>
-          <text x={toSvgX(p2.x)} y={toSvgY(p2.y) - 10} textAnchor={"middle" as const} fill={LINE_COLOR} fontSize={11} fontWeight="bold">{`(${p2.x},${p2.y})`}</text>
+          <circle cx={toSvgX(p1.x)} cy={toSvgY(p1.y)} r={6} fill={THEME.run} />
+          <circle cx={toSvgX(p2.x)} cy={toSvgY(p2.y)} r={6} fill={THEME.line} />
+          <text x={toSvgX(p1.x)} y={toSvgY(p1.y) - 10} textAnchor={"middle" as const} fill={THEME.run} fontSize={11} fontWeight="bold">{`(${p1.x},${p1.y})`}</text>
+          <text x={toSvgX(p2.x)} y={toSvgY(p2.y) - 10} textAnchor={"middle" as const} fill={THEME.line} fontSize={11} fontWeight="bold">{`(${p2.x},${p2.y})`}</text>
 
-          <text x={toSvgX(p2.x) + 16} y={(toSvgY(p1.y) + toSvgY(p2.y)) / 2 + 4} fill={RISE_COLOR} fontSize={12} fontWeight="bold">{`rise=${rise}`}</text>
-          <text x={(toSvgX(p1.x) + toSvgX(p2.x)) / 2} y={toSvgY(p1.y) + 18} textAnchor={"middle" as const} fill={RUN_COLOR} fontSize={12} fontWeight="bold">{`run=${run}`}</text>
+          <text x={toSvgX(p2.x) + 16} y={(toSvgY(p1.y) + toSvgY(p2.y)) / 2 + 4} fill={THEME.rise} fontSize={12} fontWeight="bold">{`rise=${rise}`}</text>
+          <text x={(toSvgX(p1.x) + toSvgX(p2.x)) / 2} y={toSvgY(p1.y) + 18} textAnchor={"middle" as const} fill={THEME.run} fontSize={12} fontWeight="bold">{`run=${run}`}</text>
         </svg>
 
-        <div className="rounded-xl px-6 py-3 text-center" style={{ background: SURFACE }}>
-          <p className="font-mono text-base font-bold" style={{ color: TEXT }}>
-            {"slope = "}<span style={{ color: RISE_COLOR }}>{"rise"}</span>{" / "}<span style={{ color: RUN_COLOR }}>{"run"}</span>{" = "}
-            <span style={{ color: RISE_COLOR }}>{rise}</span>{" / "}<span style={{ color: RUN_COLOR }}>{run}</span>{" = "}
-            <span style={{ color: LINE_COLOR }}>{run === 0 ? "undefined" : slopeDecimal !== null ? slopeDecimal.toFixed(2) : ""}</span>
+        <div className="rounded-xl px-6 py-3 text-center" style={{ background: colors.bg.secondary }}>
+          <p className="font-mono text-base font-bold text-nm-text-primary">
+            {"slope = "}<span style={{ color: THEME.rise }}>{"rise"}</span>{" / "}<span style={{ color: THEME.run }}>{"run"}</span>{" = "}
+            <span style={{ color: THEME.rise }}>{rise}</span>{" / "}<span style={{ color: THEME.run }}>{run}</span>{" = "}
+            <span style={{ color: THEME.line }}>{run === 0 ? "undefined" : slopeDecimal !== null ? slopeDecimal.toFixed(2) : ""}</span>
           </p>
-          <p className="mt-1 text-xs" style={{ color: MUTED }}>
+          <p className="mt-1 text-xs" style={{ color: colors.text.secondary }}>
             {run === 0 ? "Vertical line \u2014 slope is undefined!" : slopeDecimal !== null && slopeDecimal > 0 ? "Positive slope \u2014 line goes uphill left to right" : slopeDecimal !== null && slopeDecimal < 0 ? "Negative slope \u2014 line goes downhill left to right" : "Zero slope \u2014 horizontal line"}
           </p>
         </div>
 
         {canContinue && <ContinueButton onClick={onContinue} />}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -247,33 +212,31 @@ function DiscoveryStage({ onContinue }: { onContinue: () => void }) {
   const current = prompts[promptIdx]!;
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <div className="flex gap-2">
-          {prompts.map((_, i) => (<div key={i} className="h-2 w-8 rounded-full" style={{ background: i <= promptIdx ? PRIMARY : BORDER }} />))}
-        </div>
+        <InteractionDots count={promptIdx + 1} total={prompts.length} activeColor={colors.accent.indigo} />
         <AnimatePresence mode="wait">
-          <motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl p-6 text-center" style={{ background: SURFACE }}>
-            <p className="text-[clamp(16px,4vw,20px)] leading-relaxed" style={{ color: TEXT }}>{current.text}</p>
+          <motion.div key={promptIdx} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="rounded-2xl p-6 text-center" style={{ background: colors.bg.secondary }}>
+            <p className="text-[clamp(16px,4vw,20px)] leading-relaxed text-nm-text-primary">{current.text}</p>
           </motion.div>
         </AnimatePresence>
 
         <svg viewBox="0 0 360 120" className="w-full max-w-sm" aria-label="Four types of slope">
-          <line x1={20} y1={100} x2={80} y2={30} stroke={SUCCESS} strokeWidth={3} />
-          <text x={50} y={115} textAnchor={"middle" as const} fill={SUCCESS} fontSize={11} fontWeight="bold">Positive</text>
-          <line x1={110} y1={30} x2={170} y2={100} stroke={ERROR} strokeWidth={3} />
-          <text x={140} y={115} textAnchor={"middle" as const} fill={ERROR} fontSize={11} fontWeight="bold">Negative</text>
-          <line x1={200} y1={65} x2={260} y2={65} stroke={RUN_COLOR} strokeWidth={3} />
-          <text x={230} y={115} textAnchor={"middle" as const} fill={RUN_COLOR} fontSize={11} fontWeight="bold">Zero</text>
-          <line x1={320} y1={25} x2={320} y2={100} stroke={RISE_COLOR} strokeWidth={3} />
-          <text x={320} y={115} textAnchor={"middle" as const} fill={RISE_COLOR} fontSize={11} fontWeight="bold">Undefined</text>
+          <line x1={20} y1={100} x2={80} y2={30} stroke={colors.functional.success} strokeWidth={3} />
+          <text x={50} y={115} textAnchor={"middle" as const} fill={colors.functional.success} fontSize={11} fontWeight="bold">Positive</text>
+          <line x1={110} y1={30} x2={170} y2={100} stroke={colors.functional.error} strokeWidth={3} />
+          <text x={140} y={115} textAnchor={"middle" as const} fill={colors.functional.error} fontSize={11} fontWeight="bold">Negative</text>
+          <line x1={200} y1={65} x2={260} y2={65} stroke={THEME.run} strokeWidth={3} />
+          <text x={230} y={115} textAnchor={"middle" as const} fill={THEME.run} fontSize={11} fontWeight="bold">Zero</text>
+          <line x1={320} y1={25} x2={320} y2={100} stroke={THEME.rise} strokeWidth={3} />
+          <text x={320} y={115} textAnchor={"middle" as const} fill={THEME.rise} fontSize={11} fontWeight="bold">Undefined</text>
         </svg>
 
-        <motion.button whileTap={{ scale: 0.95 }} onClick={handleAck} className="rounded-xl px-8 py-3 text-base font-semibold text-white" style={{ background: PRIMARY, minHeight: 48, minWidth: 160 }} aria-label={current.button}>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={handleAck} className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 text-base font-semibold text-white" style={{ background: colors.accent.indigo }} aria-label={current.button}>
           {current.button}
         </motion.button>
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -289,30 +252,30 @@ function SymbolBridgeStage({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   const formulas = [
-    { text: "slope = rise / run", color: MUTED },
-    { text: "m = (y\u2082 \u2212 y\u2081) / (x\u2082 \u2212 x\u2081)", color: PRIMARY },
-    { text: "Example: (1,2) and (4,8) \u2192 m = 6/3 = 2", color: LINE_COLOR },
+    { text: "slope = rise / run", color: colors.text.secondary },
+    { text: "m = (y\u2082 \u2212 y\u2081) / (x\u2082 \u2212 x\u2081)", color: colors.accent.indigo },
+    { text: "Example: (1,2) and (4,8) \u2192 m = 6/3 = 2", color: THEME.line },
   ];
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>The Slope Formula</h2>
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold text-nm-text-primary">The Slope Formula</h2>
         <div className="flex flex-col gap-4">
           {formulas.map((f, i) => i <= step ? (
-            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl px-6 py-4 text-center" style={{ background: SURFACE }}>
+            <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={SPRING} className="rounded-xl px-6 py-4 text-center" style={{ background: colors.bg.secondary }}>
               <p className="font-mono text-[clamp(14px,3.5vw,22px)] font-bold" style={{ color: f.color }}>{f.text}</p>
             </motion.div>
           ) : null)}
         </div>
         {step >= 3 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-8 py-6 text-center" style={{ borderColor: PRIMARY, background: `${PRIMARY}15` }}>
-            <p className="font-mono text-[clamp(20px,5vw,36px)] font-bold" style={{ color: PRIMARY }}>{"m = \u0394y / \u0394x"}</p>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING} className="rounded-2xl border-2 px-8 py-6 text-center" style={{ borderColor: colors.accent.indigo, background: `${colors.accent.indigo}15` }}>
+            <p className="font-mono text-[clamp(20px,5vw,36px)] font-bold" style={{ color: colors.accent.indigo }}>{"m = \u0394y / \u0394x"}</p>
           </motion.div>
         )}
         {step >= 3 && <ContinueButton onClick={onContinue} delay={0.5} />}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -328,17 +291,17 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
   ];
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Slope in Real Life</h2>
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold text-nm-text-primary">Slope in Real Life</h2>
         <div className="flex flex-col gap-4">
           {scenarios.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl p-4" style={{ background: SURFACE }}>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2, ...SPRING }} className="rounded-xl p-4" style={{ background: colors.bg.secondary }}>
               <div className="flex items-start gap-3">
                 <span className="text-2xl">{s.icon}</span>
                 <div>
-                  <p className="font-semibold" style={{ color: TEXT }}>{s.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed" style={{ color: MUTED }}>{s.desc}</p>
+                  <p className="font-semibold text-nm-text-primary">{s.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed" style={{ color: colors.text.secondary }}>{s.desc}</p>
                 </div>
               </div>
             </motion.div>
@@ -346,7 +309,7 @@ function RealWorldStage({ onContinue }: { onContinue: () => void }) {
         </div>
         <ContinueButton onClick={onContinue} />
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -385,27 +348,27 @@ function PracticeStage({ onContinue }: { onContinue: () => void }) {
   const handleNext = useCallback(() => { setSelected(null); setAnswered(false); setCurrentIdx((i) => i + 1); }, []);
 
   if (done || !problem) {
-    return (<StageWrapper><div className="flex flex-col items-center gap-4"><h2 className="text-[clamp(20px,5vw,28px)] font-bold" style={{ color: TEXT }}>Practice Complete!</h2><p className="text-lg" style={{ color: MUTED }}>You got {score} out of {PROBLEMS.length} correct.</p><ContinueButton onClick={onContinue} label="Continue" /></div></StageWrapper>);
+    return (<div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12"><div className="flex flex-col items-center gap-4"><h2 className="text-[clamp(20px,5vw,28px)] font-bold text-nm-text-primary">Practice Complete!</h2><p className="text-lg" style={{ color: colors.text.secondary }}>You got {score} out of {PROBLEMS.length} correct.</p><ContinueButton onClick={onContinue} label="Continue" /></div></div>);
   }
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <p className="text-sm font-semibold" style={{ color: MUTED }}>Problem {currentIdx + 1} of {PROBLEMS.length} ({problem.layer})</p>
-        <div className="w-full rounded-xl p-6" style={{ background: SURFACE }}><p className="text-center text-[clamp(16px,4vw,20px)] font-semibold leading-relaxed" style={{ color: TEXT }}>{problem.question}</p></div>
+        <p className="text-sm font-semibold" style={{ color: colors.text.secondary }}>Problem {currentIdx + 1} of {PROBLEMS.length} ({problem.layer})</p>
+        <div className="w-full rounded-xl p-6" style={{ background: colors.bg.secondary }}><p className="text-center text-[clamp(16px,4vw,20px)] font-semibold leading-relaxed text-nm-text-primary">{problem.question}</p></div>
         <div className="flex w-full flex-col gap-3">
           {problem.options.map((opt, i) => {
             const isCorrect = i === problem.correctIndex;
             const isSelected = i === selected;
-            let bg: string = SURFACE; let border: string = BORDER;
-            if (answered) { if (isCorrect) { bg = `${SUCCESS}20`; border = SUCCESS; } else if (isSelected) { bg = `${ERROR}20`; border = ERROR; } }
-            return (<motion.button key={i} whileTap={answered ? {} : { scale: 0.97 }} onClick={() => handleSelect(i)} className="w-full rounded-xl border-2 px-4 py-3 text-left font-medium transition-colors" style={{ background: bg, borderColor: border, color: TEXT, minHeight: 48 }} aria-label={`Option: ${opt}`}>{opt}{answered && isCorrect && <span className="ml-2" style={{ color: SUCCESS }}>{"  \u2713"}</span>}{answered && isSelected && !isCorrect && <span className="ml-2" style={{ color: ERROR }}>{"  \u2717"}</span>}</motion.button>);
+            let bg: string = colors.bg.secondary; let border: string = colors.bg.elevated;
+            if (answered) { if (isCorrect) { bg = `${colors.functional.success}20`; border = colors.functional.success; } else if (isSelected) { bg = `${colors.functional.error}20`; border = colors.functional.error; } }
+            return (<motion.button key={i} whileTap={answered ? {} : { scale: 0.97 }} onClick={() => handleSelect(i)} className="w-full rounded-xl border-2 px-4 py-3 text-left font-medium transition-colors text-nm-text-primary" style={{ background: bg, borderColor: border, minHeight: 48 }} aria-label={`Option: ${opt}`}>{opt}{answered && isCorrect && <span className="ml-2" style={{ color: colors.functional.success }}>{"  \u2713"}</span>}{answered && isSelected && !isCorrect && <span className="ml-2" style={{ color: colors.functional.error }}>{"  \u2717"}</span>}</motion.button>);
           })}
         </div>
-        {answered && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full rounded-xl p-4" style={{ background: selected === problem.correctIndex ? `${SUCCESS}15` : `${ERROR}15` }}><p className="text-sm leading-relaxed" style={{ color: TEXT }}>{problem.feedback}</p></motion.div>)}
-        {answered && (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileTap={{ scale: 0.95 }} onClick={handleNext} className="rounded-xl px-8 py-3 font-semibold text-white" style={{ background: PRIMARY, minHeight: 48, minWidth: 160 }} aria-label="Next problem">{"Next \u2192"}</motion.button>)}
+        {answered && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full rounded-xl p-4" style={{ background: selected === problem.correctIndex ? `${colors.functional.success}15` : `${colors.functional.error}15` }}><p className="text-sm leading-relaxed text-nm-text-primary">{problem.feedback}</p></motion.div>)}
+        {answered && (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileTap={{ scale: 0.95 }} onClick={handleNext} className="min-h-[48px] min-w-[160px] rounded-xl px-8 py-3 font-semibold text-white" style={{ background: colors.accent.indigo }} aria-label="Next problem">{"Next \u2192"}</motion.button>)}
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -419,22 +382,22 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
   const handleSubmit = useCallback(() => { setSubmitted(true); }, []);
 
   if (submitted) {
-    return (<StageWrapper><div className="flex flex-col items-center gap-4 text-center"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}><p className="text-4xl">{"\uD83E\uDDE0"}</p><h2 className="mt-2 text-xl font-bold" style={{ color: TEXT }}>Great reflection!</h2><p className="mt-2 text-sm" style={{ color: MUTED }}>Understanding slope unlocks the entire world of linear functions. +50 XP</p></motion.div><ContinueButton onClick={onContinue} label="Complete Lesson" delay={0.5} /></div></StageWrapper>);
+    return (<div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12"><div className="flex flex-col items-center gap-4 text-center"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={SPRING}><p className="text-4xl">{"\uD83E\uDDE0"}</p><h2 className="mt-2 text-xl font-bold text-nm-text-primary">Great reflection!</h2><p className="mt-2 text-sm" style={{ color: colors.text.secondary }}>Understanding slope unlocks the entire world of linear functions. +50 XP</p></motion.div><ContinueButton onClick={onContinue} label="Complete Lesson" delay={0.5} /></div></div>);
   }
 
   return (
-    <StageWrapper>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-nm-bg-primary px-4 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-6">
-        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold" style={{ color: TEXT }}>Reflect</h2>
-        <p className="text-center text-sm" style={{ color: MUTED }}>Why does it not matter which two points on a line you pick to calculate slope?</p>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your explanation here..." className="w-full rounded-xl border-2 p-4 text-base" style={{ background: SURFACE, borderColor: BORDER, color: TEXT, minHeight: 120, resize: "vertical" }} aria-label="Reflection text" />
+        <h2 className="text-center text-[clamp(18px,4.5vw,26px)] font-bold text-nm-text-primary">Reflect</h2>
+        <p className="text-center text-sm" style={{ color: colors.text.secondary }}>Why does it not matter which two points on a line you pick to calculate slope?</p>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your explanation here..." className="w-full rounded-xl border-2 p-4 text-base text-nm-text-primary" style={{ background: colors.bg.secondary, borderColor: colors.bg.elevated, minHeight: 120, resize: "vertical" }} aria-label="Reflection text" />
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={onContinue} className="rounded-xl px-6 py-3 text-sm" style={{ background: SURFACE, color: MUTED, minHeight: 44 }}>Skip</motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={handleSubmit} disabled={text.length < 20} className="rounded-xl px-8 py-3 font-semibold text-white disabled:opacity-40" style={{ background: PRIMARY, minHeight: 48, minWidth: 120 }} aria-label="Submit reflection">Submit</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onContinue} className="min-h-[44px] rounded-xl px-6 py-3 text-sm" style={{ background: colors.bg.secondary, color: colors.text.secondary }}>Skip</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleSubmit} disabled={text.length < 20} className="min-h-[48px] min-w-[120px] rounded-xl px-8 py-3 font-semibold text-white disabled:opacity-40" style={{ background: colors.accent.indigo }} aria-label="Submit reflection">Submit</motion.button>
         </div>
-        <p className="text-xs" style={{ color: MUTED }}>{text.length < 20 ? `${20 - text.length} more characters needed` : "Ready to submit!"}</p>
+        <p className="text-xs" style={{ color: colors.text.secondary }}>{text.length < 20 ? `${20 - text.length} more characters needed` : "Ready to submit!"}</p>
       </div>
-    </StageWrapper>
+    </div>
   );
 }
 
@@ -443,24 +406,20 @@ function ReflectionStage({ onContinue }: { onContinue: () => void }) {
 /* ================================================================== */
 
 export function SlopeLesson({ onComplete }: { onComplete?: () => void }) {
-  const [stage, setStage] = useState<Stage>("hook");
-  const stageIdx = STAGES.indexOf(stage);
-  const advance = useCallback(() => { const next = STAGES[stageIdx + 1]; if (next) { setStage(next); } else { onComplete?.(); } }, [stageIdx, onComplete]);
-
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: BG }}>
-      <ProgressBar current={stageIdx} total={STAGES.length} />
-      <AnimatePresence mode="wait">
-        <motion.div key={stage} className="flex-1">
-          {stage === "hook" && <HookStage onContinue={advance} />}
-          {stage === "spatial" && <SpatialStage onContinue={advance} />}
-          {stage === "discovery" && <DiscoveryStage onContinue={advance} />}
-          {stage === "symbol" && <SymbolBridgeStage onContinue={advance} />}
-          {stage === "realWorld" && <RealWorldStage onContinue={advance} />}
-          {stage === "practice" && <PracticeStage onContinue={advance} />}
-          {stage === "reflection" && <ReflectionStage onContinue={advance} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <LessonShell title="AL-3.8a Slope" stages={[...NLS_STAGES]} onComplete={onComplete}>
+      {({ stage, advance }) => {
+        switch (stage) {
+          case "hook": return <HookStage onContinue={advance} />;
+          case "spatial": return <SpatialStage onContinue={advance} />;
+          case "discovery": return <DiscoveryStage onContinue={advance} />;
+          case "symbol": return <SymbolBridgeStage onContinue={advance} />;
+          case "realWorld": return <RealWorldStage onContinue={advance} />;
+          case "practice": return <PracticeStage onContinue={advance} />;
+          case "reflection": return <ReflectionStage onContinue={advance} />;
+          default: return null;
+        }
+      }}
+    </LessonShell>
   );
 }

@@ -1,0 +1,123 @@
+[
+  {
+    "id": "NO-1.1-R1",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "What digit is in the hundreds place of 4,729?",
+      "options": ["4", "7", "2", "9"],
+      "solution": "7",
+      "solutionExplanation": "In the number 4,729, each digit has a specific position. Reading from right to left: 9 is in the ones place, 2 is in the tens place, 7 is in the hundreds place, and 4 is in the thousands place. The digit in the hundreds place is 7."
+    },
+    "explanationPrompt": "How do you identify which place a digit occupies in a number?",
+    "difficultyB": -1.5
+  },
+  {
+    "id": "NO-1.1-R2",
+    "layer": 0,
+    "templateType": "free-response",
+    "content": {
+      "question": "Write 5,302 in expanded form.",
+      "solution": "5,000 + 300 + 0 + 2",
+      "solutionExplanation": "Expanded form breaks a number into the sum of each digit multiplied by its place value. In 5,302: the 5 is in the thousands place (5 x 1,000 = 5,000), the 3 is in the hundreds place (3 x 100 = 300), the 0 is in the tens place (0 x 10 = 0), and the 2 is in the ones place (2 x 1 = 2). So 5,302 = 5,000 + 300 + 0 + 2."
+    },
+    "explanationPrompt": "What does expanded form tell us about each digit's contribution to the total value?",
+    "difficultyB": -1.0
+  },
+  {
+    "id": "NO-1.1-R3",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "What is the value of the digit 7 in the number 7,845?",
+      "options": ["7", "70", "700", "7,000"],
+      "solution": "7,000",
+      "solutionExplanation": "The digit 7 is in the thousands place. The value of a digit depends on its position: in the thousands place, 7 represents 7 x 1,000 = 7,000. Notice the difference between the digit (7) and its value (7,000) — the position matters!"
+    },
+    "explanationPrompt": "What is the difference between a digit and its value? Why does the position matter?",
+    "difficultyB": -1.2
+  },
+  {
+    "id": "NO-1.1-P1",
+    "layer": 1,
+    "templateType": "comparison",
+    "content": {
+      "question": "Compare using <, >, or =: 3,456 ___ 3,465",
+      "options": ["<", ">", "="],
+      "solution": "<",
+      "solutionExplanation": "To compare two numbers, start from the leftmost digit. Both numbers have 3 in the thousands place and 4 in the hundreds place — they match so far. In the tens place, the first number has 5 and the second has 6. Since 5 < 6, the first number is smaller: 3,456 < 3,465. The ones digit doesn't matter here because the tens place already determined the result.",
+      "visualization": {
+        "type": "numberLine",
+        "range": [3450, 3470],
+        "step": 1,
+        "markers": [
+          { "value": 3456, "label": "3,456", "color": "#7c3aed" },
+          { "value": 3465, "label": "3,465", "color": "#f59e0b" }
+        ]
+      }
+    },
+    "explanationPrompt": "When comparing numbers with the same number of digits, which place values do you check first, and why?",
+    "difficultyB": 0.0
+  },
+  {
+    "id": "NO-1.1-P2",
+    "layer": 1,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "Round 4,678 to the nearest hundred.",
+      "options": ["4,600", "4,680", "4,700", "5,000"],
+      "solution": "4,700",
+      "solutionExplanation": "To round to the nearest hundred, look at the tens digit. In 4,678, the tens digit is 7. Since 7 >= 5, we round the hundreds digit up: 6 becomes 7. The tens and ones digits become 0. So 4,678 rounded to the nearest hundred is 4,700."
+    },
+    "explanationPrompt": "Why do we look at the digit to the right of the place we're rounding to?",
+    "difficultyB": 0.3
+  },
+  {
+    "id": "NO-1.1-P3",
+    "layer": 1,
+    "templateType": "ordering",
+    "content": {
+      "question": "Write these numbers in order from least to greatest: 5,432; 5,423; 5,234",
+      "solution": "5,234; 5,423; 5,432",
+      "solutionExplanation": "All three numbers have 5 in the thousands place, so we compare the hundreds place. 5,234 has 2 in the hundreds place, while 5,423 and 5,432 both have 4. So 5,234 is the smallest. Comparing 5,423 and 5,432: both have 4 in hundreds, and 2 in tens vs 3 in tens. Since 2 < 3, we get 5,423 < 5,432. Final order: 5,234 < 5,423 < 5,432."
+    },
+    "explanationPrompt": "What strategy did you use to sort these numbers? Which place value was most important for deciding the order?",
+    "difficultyB": 0.5
+  },
+  {
+    "id": "NO-1.1-U1",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "Why does moving a digit one place to the left make it worth 10 times more?",
+      "solution": "Our number system is base-10, meaning each position is worth 10 times the position to its right.",
+      "solutionExplanation": "Our number system (the Hindu-Arabic system) is based on powers of 10. Each place value is 10 times greater than the place to its right: ones (1), tens (10), hundreds (100), thousands (1,000). This is why we call it a base-10 system. Moving a digit one place left multiplies its value by 10 because you're moving to the next power of 10. For example, 3 in the tens place is 30, but 3 in the hundreds place is 300 — exactly 10 times more."
+    },
+    "explanationPrompt": "Can you think of what a base-5 or base-2 number system would look like? How would place values change?",
+    "difficultyB": 1.2
+  },
+  {
+    "id": "NO-1.1-U2",
+    "layer": 2,
+    "templateType": "construction",
+    "content": {
+      "question": "Using the digits 3, 7, 1, and 9 (each exactly once), create the largest possible four-digit number. Explain your reasoning.",
+      "solution": "9,731",
+      "solutionExplanation": "To make the largest number, place the largest digit in the highest place value position. The thousands place has the greatest value, so put 9 there (9,000). Next, the hundreds place: put 7 (700). Then the tens place: put 3 (30). Finally the ones place: put 1 (1). The result is 9,731. This works because 9,000 > 7,000 > 3,000 > 1,000 — the thousands place contributes the most to the total, so it must hold the largest digit."
+    },
+    "explanationPrompt": "What strategy did you use? Would the same strategy work if you needed the smallest number instead?",
+    "difficultyB": 1.0
+  },
+  {
+    "id": "NO-1.1-U3",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "Explain why the digit 0 is important in the number 5,027. What would happen if we removed it?",
+      "solution": "The 0 holds the hundreds place, showing there are no hundreds. Without it, the number would become 527, a completely different value.",
+      "solutionExplanation": "In 5,027, the digit 0 acts as a placeholder in the hundreds place. It tells us there are 0 hundreds in this number. Without the 0, the remaining digits 5, 2, 7 would shift: 5 would move to the hundreds place, 2 to the tens, and 7 to the ones, giving us 527 — which is nearly 10 times smaller than 5,027! The zero preserves the correct position of every other digit. This is one of the most important inventions in mathematical history: the concept of zero as a placeholder."
+    },
+    "explanationPrompt": "Can you think of other examples where removing a zero would completely change a number's meaning? What about adding a zero?",
+    "difficultyB": 1.5
+  }
+]

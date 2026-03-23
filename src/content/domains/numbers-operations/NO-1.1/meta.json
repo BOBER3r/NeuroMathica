@@ -1,0 +1,15 @@
+{
+  "conceptId": "NO-1.1",
+  "name": "Place Value",
+  "gradeLevel": 6,
+  "domain": "numbers-operations",
+  "prerequisites": [],
+  "successors": ["NO-1.2", "NO-1.3", "NO-1.4"],
+  "estimatedMinutes": 25,
+  "hooks": {
+    "visual": "Zoom into a single number and discover a hidden city of place values",
+    "question": "What makes 3,456 different from 6,543?"
+  },
+  "realWorldContext": "Every time you read a price tag, check a sports score, or count money, you're using place value. The position of each digit tells you whether it means ones, tens, hundreds, or thousands.",
+  "reflectionPrompt": "Explain in your own words why the digit 5 means different things in the numbers 500, 50, and 5."
+}

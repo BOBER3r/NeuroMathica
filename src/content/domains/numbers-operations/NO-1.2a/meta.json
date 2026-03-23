@@ -1,0 +1,15 @@
+{
+  "conceptId": "NO-1.2a",
+  "name": "Integer Addition & Subtraction",
+  "gradeLevel": 6,
+  "domain": "numbers-operations",
+  "prerequisites": ["NO-1.2"],
+  "successors": ["NO-1.3"],
+  "estimatedMinutes": 30,
+  "hooks": {
+    "visual": "Walking forward and backward on a number line \u2014 what happens when you change direction?",
+    "question": "What does it mean to take away a debt? Could removing something negative actually be a good thing?"
+  },
+  "realWorldContext": "Every time you gain or lose points in a game, go up or down floors in a building, or track money earned and spent, you are adding and subtracting integers. Understanding these operations unlocks how the world keeps score.",
+  "reflectionPrompt": "Why does subtracting a negative number give the same result as adding a positive?"
+}

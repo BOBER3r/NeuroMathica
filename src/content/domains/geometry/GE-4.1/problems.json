@@ -1,0 +1,113 @@
+[
+  {
+    "id": "GE-4.1-R1",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "What type of angle measures exactly 90 degrees?",
+      "options": ["Acute", "Right", "Obtuse", "Straight"],
+      "solution": "Right",
+      "solutionExplanation": "A right angle measures exactly 90\u00b0. It looks like the corner of a square or a book. Acute angles are less than 90\u00b0, obtuse angles are between 90\u00b0 and 180\u00b0, and a straight angle is exactly 180\u00b0 (a flat line)."
+    },
+    "explanationPrompt": "How can you identify a right angle without measuring it?",
+    "difficultyB": -1.5
+  },
+  {
+    "id": "GE-4.1-R2",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "An angle measures 135\u00b0. What type of angle is it?",
+      "options": ["Acute", "Right", "Obtuse", "Reflex"],
+      "solution": "Obtuse",
+      "solutionExplanation": "An obtuse angle is any angle that measures more than 90\u00b0 but less than 180\u00b0. Since 135\u00b0 falls between 90\u00b0 and 180\u00b0, it is obtuse. A reflex angle would be greater than 180\u00b0."
+    },
+    "explanationPrompt": "What are the boundaries that separate acute, right, obtuse, straight, and reflex angles?",
+    "difficultyB": -1.2
+  },
+  {
+    "id": "GE-4.1-R3",
+    "layer": 0,
+    "templateType": "free-response",
+    "content": {
+      "question": "Name the five types of angles based on their measure, from smallest to largest.",
+      "solution": "Acute (0\u00b0-90\u00b0), Right (90\u00b0), Obtuse (90\u00b0-180\u00b0), Straight (180\u00b0), Reflex (180\u00b0-360\u00b0)",
+      "solutionExplanation": "Angles are classified by their measure: Acute angles measure between 0\u00b0 and 90\u00b0 (sharp, like a pizza slice). Right angles are exactly 90\u00b0 (a perfect corner). Obtuse angles are between 90\u00b0 and 180\u00b0 (wider than a corner). Straight angles are exactly 180\u00b0 (a flat line). Reflex angles are between 180\u00b0 and 360\u00b0 (more than a half turn)."
+    },
+    "explanationPrompt": "What real-world objects have each type of angle?",
+    "difficultyB": -1.0
+  },
+  {
+    "id": "GE-4.1-P1",
+    "layer": 1,
+    "templateType": "free-response",
+    "content": {
+      "question": "Two angles are complementary. One measures 35\u00b0. What is the other angle?",
+      "solution": "55\u00b0",
+      "solutionExplanation": "Complementary angles add up to 90\u00b0. If one angle is 35\u00b0, the other is 90\u00b0 - 35\u00b0 = 55\u00b0. Together, 35\u00b0 + 55\u00b0 = 90\u00b0, forming a right angle."
+    },
+    "explanationPrompt": "What is the difference between complementary and supplementary angles?",
+    "difficultyB": 0.0
+  },
+  {
+    "id": "GE-4.1-P2",
+    "layer": 1,
+    "templateType": "free-response",
+    "content": {
+      "question": "Two angles are supplementary. One measures 110\u00b0. What is the other angle?",
+      "solution": "70\u00b0",
+      "solutionExplanation": "Supplementary angles add up to 180\u00b0. If one angle is 110\u00b0, the other is 180\u00b0 - 110\u00b0 = 70\u00b0. Together, they form a straight line (180\u00b0)."
+    },
+    "explanationPrompt": "Where in everyday life do you see supplementary angles?",
+    "difficultyB": 0.3
+  },
+  {
+    "id": "GE-4.1-P3",
+    "layer": 1,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "A clock shows 3:00. What angle do the minute and hour hands form?",
+      "options": ["45\u00b0", "60\u00b0", "90\u00b0", "180\u00b0"],
+      "solution": "90\u00b0",
+      "solutionExplanation": "At 3:00, the minute hand points to 12 and the hour hand points to 3. A clock face is a full circle of 360\u00b0, divided into 12 hours. Each hour mark represents 360\u00b0 \u00f7 12 = 30\u00b0. From 12 to 3 is 3 hour marks: 3 \u00d7 30\u00b0 = 90\u00b0. This is a right angle."
+    },
+    "explanationPrompt": "How many degrees does the hour hand move per hour? Per minute?",
+    "difficultyB": 0.5
+  },
+  {
+    "id": "GE-4.1-U1",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "Explain why the angles in any triangle always add up to exactly 180 degrees.",
+      "solution": "If you tear off the three corners of any triangle and arrange them, they form a straight line (180\u00b0). This can be proven using parallel lines and alternate interior angles.",
+      "solutionExplanation": "Here is one way to see it: draw any triangle and extend one side to form a straight line. Draw a line through the opposite vertex parallel to the base. By the alternate interior angles theorem, the angles formed at the top vertex equal the two base angles of the triangle. The three angles at the top vertex sit on a straight line, so they must add to 180\u00b0. Since they are the same as the three angles of the triangle, the triangle's angles also sum to 180\u00b0. You can also verify experimentally: cut out any triangle, tear off its three corners, and place them together \u2014 they always form a straight line."
+    },
+    "explanationPrompt": "Does this rule work for all triangles, including very flat or very pointy ones? How could you test it?",
+    "difficultyB": 1.0
+  },
+  {
+    "id": "GE-4.1-U2",
+    "layer": 2,
+    "templateType": "construction",
+    "content": {
+      "question": "A triangle has one angle of 40\u00b0 and another of 75\u00b0. Find the third angle and classify each angle by type (acute, right, or obtuse).",
+      "solution": "Third angle = 65\u00b0. All three angles (40\u00b0, 65\u00b0, 75\u00b0) are acute, making this an acute triangle.",
+      "solutionExplanation": "The angles in a triangle sum to 180\u00b0. So the third angle is 180\u00b0 - 40\u00b0 - 75\u00b0 = 65\u00b0. Now classify each: 40\u00b0 is acute (less than 90\u00b0), 75\u00b0 is acute, and 65\u00b0 is acute. Since all three angles are acute, this is called an acute triangle. If any angle were exactly 90\u00b0, it would be a right triangle. If any were greater than 90\u00b0, it would be an obtuse triangle."
+    },
+    "explanationPrompt": "Can a triangle have two obtuse angles? Why or why not?",
+    "difficultyB": 1.2
+  },
+  {
+    "id": "GE-4.1-U3",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "A full rotation is 360\u00b0. Explain why this makes sense and describe what happens at 90\u00b0, 180\u00b0, 270\u00b0, and 360\u00b0.",
+      "solution": "360\u00b0 represents a complete turn back to the starting position. 90\u00b0 is a quarter turn, 180\u00b0 is a half turn, 270\u00b0 is three-quarters, and 360\u00b0 returns to start.",
+      "solutionExplanation": "Imagine facing north and turning clockwise. After 90\u00b0 (a quarter turn), you face east. After 180\u00b0 (a half turn), you face south \u2014 exactly opposite to where you started. After 270\u00b0 (three-quarter turn), you face west. After 360\u00b0, you have made a complete revolution and face north again. The choice of 360 dates back to ancient Babylon; 360 was chosen because it has many factors (1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360), making it easy to divide into equal parts."
+    },
+    "explanationPrompt": "Why do you think ancient mathematicians chose 360 for a full circle instead of, say, 100?",
+    "difficultyB": 1.5
+  }
+]

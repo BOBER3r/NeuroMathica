@@ -1,0 +1,950 @@
+{
+  "hook": {
+    "id": "NO-1.2a-hook",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "title-text",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Walking the Number Line}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "hook-number-line",
+        "type": "numberLine",
+        "range": [-8, 8],
+        "step": 1,
+        "markers": [
+          { "value": -8, "label": "-8", "style": "dot" },
+          { "value": -6, "label": "-6", "style": "dot" },
+          { "value": -4, "label": "-4", "style": "dot" },
+          { "value": -2, "label": "-2", "style": "dot" },
+          { "value": 0, "label": "0", "color": "#fbbf24", "style": "dot" },
+          { "value": 2, "label": "2", "style": "dot" },
+          { "value": 3, "label": "3", "color": "#7c3aed", "style": "dot" },
+          { "value": 4, "label": "4", "style": "dot" },
+          { "value": 6, "label": "6", "style": "dot" },
+          { "value": 8, "label": "8", "style": "dot" }
+        ]
+      },
+      {
+        "id": "walker",
+        "type": "point",
+        "position": [500, 150],
+        "radius": 12,
+        "label": "",
+        "style": { "fill": "#7c3aed", "stroke": "#a78bfa", "strokeWidth": 2 }
+      },
+      {
+        "id": "arrow-forward",
+        "type": "vector",
+        "from": [500, 130],
+        "to": [620, 130],
+        "color": "#10b981",
+        "label": "+3",
+        "opacity": 0
+      },
+      {
+        "id": "arrow-backward",
+        "type": "vector",
+        "from": [620, 130],
+        "to": [380, 130],
+        "color": "#ef4444",
+        "label": "-5",
+        "opacity": 0
+      },
+      {
+        "id": "result-label",
+        "type": "annotation",
+        "position": [400, 350],
+        "latex": "3 + (-5) = -2",
+        "anchor": "center",
+        "style": { "fontSize": 32, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "direction-label",
+        "type": "annotation",
+        "position": [400, 380],
+        "latex": "\\text{Changing direction changes everything!}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#94a3b8" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "hook-intro",
+        "trigger": "auto",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "title-text",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "top"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "arrow-forward",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "moveTo",
+            "target": "walker",
+            "position": [620, 150],
+            "duration": 1.2,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.4 },
+          {
+            "action": "fadeIn",
+            "target": "arrow-backward",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "moveTo",
+            "target": "walker",
+            "position": [380, 150],
+            "duration": 1.5,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "result-label",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "direction-label",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": []
+  },
+  "spatial": {
+    "id": "NO-1.2a-spatial",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "spatial-number-line",
+        "type": "numberLine",
+        "range": [-10, 10],
+        "step": 1,
+        "markers": [
+          { "value": -10, "label": "-10", "style": "dot" },
+          { "value": -8, "label": "-8", "style": "dot" },
+          { "value": -6, "label": "-6", "style": "dot" },
+          { "value": -4, "label": "-4", "style": "dot" },
+          { "value": -2, "label": "-2", "style": "dot" },
+          { "value": 0, "label": "0", "color": "#fbbf24", "style": "dot" },
+          { "value": 2, "label": "2", "style": "dot" },
+          { "value": 4, "label": "4", "style": "dot" },
+          { "value": 6, "label": "6", "style": "dot" },
+          { "value": 8, "label": "8", "style": "dot" },
+          { "value": 10, "label": "10", "style": "dot" }
+        ]
+      },
+      {
+        "id": "add-label",
+        "type": "annotation",
+        "position": [600, 30],
+        "latex": "\\text{Addition} \\rightarrow \\text{Move Right}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "sub-label",
+        "type": "annotation",
+        "position": [200, 30],
+        "latex": "\\text{Subtraction} \\leftarrow \\text{Move Left}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#ef4444" },
+        "opacity": 0
+      },
+      {
+        "id": "chip-section-title",
+        "type": "annotation",
+        "position": [400, 200],
+        "latex": "\\text{Zero-Pair Model}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "pos-chips",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "pos-chip-1",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [250, 270],
+            "radius": 20,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 2 }
+          },
+          {
+            "id": "pos-chip-1-label",
+            "type": "annotation",
+            "position": [250, 270],
+            "latex": "+",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "pos-chip-2",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [300, 270],
+            "radius": 20,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 2 }
+          },
+          {
+            "id": "pos-chip-2-label",
+            "type": "annotation",
+            "position": [300, 270],
+            "latex": "+",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "pos-chip-3",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [350, 270],
+            "radius": 20,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 2 }
+          },
+          {
+            "id": "pos-chip-3-label",
+            "type": "annotation",
+            "position": [350, 270],
+            "latex": "+",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "pos-chip-4",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [400, 270],
+            "radius": 20,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 2 }
+          },
+          {
+            "id": "pos-chip-4-label",
+            "type": "annotation",
+            "position": [400, 270],
+            "latex": "+",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "pos-chip-5",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [450, 270],
+            "radius": 20,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 2 }
+          },
+          {
+            "id": "pos-chip-5-label",
+            "type": "annotation",
+            "position": [450, 270],
+            "latex": "+",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          }
+        ]
+      },
+      {
+        "id": "neg-chips",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "neg-chip-1",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [250, 330],
+            "radius": 20,
+            "style": { "fill": "#ef4444", "stroke": "#f87171", "strokeWidth": 2 }
+          },
+          {
+            "id": "neg-chip-1-label",
+            "type": "annotation",
+            "position": [250, 330],
+            "latex": "-",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "neg-chip-2",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [300, 330],
+            "radius": 20,
+            "style": { "fill": "#ef4444", "stroke": "#f87171", "strokeWidth": 2 }
+          },
+          {
+            "id": "neg-chip-2-label",
+            "type": "annotation",
+            "position": [300, 330],
+            "latex": "-",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          },
+          {
+            "id": "neg-chip-3",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [350, 330],
+            "radius": 20,
+            "style": { "fill": "#ef4444", "stroke": "#f87171", "strokeWidth": 2 }
+          },
+          {
+            "id": "neg-chip-3-label",
+            "type": "annotation",
+            "position": [350, 330],
+            "latex": "-",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#ffffff" }
+          }
+        ]
+      },
+      {
+        "id": "zero-pair-brackets",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "bracket-1",
+            "type": "line",
+            "from": [250, 248],
+            "to": [250, 352],
+            "dashed": true,
+            "style": { "stroke": "#fbbf24", "strokeWidth": 2 }
+          },
+          {
+            "id": "bracket-2",
+            "type": "line",
+            "from": [300, 248],
+            "to": [300, 352],
+            "dashed": true,
+            "style": { "stroke": "#fbbf24", "strokeWidth": 2 }
+          },
+          {
+            "id": "bracket-3",
+            "type": "line",
+            "from": [350, 248],
+            "to": [350, 352],
+            "dashed": true,
+            "style": { "stroke": "#fbbf24", "strokeWidth": 2 }
+          }
+        ]
+      },
+      {
+        "id": "zero-pairs-label",
+        "type": "annotation",
+        "position": [300, 380],
+        "latex": "\\text{3 zero pairs}",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "result-label",
+        "type": "annotation",
+        "position": [425, 380],
+        "latex": "5 + (-3) = 2 \\text{ remaining}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "draggable-start",
+        "type": "point",
+        "position": [400, 100],
+        "radius": 15,
+        "label": "Start",
+        "draggable": true,
+        "dragConstraint": "x",
+        "snapToGrid": 1,
+        "style": { "fill": "#f59e0b", "stroke": "#fbbf24", "strokeWidth": 2 }
+      }
+    ],
+    "animations": [
+      {
+        "id": "spatial-intro",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "spatial-number-line",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "add-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "right"
+              },
+              {
+                "action": "fadeIn",
+                "target": "sub-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "left"
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "chip-section-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pos-chips",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "neg-chips",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "zero-pair-brackets",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "zero-pairs-label",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "highlight",
+            "target": "pos-chip-4",
+            "duration": 0.8,
+            "color": "#10b981",
+            "pulse": true
+          },
+          {
+            "action": "highlight",
+            "target": "pos-chip-5",
+            "duration": 0.8,
+            "color": "#10b981",
+            "pulse": true
+          },
+          {
+            "action": "fadeIn",
+            "target": "result-label",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "draggable-start",
+            "duration": 0.4,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "drag-start-point",
+        "type": "drag",
+        "target": "draggable-start",
+        "onUpdate": [
+          {
+            "source": "x",
+            "target": "spatial-number-line",
+            "property": "highlightRange.to",
+            "transform": "mapToRange(-10, 10)"
+          }
+        ]
+      }
+    ]
+  },
+  "discovery": {
+    "id": "NO-1.2a-discovery",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "discovery-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Subtracting a Negative}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "scenario-line",
+        "type": "numberLine",
+        "range": [-4, 12],
+        "step": 1,
+        "markers": [
+          { "value": 0, "label": "0", "color": "#fbbf24", "style": "dot" },
+          { "value": 5, "label": "5", "color": "#7c3aed", "style": "dot" },
+          { "value": 8, "label": "8", "color": "#10b981", "style": "dot" }
+        ]
+      },
+      {
+        "id": "step-1-label",
+        "type": "annotation",
+        "position": [200, 180],
+        "latex": "\\text{Start at } 5",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "arrow-sub-neg",
+        "type": "vector",
+        "from": [400, 130],
+        "to": [520, 130],
+        "color": "#10b981",
+        "label": "-(-3) = +3",
+        "opacity": 0
+      },
+      {
+        "id": "step-2-label",
+        "type": "annotation",
+        "position": [600, 180],
+        "latex": "5 - (-3) = 5 + 3 = 8",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "debt-model-title",
+        "type": "annotation",
+        "position": [400, 240],
+        "latex": "\\text{Debt Model}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "debt-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "debt-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [250, 310],
+            "width": 250,
+            "height": 60,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "debt-text",
+            "type": "annotation",
+            "position": [250, 310],
+            "latex": "\\text{You have \\$5}",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#c4b5fd" }
+          }
+        ]
+      },
+      {
+        "id": "remove-debt-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "remove-debt-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [550, 310],
+            "width": 300,
+            "height": 60,
+            "style": { "fill": "#052e16", "stroke": "#10b981", "strokeWidth": 2 }
+          },
+          {
+            "id": "remove-debt-text",
+            "type": "annotation",
+            "position": [550, 310],
+            "latex": "\\text{Remove \\$3 debt} \\rightarrow \\text{gain \\$3}",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#6ee7b7" }
+          }
+        ]
+      },
+      {
+        "id": "debt-result",
+        "type": "annotation",
+        "position": [400, 380],
+        "latex": "\\text{Result: } \\$5 + \\$3 = \\$8",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "rule-summary",
+        "type": "annotation",
+        "position": [400, 440],
+        "latex": "a - (-b) = a + b",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#f59e0b" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "discovery-build",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "discovery-title",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "scenario-line",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "step-1-label",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "arrow-sub-neg",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "step-2-label",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "right"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "debt-model-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "debt-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "remove-debt-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "right"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "debt-result",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.4 },
+          {
+            "action": "fadeIn",
+            "target": "rule-summary",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-debt-box",
+        "type": "click",
+        "target": "debt-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "debt-bg",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#1e1b4b, #312e81)"
+          }
+        ]
+      }
+    ]
+  },
+  "symbol": {
+    "id": "NO-1.2a-symbol",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "rules-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Rules for Integer Operations}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "rule-1-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "rule-1-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 80],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#052e16", "stroke": "#10b981", "strokeWidth": 2 }
+          },
+          {
+            "id": "rule-1-text",
+            "type": "annotation",
+            "position": [400, 80],
+            "latex": "\\text{Same signs: Add absolute values, keep the sign}",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#6ee7b7" }
+          }
+        ]
+      },
+      {
+        "id": "rule-1-example",
+        "type": "annotation",
+        "position": [400, 115],
+        "latex": "-4 + (-3) = -(4+3) = -7",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "rule-2-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "rule-2-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 170],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#172554", "stroke": "#3b82f6", "strokeWidth": 2 }
+          },
+          {
+            "id": "rule-2-text",
+            "type": "annotation",
+            "position": [400, 170],
+            "latex": "\\text{Different signs: Subtract absolute values, take sign of larger}",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#93c5fd" }
+          }
+        ]
+      },
+      {
+        "id": "rule-2-example",
+        "type": "annotation",
+        "position": [400, 205],
+        "latex": "-7 + 4 = -(7-4) = -3",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "rule-3-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "rule-3-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 260],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "rule-3-text",
+            "type": "annotation",
+            "position": [400, 260],
+            "latex": "\\text{Subtracting = Adding the opposite: } a - b = a + (-b)",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#c4b5fd" }
+          }
+        ]
+      },
+      {
+        "id": "rule-3-example",
+        "type": "annotation",
+        "position": [400, 295],
+        "latex": "5 - 8 = 5 + (-8) = -3",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "key-insight",
+        "type": "annotation",
+        "position": [400, 360],
+        "latex": "a - (-b) = a + b \\quad \\text{(double negative = positive)}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#fbbf24" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "symbol-reveal",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "rule-1-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rule-1-example",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "rule-2-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rule-2-example",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "rule-3-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rule-3-example",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "key-insight",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "hover-rule-1",
+        "type": "hover",
+        "target": "rule-1-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "rule-1-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-rule-2",
+        "type": "hover",
+        "target": "rule-2-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "rule-2-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-rule-3",
+        "type": "hover",
+        "target": "rule-3-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "rule-3-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      }
+    ]
+  }
+}

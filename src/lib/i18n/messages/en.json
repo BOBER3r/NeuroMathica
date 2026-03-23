@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "NeuroMathica",
+    "tagline": "See math. Understand math."
+  },
+  "nav": {
+    "learn": "Learn",
+    "practice": "Practice",
+    "progress": "Progress",
+    "profile": "Profile"
+  },
+  "lesson": {
+    "startLesson": "Start Lesson",
+    "continueLesson": "Continue Lesson",
+    "stageHook": "Hook",
+    "stageSpatial": "Explore",
+    "stageDiscovery": "Discover",
+    "stageSymbol": "Symbols",
+    "stageRealWorld": "Real World",
+    "stagePractice": "Practice",
+    "stageReflection": "Reflect",
+    "nextStage": "Continue",
+    "completeLesson": "Complete Lesson"
+  },
+  "practice": {
+    "dailyReview": "Daily Review",
+    "startSession": "Start Practice",
+    "submitAnswer": "Submit",
+    "showHint": "Show Hint",
+    "nextProblem": "Next",
+    "sessionComplete": "Session Complete!",
+    "problemsCorrect": "{correct} of {total} correct",
+    "whyDoesThisWork": "Why does this work?"
+  },
+  "gamification": {
+    "xpEarned": "+{amount} XP",
+    "levelUp": "Level Up!",
+    "streakDay": "{count}-day streak",
+    "achievementUnlocked": "Achievement Unlocked!"
+  },
+  "progress": {
+    "knowledgeNebula": "Knowledge Nebula",
+    "mastered": "Mastered",
+    "inProgress": "In Progress",
+    "available": "Available",
+    "locked": "Locked",
+    "reviewDue": "Review Due"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out"
+  },
+  "onboarding": {
+    "welcome": "Welcome to NeuroMathica",
+    "exploreMath": "See math come alive",
+    "createAccount": "Create Account",
+    "startDiagnostic": "Let's find your starting point",
+    "startLearning": "Start Learning"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "offline": "You're offline",
+    "syncing": "Syncing..."
+  }
+}

@@ -1,0 +1,1221 @@
+{
+  "hook": {
+    "id": "NT-2.1-hook",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "title-text",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Every number has a secret family tree}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "number-24",
+        "type": "annotation",
+        "position": [400, 90],
+        "latex": "24",
+        "anchor": "center",
+        "style": { "fontSize": 72, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "rect-1x24",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [80, 160] },
+        "children": [
+          {
+            "id": "rect-1x24-shape",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [60, 15],
+            "width": 120,
+            "height": 12,
+            "style": { "fill": "#ef4444", "stroke": "#f87171", "strokeWidth": 1 }
+          },
+          {
+            "id": "rect-1x24-label",
+            "type": "annotation",
+            "position": [60, 40],
+            "latex": "1 \\times 24",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#f87171" }
+          }
+        ]
+      },
+      {
+        "id": "rect-2x12",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [240, 160] },
+        "children": [
+          {
+            "id": "rect-2x12-shape",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [50, 15],
+            "width": 96,
+            "height": 24,
+            "style": { "fill": "#f59e0b", "stroke": "#fbbf24", "strokeWidth": 1 }
+          },
+          {
+            "id": "rect-2x12-label",
+            "type": "annotation",
+            "position": [50, 50],
+            "latex": "2 \\times 12",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#fbbf24" }
+          }
+        ]
+      },
+      {
+        "id": "rect-3x8",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [390, 160] },
+        "children": [
+          {
+            "id": "rect-3x8-shape",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [40, 20],
+            "width": 80,
+            "height": 36,
+            "style": { "fill": "#10b981", "stroke": "#34d399", "strokeWidth": 1 }
+          },
+          {
+            "id": "rect-3x8-label",
+            "type": "annotation",
+            "position": [40, 55],
+            "latex": "3 \\times 8",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#34d399" }
+          }
+        ]
+      },
+      {
+        "id": "rect-4x6",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [530, 160] },
+        "children": [
+          {
+            "id": "rect-4x6-shape",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [36, 24],
+            "width": 72,
+            "height": 48,
+            "style": { "fill": "#3b82f6", "stroke": "#60a5fa", "strokeWidth": 1 }
+          },
+          {
+            "id": "rect-4x6-label",
+            "type": "annotation",
+            "position": [36, 60],
+            "latex": "4 \\times 6",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#60a5fa" }
+          }
+        ]
+      },
+      {
+        "id": "factors-list",
+        "type": "annotation",
+        "position": [400, 310],
+        "latex": "\\text{Factors of 24: } 1, 2, 3, 4, 6, 8, 12, 24",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "question-label",
+        "type": "annotation",
+        "position": [400, 360],
+        "latex": "\\text{Who are the factors of YOUR number?}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#94a3b8" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "hook-intro",
+        "trigger": "auto",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "title-text",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "top"
+          },
+          {
+            "action": "fadeIn",
+            "target": "number-24",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "rect-1x24",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "bottom"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rect-2x12",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "bottom"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rect-3x8",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "bottom"
+          },
+          {
+            "action": "fadeIn",
+            "target": "rect-4x6",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "bottom"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "factors-list",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "question-label",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": []
+  },
+  "spatial": {
+    "id": "NT-2.1-spatial",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "spatial-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Factor Rectangles for 24}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "grid-1x24",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [50, 70] },
+        "children": [
+          {
+            "id": "grid-1x24-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [150, 10],
+            "width": 288,
+            "height": 12,
+            "style": { "fill": "#ef444440", "stroke": "#ef4444", "strokeWidth": 1 }
+          },
+          {
+            "id": "grid-1x24-label",
+            "type": "annotation",
+            "position": [310, 10],
+            "latex": "1 \\times 24",
+            "anchor": "left",
+            "style": { "fontSize": 16, "fill": "#f87171" }
+          }
+        ]
+      },
+      {
+        "id": "grid-2x12",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [50, 100] },
+        "children": [
+          {
+            "id": "grid-2x12-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [72, 12],
+            "width": 144,
+            "height": 24,
+            "style": { "fill": "#f59e0b40", "stroke": "#f59e0b", "strokeWidth": 1 }
+          },
+          {
+            "id": "grid-2x12-label",
+            "type": "annotation",
+            "position": [160, 12],
+            "latex": "2 \\times 12",
+            "anchor": "left",
+            "style": { "fontSize": 16, "fill": "#fbbf24" }
+          }
+        ]
+      },
+      {
+        "id": "grid-3x8",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [50, 145] },
+        "children": [
+          {
+            "id": "grid-3x8-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [48, 18],
+            "width": 96,
+            "height": 36,
+            "style": { "fill": "#10b98140", "stroke": "#10b981", "strokeWidth": 1 }
+          },
+          {
+            "id": "grid-3x8-label",
+            "type": "annotation",
+            "position": [112, 18],
+            "latex": "3 \\times 8",
+            "anchor": "left",
+            "style": { "fontSize": 16, "fill": "#34d399" }
+          }
+        ]
+      },
+      {
+        "id": "grid-4x6",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [50, 200] },
+        "children": [
+          {
+            "id": "grid-4x6-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [36, 24],
+            "width": 72,
+            "height": 48,
+            "style": { "fill": "#3b82f640", "stroke": "#3b82f6", "strokeWidth": 1 }
+          },
+          {
+            "id": "grid-4x6-label",
+            "type": "annotation",
+            "position": [88, 24],
+            "latex": "4 \\times 6",
+            "anchor": "left",
+            "style": { "fontSize": 16, "fill": "#60a5fa" }
+          }
+        ]
+      },
+      {
+        "id": "venn-title",
+        "type": "annotation",
+        "position": [550, 60],
+        "latex": "\\text{Common Factors of 18 and 24}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "venn-circle-18",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [490, 180],
+        "radius": 90,
+        "style": { "fill": "#7c3aed20", "stroke": "#7c3aed", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "venn-label-18",
+        "type": "annotation",
+        "position": [430, 100],
+        "latex": "\\text{18}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "venn-circle-24",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [610, 180],
+        "radius": 90,
+        "style": { "fill": "#3b82f620", "stroke": "#3b82f6", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "venn-label-24",
+        "type": "annotation",
+        "position": [670, 100],
+        "latex": "\\text{24}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#3b82f6" },
+        "opacity": 0
+      },
+      {
+        "id": "venn-only-18",
+        "type": "annotation",
+        "position": [440, 180],
+        "latex": "9, 18",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#c4b5fd" },
+        "opacity": 0
+      },
+      {
+        "id": "venn-common",
+        "type": "annotation",
+        "position": [550, 180],
+        "latex": "1, 2, 3, 6",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "venn-only-24",
+        "type": "annotation",
+        "position": [660, 180],
+        "latex": "4, 8, 12, 24",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#93c5fd" },
+        "opacity": 0
+      },
+      {
+        "id": "gcf-label",
+        "type": "annotation",
+        "position": [550, 290],
+        "latex": "\\text{GCF}(18, 24) = 6",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "dot-grid",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [50, 320] },
+        "children": [
+          {
+            "id": "dot-grid-label",
+            "type": "annotation",
+            "position": [200, -10],
+            "latex": "\\text{Drag to rearrange 24 dots}",
+            "anchor": "center",
+            "style": { "fontSize": 16, "fill": "#94a3b8" }
+          },
+          {
+            "id": "dot-1",
+            "type": "point",
+            "position": [20, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-2",
+            "type": "point",
+            "position": [50, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-3",
+            "type": "point",
+            "position": [80, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-4",
+            "type": "point",
+            "position": [110, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-5",
+            "type": "point",
+            "position": [140, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-6",
+            "type": "point",
+            "position": [170, 20],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-7",
+            "type": "point",
+            "position": [20, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-8",
+            "type": "point",
+            "position": [50, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-9",
+            "type": "point",
+            "position": [80, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-10",
+            "type": "point",
+            "position": [110, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-11",
+            "type": "point",
+            "position": [140, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-12",
+            "type": "point",
+            "position": [170, 50],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-13",
+            "type": "point",
+            "position": [20, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-14",
+            "type": "point",
+            "position": [50, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-15",
+            "type": "point",
+            "position": [80, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-16",
+            "type": "point",
+            "position": [110, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-17",
+            "type": "point",
+            "position": [140, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-18",
+            "type": "point",
+            "position": [170, 80],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-19",
+            "type": "point",
+            "position": [20, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-20",
+            "type": "point",
+            "position": [50, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-21",
+            "type": "point",
+            "position": [80, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-22",
+            "type": "point",
+            "position": [110, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-23",
+            "type": "point",
+            "position": [140, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          },
+          {
+            "id": "dot-24",
+            "type": "point",
+            "position": [170, 110],
+            "radius": 8,
+            "style": { "fill": "#f59e0b" }
+          }
+        ]
+      }
+    ],
+    "animations": [
+      {
+        "id": "spatial-intro",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "grid-1x24",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "grid-2x12",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "grid-3x8",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "grid-4x6",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "venn-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "venn-circle-18",
+                "duration": 0.6,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "venn-label-18",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "venn-circle-24",
+                "duration": 0.6,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "venn-label-24",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.4
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "venn-only-18",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "venn-common",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.1
+              },
+              {
+                "action": "fadeIn",
+                "target": "venn-only-24",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "highlight",
+            "target": "venn-common",
+            "duration": 1.0,
+            "color": "#fbbf24",
+            "pulse": true
+          },
+          {
+            "action": "fadeIn",
+            "target": "gcf-label",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "dot-grid",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "bottom"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-venn-18",
+        "type": "click",
+        "target": "venn-circle-18",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "venn-circle-18",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#7c3aed20, #7c3aed40)"
+          }
+        ]
+      },
+      {
+        "id": "click-venn-24",
+        "type": "click",
+        "target": "venn-circle-24",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "venn-circle-24",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#3b82f620, #3b82f640)"
+          }
+        ]
+      }
+    ]
+  },
+  "discovery": {
+    "id": "NT-2.1-discovery",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "discovery-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Prime vs Composite: The Factor Count}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "num-12-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "num-12-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [200, 100],
+            "width": 300,
+            "height": 60,
+            "style": { "fill": "#172554", "stroke": "#3b82f6", "strokeWidth": 2 }
+          },
+          {
+            "id": "num-12-text",
+            "type": "annotation",
+            "position": [200, 90],
+            "latex": "12 = 2 \\times 2 \\times 3",
+            "anchor": "center",
+            "style": { "fontSize": 22, "fill": "#93c5fd" }
+          },
+          {
+            "id": "num-12-factors",
+            "type": "annotation",
+            "position": [200, 115],
+            "latex": "\\text{6 factors: } 1,2,3,4,6,12",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#94a3b8" }
+          }
+        ]
+      },
+      {
+        "id": "composite-label",
+        "type": "annotation",
+        "position": [200, 150],
+        "latex": "\\text{COMPOSITE}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#3b82f6" },
+        "opacity": 0
+      },
+      {
+        "id": "num-13-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "num-13-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [600, 100],
+            "width": 300,
+            "height": 60,
+            "style": { "fill": "#052e16", "stroke": "#10b981", "strokeWidth": 2 }
+          },
+          {
+            "id": "num-13-text",
+            "type": "annotation",
+            "position": [600, 90],
+            "latex": "13 = 1 \\times 13",
+            "anchor": "center",
+            "style": { "fontSize": 22, "fill": "#6ee7b7" }
+          },
+          {
+            "id": "num-13-factors",
+            "type": "annotation",
+            "position": [600, 115],
+            "latex": "\\text{2 factors: } 1, 13",
+            "anchor": "center",
+            "style": { "fontSize": 14, "fill": "#94a3b8" }
+          }
+        ]
+      },
+      {
+        "id": "prime-label",
+        "type": "annotation",
+        "position": [600, 150],
+        "latex": "\\text{PRIME}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "multiples-title",
+        "type": "annotation",
+        "position": [400, 210],
+        "latex": "\\text{Multiples: The Factor Flip Side}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "multiples-4",
+        "type": "numberLine",
+        "range": [0, 30],
+        "step": 4,
+        "markers": [
+          { "value": 0, "label": "0", "style": "dot" },
+          { "value": 4, "label": "4", "color": "#ef4444", "style": "dot" },
+          { "value": 8, "label": "8", "color": "#ef4444", "style": "dot" },
+          { "value": 12, "label": "12", "color": "#fbbf24", "style": "dot" },
+          { "value": 16, "label": "16", "color": "#ef4444", "style": "dot" },
+          { "value": 20, "label": "20", "color": "#ef4444", "style": "dot" },
+          { "value": 24, "label": "24", "color": "#fbbf24", "style": "dot" },
+          { "value": 28, "label": "28", "color": "#ef4444", "style": "dot" }
+        ]
+      },
+      {
+        "id": "multiples-4-label",
+        "type": "annotation",
+        "position": [100, 280],
+        "latex": "\\text{Multiples of 4}",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#ef4444" },
+        "opacity": 0
+      },
+      {
+        "id": "multiples-6",
+        "type": "numberLine",
+        "range": [0, 30],
+        "step": 6,
+        "markers": [
+          { "value": 0, "label": "0", "style": "dot" },
+          { "value": 6, "label": "6", "color": "#3b82f6", "style": "dot" },
+          { "value": 12, "label": "12", "color": "#fbbf24", "style": "dot" },
+          { "value": 18, "label": "18", "color": "#3b82f6", "style": "dot" },
+          { "value": 24, "label": "24", "color": "#fbbf24", "style": "dot" },
+          { "value": 30, "label": "30", "color": "#3b82f6", "style": "dot" }
+        ]
+      },
+      {
+        "id": "multiples-6-label",
+        "type": "annotation",
+        "position": [100, 350],
+        "latex": "\\text{Multiples of 6}",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#3b82f6" },
+        "opacity": 0
+      },
+      {
+        "id": "lcm-label",
+        "type": "annotation",
+        "position": [400, 420],
+        "latex": "\\text{LCM}(4, 6) = 12 \\quad \\text{(first common multiple)}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "discovery-build",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "discovery-title",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "num-12-box",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "left"
+              },
+              {
+                "action": "fadeIn",
+                "target": "num-13-box",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "right"
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "composite-label",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "prime-label",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "multiples-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "multiples-4",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "multiples-4-label",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "multiples-6",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "multiples-6-label",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.4 },
+          {
+            "action": "fadeIn",
+            "target": "lcm-label",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-12-box",
+        "type": "click",
+        "target": "num-12-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "num-12-bg",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#172554, #1e3a8a)"
+          }
+        ]
+      },
+      {
+        "id": "click-13-box",
+        "type": "click",
+        "target": "num-13-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "num-13-bg",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#052e16, #14532d)"
+          }
+        ]
+      }
+    ]
+  },
+  "symbol": {
+    "id": "NT-2.1-symbol",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "symbol-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Factor & Multiple Notation}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "factor-def",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "factor-def-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 80],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "factor-def-text",
+            "type": "annotation",
+            "position": [400, 80],
+            "latex": "a \\text{ is a factor of } b \\iff b \\div a \\text{ has no remainder}",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#c4b5fd" }
+          }
+        ]
+      },
+      {
+        "id": "multiple-def",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "multiple-def-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 145],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#172554", "stroke": "#3b82f6", "strokeWidth": 2 }
+          },
+          {
+            "id": "multiple-def-text",
+            "type": "annotation",
+            "position": [400, 145],
+            "latex": "b \\text{ is a multiple of } a \\iff b = a \\times n \\text{ for some whole } n",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#93c5fd" }
+          }
+        ]
+      },
+      {
+        "id": "gcf-def",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "gcf-def-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 215],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#052e16", "stroke": "#10b981", "strokeWidth": 2 }
+          },
+          {
+            "id": "gcf-def-text",
+            "type": "annotation",
+            "position": [400, 215],
+            "latex": "\\text{GCF}(a, b) = \\text{greatest number that divides both } a \\text{ and } b",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#6ee7b7" }
+          }
+        ]
+      },
+      {
+        "id": "lcm-def",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "lcm-def-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 285],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#451a03", "stroke": "#f59e0b", "strokeWidth": 2 }
+          },
+          {
+            "id": "lcm-def-text",
+            "type": "annotation",
+            "position": [400, 285],
+            "latex": "\\text{LCM}(a, b) = \\text{smallest number that is a multiple of both}",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#fbbf24" }
+          }
+        ]
+      },
+      {
+        "id": "relationship",
+        "type": "annotation",
+        "position": [400, 350],
+        "latex": "\\text{GCF}(a,b) \\times \\text{LCM}(a,b) = a \\times b",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#fbbf24" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "symbol-reveal",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "factor-def",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "multiple-def",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "gcf-def",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "lcm-def",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "relationship",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "hover-factor-def",
+        "type": "hover",
+        "target": "factor-def",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "factor-def-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-multiple-def",
+        "type": "hover",
+        "target": "multiple-def",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "multiple-def-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      }
+    ]
+  }
+}

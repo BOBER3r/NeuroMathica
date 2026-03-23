@@ -1,0 +1,15 @@
+{
+  "conceptId": "GE-4.1",
+  "name": "Angles",
+  "gradeLevel": 6,
+  "domain": "geometry",
+  "prerequisites": [],
+  "successors": ["GE-4.2", "GE-4.3"],
+  "estimatedMinutes": 30,
+  "hooks": {
+    "visual": "Angles are everywhere \u2014 from clock hands to skateboard ramps to pizza slices",
+    "question": "When clock hands point to 3 o'clock, what angle do they make? What about 6 o'clock?"
+  },
+  "realWorldContext": "Angles shape the world around you: the tilt of a ramp determines how steep it is, architects use angles to design buildings, athletes adjust their launch angle for the best throw, and every turn you make on a skateboard or bicycle is measured in degrees.",
+  "reflectionPrompt": "Why do you think the angles in any triangle always add up to exactly 180 degrees?"
+}

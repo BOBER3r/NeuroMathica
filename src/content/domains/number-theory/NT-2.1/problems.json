@@ -1,0 +1,113 @@
+[
+  {
+    "id": "NT-2.1-R1",
+    "layer": 0,
+    "templateType": "free-response",
+    "content": {
+      "question": "List all the factors of 12.",
+      "solution": "1, 2, 3, 4, 6, 12",
+      "solutionExplanation": "A factor of 12 is any whole number that divides evenly into 12. Check each number: 12 \u00f7 1 = 12 (yes), 12 \u00f7 2 = 6 (yes), 12 \u00f7 3 = 4 (yes), 12 \u00f7 4 = 3 (yes), 12 \u00f7 5 = 2.4 (no), 12 \u00f7 6 = 2 (yes). We can stop at 6 because we have already found its pair (2). The complete list is 1, 2, 3, 4, 6, 12."
+    },
+    "explanationPrompt": "How do you systematically find all factors of a number without missing any?",
+    "difficultyB": -1.5
+  },
+  {
+    "id": "NT-2.1-R2",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "Which of the following is a multiple of 7?",
+      "options": ["22", "28", "30", "25"],
+      "solution": "28",
+      "solutionExplanation": "A multiple of 7 is the result of multiplying 7 by a whole number. 7 \u00d7 1 = 7, 7 \u00d7 2 = 14, 7 \u00d7 3 = 21, 7 \u00d7 4 = 28. So 28 is a multiple of 7. You can also check: 28 \u00f7 7 = 4 with no remainder."
+    },
+    "explanationPrompt": "What is the relationship between factors and multiples?",
+    "difficultyB": -1.2
+  },
+  {
+    "id": "NT-2.1-R3",
+    "layer": 0,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "Is 5 a factor of 35?",
+      "options": ["Yes", "No"],
+      "solution": "Yes",
+      "solutionExplanation": "To check if 5 is a factor of 35, divide: 35 \u00f7 5 = 7, with no remainder. Since 5 divides evenly into 35, yes, 5 is a factor of 35. Equivalently, 35 is a multiple of 5."
+    },
+    "explanationPrompt": "How can you quickly check whether one number is a factor of another?",
+    "difficultyB": -1.0
+  },
+  {
+    "id": "NT-2.1-P1",
+    "layer": 1,
+    "templateType": "free-response",
+    "content": {
+      "question": "Find the greatest common factor (GCF) of 18 and 24.",
+      "solution": "6",
+      "solutionExplanation": "List the factors of each number. Factors of 18: 1, 2, 3, 6, 9, 18. Factors of 24: 1, 2, 3, 4, 6, 8, 12, 24. Common factors (in both lists): 1, 2, 3, 6. The greatest of these is 6, so GCF(18, 24) = 6."
+    },
+    "explanationPrompt": "Why is finding the GCF useful? Can you think of a situation where you would need it?",
+    "difficultyB": 0.0
+  },
+  {
+    "id": "NT-2.1-P2",
+    "layer": 1,
+    "templateType": "free-response",
+    "content": {
+      "question": "Find the least common multiple (LCM) of 4 and 6.",
+      "solution": "12",
+      "solutionExplanation": "List multiples of each number until you find a match. Multiples of 4: 4, 8, 12, 16, 20... Multiples of 6: 6, 12, 18, 24... The smallest number that appears in both lists is 12, so LCM(4, 6) = 12."
+    },
+    "explanationPrompt": "When would you need the LCM in real life? Think about repeating events.",
+    "difficultyB": 0.3
+  },
+  {
+    "id": "NT-2.1-P3",
+    "layer": 1,
+    "templateType": "multiple-choice",
+    "content": {
+      "question": "You have 36 red marbles and 48 blue marbles. You want to divide them into identical groups with no marbles left over. What is the greatest number of groups you can make?",
+      "options": ["6", "8", "12", "4"],
+      "solution": "12",
+      "solutionExplanation": "The greatest number of equal groups is the GCF of 36 and 48. Factors of 36: 1, 2, 3, 4, 6, 9, 12, 18, 36. Factors of 48: 1, 2, 3, 4, 6, 8, 12, 16, 24, 48. The GCF is 12. Each group would have 36 \u00f7 12 = 3 red marbles and 48 \u00f7 12 = 4 blue marbles."
+    },
+    "explanationPrompt": "Why does the GCF give you the answer to this type of grouping problem?",
+    "difficultyB": 0.5
+  },
+  {
+    "id": "NT-2.1-U1",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "Explain why 1 and the number itself are always factors of any whole number greater than 0.",
+      "solution": "Any number divided by 1 equals itself (no remainder), and any number divided by itself equals 1 (no remainder). So both always divide evenly.",
+      "solutionExplanation": "For any whole number n > 0: n \u00f7 1 = n (divides evenly, so 1 is always a factor), and n \u00f7 n = 1 (divides evenly, so n is always a factor of itself). These two factors are guaranteed for every number. Numbers that have ONLY these two factors (like 2, 3, 5, 7, 11) are called prime numbers. Numbers with additional factors are called composite numbers. The number 1 is special: it only has one factor (itself), so it is neither prime nor composite."
+    },
+    "explanationPrompt": "What makes a number prime versus composite? Where does 1 fit in?",
+    "difficultyB": 1.0
+  },
+  {
+    "id": "NT-2.1-U2",
+    "layer": 2,
+    "templateType": "explain-why",
+    "content": {
+      "question": "Why do some numbers have many factors while others have very few? Compare 12 and 13.",
+      "solution": "12 is composite with factors 1, 2, 3, 4, 6, 12 because it can be expressed as products of smaller numbers in many ways. 13 is prime \u2014 it can only be divided by 1 and itself.",
+      "solutionExplanation": "The number 12 can be built from smaller numbers in multiple ways: 1\u00d712, 2\u00d76, 3\u00d74. Each factorization gives a pair of factors, totaling 6 factors. Meanwhile, 13 cannot be evenly divided by 2, 3, 4, 5, 6, or any number except 1 and 13, giving it exactly 2 factors. Numbers with many small prime factors (like 12 = 2\u00d72\u00d73) tend to have many factor combinations. Prime numbers, by definition, resist being broken down. This distinction has deep consequences: it is the foundation of modern cryptography, where the difficulty of factoring very large numbers keeps your online data secure."
+    },
+    "explanationPrompt": "Can you predict whether a number will have many factors just by looking at it? What clues help?",
+    "difficultyB": 1.2
+  },
+  {
+    "id": "NT-2.1-U3",
+    "layer": 2,
+    "templateType": "construction",
+    "content": {
+      "question": "Draw or describe all the different rectangular arrays you can make with exactly 24 dots. Each array represents a factor pair. List all factor pairs of 24.",
+      "solution": "1\u00d724, 2\u00d712, 3\u00d78, 4\u00d76",
+      "solutionExplanation": "Each rectangular array has rows and columns whose product is 24. The possible rectangles are: 1 row of 24 (1\u00d724), 2 rows of 12 (2\u00d712), 3 rows of 8 (3\u00d78), 4 rows of 6 (4\u00d76). After 4\u00d76, the next would be 6\u00d74, which is the same rectangle rotated. So 24 has 8 factors total: 1, 2, 3, 4, 6, 8, 12, 24. Each factor pair forms a unique rectangular arrangement of the dots."
+    },
+    "explanationPrompt": "How does the rectangle model help you understand what factors are? Why do factors always come in pairs?",
+    "difficultyB": 1.5
+  }
+]

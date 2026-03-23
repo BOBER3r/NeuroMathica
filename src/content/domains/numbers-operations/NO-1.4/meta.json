@@ -1,0 +1,15 @@
+{
+  "conceptId": "NO-1.4",
+  "name": "Fractions",
+  "gradeLevel": 6,
+  "domain": "numbers-operations",
+  "prerequisites": ["NO-1.1"],
+  "successors": ["NO-1.5", "NO-1.6"],
+  "estimatedMinutes": 30,
+  "hooks": {
+    "visual": "What lives between the whole numbers? Zoom in and discover an infinite world",
+    "question": "If you split a pizza into 8 slices and eat 3, how much is left? What if someone cut theirs into 4 slices and ate 1 \u2014 did you eat the same amount?"
+  },
+  "realWorldContext": "Fractions appear in cooking recipes, music time signatures, measuring tools, and splitting things fairly among friends. Understanding fractions means understanding parts of a whole \u2014 one of the most fundamental ideas in all of mathematics.",
+  "reflectionPrompt": "Explain what a fraction really means and why the denominator matters."
+}

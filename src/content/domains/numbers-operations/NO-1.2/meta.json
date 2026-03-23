@@ -1,0 +1,15 @@
+{
+  "conceptId": "NO-1.2",
+  "name": "Integers",
+  "gradeLevel": 6,
+  "domain": "numbers-operations",
+  "prerequisites": ["NO-1.1"],
+  "successors": ["NO-1.2a", "NO-1.7"],
+  "estimatedMinutes": 25,
+  "hooks": {
+    "visual": "What happens when you go below zero? Discover the hidden mirror world of negative numbers",
+    "question": "If the temperature is 3 degrees and drops by 5 degrees, where does it end up?"
+  },
+  "realWorldContext": "Negative numbers are everywhere: temperatures below zero, elevators going underground, bank accounts with overdrafts, and sea depths below the surface. Integers let us describe the world in both directions.",
+  "reflectionPrompt": "Explain why -5 is less than -2, even though 5 is greater than 2."
+}

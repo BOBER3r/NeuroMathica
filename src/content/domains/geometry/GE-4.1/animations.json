@@ -1,0 +1,1069 @@
+{
+  "hook": {
+    "id": "GE-4.1-hook",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "title-text",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Angles are everywhere}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "clock-face",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [200, 200],
+        "radius": 100,
+        "style": { "fill": "#1e293b", "stroke": "#475569", "strokeWidth": 2 }
+      },
+      {
+        "id": "clock-center",
+        "type": "point",
+        "position": [200, 200],
+        "radius": 5,
+        "style": { "fill": "#e2e8f0" }
+      },
+      {
+        "id": "clock-12",
+        "type": "annotation",
+        "position": [200, 115],
+        "latex": "12",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" }
+      },
+      {
+        "id": "clock-3",
+        "type": "annotation",
+        "position": [285, 200],
+        "latex": "3",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" }
+      },
+      {
+        "id": "clock-6",
+        "type": "annotation",
+        "position": [200, 290],
+        "latex": "6",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" }
+      },
+      {
+        "id": "clock-9",
+        "type": "annotation",
+        "position": [115, 200],
+        "latex": "9",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" }
+      },
+      {
+        "id": "minute-hand",
+        "type": "line",
+        "from": [200, 200],
+        "to": [200, 120],
+        "style": { "stroke": "#e2e8f0", "strokeWidth": 2 }
+      },
+      {
+        "id": "hour-hand",
+        "type": "line",
+        "from": [200, 200],
+        "to": [270, 200],
+        "style": { "stroke": "#7c3aed", "strokeWidth": 3 }
+      },
+      {
+        "id": "clock-angle-arc",
+        "type": "angle",
+        "vertex": [200, 200],
+        "ray1End": [200, 120],
+        "ray2End": [270, 200],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 35,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "clock-angle-label",
+        "type": "annotation",
+        "position": [200, 340],
+        "latex": "3 \\text{ o'clock} = 90°",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "pizza-slice",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "pizza-circle",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [550, 200],
+            "radius": 80,
+            "style": { "fill": "#f59e0b20", "stroke": "#f59e0b", "strokeWidth": 2 }
+          },
+          {
+            "id": "pizza-cut-1",
+            "type": "line",
+            "from": [550, 200],
+            "to": [630, 200],
+            "style": { "stroke": "#f59e0b", "strokeWidth": 2 }
+          },
+          {
+            "id": "pizza-cut-2",
+            "type": "line",
+            "from": [550, 200],
+            "to": [590, 140],
+            "style": { "stroke": "#f59e0b", "strokeWidth": 2 }
+          },
+          {
+            "id": "pizza-angle",
+            "type": "angle",
+            "vertex": [550, 200],
+            "ray1End": [630, 200],
+            "ray2End": [590, 140],
+            "showArc": true,
+            "showMeasurement": true,
+            "arcRadius": 30,
+            "style": { "stroke": "#ef4444", "strokeWidth": 2 }
+          }
+        ]
+      },
+      {
+        "id": "pizza-label",
+        "type": "annotation",
+        "position": [550, 340],
+        "latex": "\\text{Pizza slice} = 45°",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#f59e0b" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "hook-intro",
+        "trigger": "auto",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "title-text",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "top"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "clock-angle-arc",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "clock-angle-label",
+            "duration": 0.5,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "pizza-slice",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pizza-label",
+            "duration": 0.5,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": []
+  },
+  "spatial": {
+    "id": "GE-4.1-spatial",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "spatial-title",
+        "type": "annotation",
+        "position": [400, 25],
+        "latex": "\\text{Interactive Protractor}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "protractor-arc",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [400, 280],
+        "radius": 180,
+        "style": { "fill": "#1e293b20", "stroke": "#475569", "strokeWidth": 2 }
+      },
+      {
+        "id": "ray-fixed",
+        "type": "line",
+        "from": [400, 280],
+        "to": [600, 280],
+        "arrowHead": "end",
+        "style": { "stroke": "#e2e8f0", "strokeWidth": 2 }
+      },
+      {
+        "id": "ray-draggable-line",
+        "type": "line",
+        "from": [400, 280],
+        "to": [550, 150],
+        "arrowHead": "end",
+        "style": { "stroke": "#7c3aed", "strokeWidth": 2 }
+      },
+      {
+        "id": "angle-arc",
+        "type": "angle",
+        "vertex": [400, 280],
+        "ray1End": [600, 280],
+        "ray2End": [550, 150],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 60,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 }
+      },
+      {
+        "id": "ray-endpoint",
+        "type": "point",
+        "position": [550, 150],
+        "radius": 12,
+        "label": "",
+        "draggable": true,
+        "style": { "fill": "#7c3aed", "stroke": "#a78bfa", "strokeWidth": 2 }
+      },
+      {
+        "id": "tick-0",
+        "type": "annotation",
+        "position": [590, 295],
+        "latex": "0°",
+        "anchor": "center",
+        "style": { "fontSize": 12, "fill": "#94a3b8" }
+      },
+      {
+        "id": "tick-90",
+        "type": "annotation",
+        "position": [400, 90],
+        "latex": "90°",
+        "anchor": "center",
+        "style": { "fontSize": 12, "fill": "#94a3b8" }
+      },
+      {
+        "id": "tick-180",
+        "type": "annotation",
+        "position": [210, 295],
+        "latex": "180°",
+        "anchor": "center",
+        "style": { "fontSize": 12, "fill": "#94a3b8" }
+      },
+      {
+        "id": "angle-type-label",
+        "type": "annotation",
+        "position": [400, 460],
+        "latex": "\\text{Acute Angle}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "angle-types-legend",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "legend-acute",
+            "type": "annotation",
+            "position": [100, 460],
+            "latex": "\\text{Acute: } 0°\\text{-}90°",
+            "anchor": "center",
+            "style": { "fontSize": 13, "fill": "#10b981" }
+          },
+          {
+            "id": "legend-right",
+            "type": "annotation",
+            "position": [260, 460],
+            "latex": "\\text{Right: } 90°",
+            "anchor": "center",
+            "style": { "fontSize": 13, "fill": "#fbbf24" }
+          },
+          {
+            "id": "legend-obtuse",
+            "type": "annotation",
+            "position": [400, 460],
+            "latex": "\\text{Obtuse: } 90°\\text{-}180°",
+            "anchor": "center",
+            "style": { "fontSize": 13, "fill": "#ef4444" }
+          },
+          {
+            "id": "legend-straight",
+            "type": "annotation",
+            "position": [560, 460],
+            "latex": "\\text{Straight: } 180°",
+            "anchor": "center",
+            "style": { "fontSize": 13, "fill": "#94a3b8" }
+          },
+          {
+            "id": "legend-reflex",
+            "type": "annotation",
+            "position": [710, 460],
+            "latex": "\\text{Reflex: } 180°\\text{-}360°",
+            "anchor": "center",
+            "style": { "fontSize": 13, "fill": "#7c3aed" }
+          }
+        ]
+      }
+    ],
+    "animations": [
+      {
+        "id": "spatial-intro",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "protractor-arc",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "draw",
+            "target": "ray-fixed",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "draw",
+            "target": "ray-draggable-line",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "angle-arc",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "ray-endpoint",
+            "duration": 0.4,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "angle-type-label",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "angle-types-legend",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "drag-ray",
+        "type": "drag",
+        "target": "ray-endpoint",
+        "onUpdate": [
+          {
+            "source": "angle",
+            "target": "angle-arc",
+            "property": "ray2End",
+            "transform": "updateAngleFromDrag(400, 280)"
+          },
+          {
+            "source": "angle",
+            "target": "ray-draggable-line",
+            "property": "to",
+            "transform": "updateLineEndFromDrag(400, 280)"
+          },
+          {
+            "source": "angle",
+            "target": "angle-type-label",
+            "property": "latex",
+            "transform": "classifyAngle()"
+          }
+        ]
+      }
+    ]
+  },
+  "discovery": {
+    "id": "GE-4.1-discovery",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "discovery-title",
+        "type": "annotation",
+        "position": [400, 25],
+        "latex": "\\text{Angle Types Gallery}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "acute-angle",
+        "type": "angle",
+        "vertex": [120, 180],
+        "ray1End": [200, 180],
+        "ray2End": [180, 110],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 30,
+        "style": { "stroke": "#10b981", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "acute-label",
+        "type": "annotation",
+        "position": [150, 210],
+        "latex": "\\text{Acute } (45°)",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "right-angle",
+        "type": "angle",
+        "vertex": [320, 180],
+        "ray1End": [400, 180],
+        "ray2End": [320, 100],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 30,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "right-label",
+        "type": "annotation",
+        "position": [350, 210],
+        "latex": "\\text{Right } (90°)",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "obtuse-angle",
+        "type": "angle",
+        "vertex": [520, 180],
+        "ray1End": [600, 180],
+        "ray2End": [460, 110],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 30,
+        "style": { "stroke": "#ef4444", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "obtuse-label",
+        "type": "annotation",
+        "position": [550, 210],
+        "latex": "\\text{Obtuse } (135°)",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#ef4444" },
+        "opacity": 0
+      },
+      {
+        "id": "straight-angle",
+        "type": "angle",
+        "vertex": [700, 180],
+        "ray1End": [770, 180],
+        "ray2End": [630, 180],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 30,
+        "style": { "stroke": "#94a3b8", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "straight-label",
+        "type": "annotation",
+        "position": [700, 210],
+        "latex": "\\text{Straight } (180°)",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "comp-supp-title",
+        "type": "annotation",
+        "position": [400, 270],
+        "latex": "\\text{Complementary \\& Supplementary}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "comp-angle-1",
+        "type": "angle",
+        "vertex": [200, 400],
+        "ray1End": [300, 400],
+        "ray2End": [270, 330],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 35,
+        "style": { "stroke": "#10b981", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "comp-angle-2",
+        "type": "angle",
+        "vertex": [200, 400],
+        "ray1End": [270, 330],
+        "ray2End": [200, 300],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 50,
+        "style": { "stroke": "#3b82f6", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "comp-label",
+        "type": "annotation",
+        "position": [200, 440],
+        "latex": "35° + 55° = 90°",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "comp-name",
+        "type": "annotation",
+        "position": [200, 465],
+        "latex": "\\text{Complementary}",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "supp-angle-1",
+        "type": "angle",
+        "vertex": [550, 400],
+        "ray1End": [660, 400],
+        "ray2End": [590, 310],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 35,
+        "style": { "stroke": "#ef4444", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "supp-angle-2",
+        "type": "angle",
+        "vertex": [550, 400],
+        "ray1End": [590, 310],
+        "ray2End": [440, 400],
+        "showArc": true,
+        "showMeasurement": true,
+        "arcRadius": 50,
+        "style": { "stroke": "#7c3aed", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "supp-label",
+        "type": "annotation",
+        "position": [550, 440],
+        "latex": "70° + 110° = 180°",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "supp-name",
+        "type": "annotation",
+        "position": [550, 465],
+        "latex": "\\text{Supplementary}",
+        "anchor": "center",
+        "style": { "fontSize": 14, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "triangle-sum",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "triangle-shape",
+            "type": "geometricShape",
+            "shape": "triangle",
+            "vertices": [[350, 480], [450, 480], [400, 420]],
+            "showMeasurements": true,
+            "style": { "stroke": "#f59e0b", "strokeWidth": 2, "fill": "#f59e0b10" }
+          }
+        ]
+      }
+    ],
+    "animations": [
+      {
+        "id": "discovery-build",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "discovery-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "acute-angle",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "acute-label",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "right-angle",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "right-label",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "obtuse-angle",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "obtuse-label",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "straight-angle",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "straight-label",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "comp-supp-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "comp-angle-1",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "comp-angle-2",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "fadeIn",
+            "target": "comp-label",
+            "duration": 0.4,
+            "ease": "spring",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "comp-name",
+            "duration": 0.3,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "supp-angle-1",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "supp-angle-2",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "fadeIn",
+            "target": "supp-label",
+            "duration": 0.4,
+            "ease": "spring",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "supp-name",
+            "duration": 0.3,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-acute",
+        "type": "click",
+        "target": "acute-angle",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "acute-angle",
+            "property": "style.stroke",
+            "transform": "toggleHighlight(#10b981, #34d399)"
+          }
+        ]
+      },
+      {
+        "id": "click-right",
+        "type": "click",
+        "target": "right-angle",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "right-angle",
+            "property": "style.stroke",
+            "transform": "toggleHighlight(#fbbf24, #fde68a)"
+          }
+        ]
+      },
+      {
+        "id": "click-obtuse",
+        "type": "click",
+        "target": "obtuse-angle",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "obtuse-angle",
+            "property": "style.stroke",
+            "transform": "toggleHighlight(#ef4444, #f87171)"
+          }
+        ]
+      }
+    ]
+  },
+  "symbol": {
+    "id": "GE-4.1-symbol",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "symbol-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Angle Notation \\& Rules}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "notation-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "notation-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 80],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "notation-text",
+            "type": "annotation",
+            "position": [400, 80],
+            "latex": "\\angle ABC \\text{ means the angle at vertex } B \\text{, with rays } BA \\text{ and } BC",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#c4b5fd" }
+          }
+        ]
+      },
+      {
+        "id": "comp-rule",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "comp-rule-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 145],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#052e16", "stroke": "#10b981", "strokeWidth": 2 }
+          },
+          {
+            "id": "comp-rule-text",
+            "type": "annotation",
+            "position": [400, 145],
+            "latex": "\\text{Complementary: } \\angle A + \\angle B = 90°",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#6ee7b7" }
+          }
+        ]
+      },
+      {
+        "id": "supp-rule",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "supp-rule-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 210],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#172554", "stroke": "#3b82f6", "strokeWidth": 2 }
+          },
+          {
+            "id": "supp-rule-text",
+            "type": "annotation",
+            "position": [400, 210],
+            "latex": "\\text{Supplementary: } \\angle A + \\angle B = 180°",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#93c5fd" }
+          }
+        ]
+      },
+      {
+        "id": "triangle-rule",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "triangle-rule-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 275],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#451a03", "stroke": "#f59e0b", "strokeWidth": 2 }
+          },
+          {
+            "id": "triangle-rule-text",
+            "type": "annotation",
+            "position": [400, 275],
+            "latex": "\\text{Triangle Angle Sum: } \\angle A + \\angle B + \\angle C = 180°",
+            "anchor": "center",
+            "style": { "fontSize": 20, "fill": "#fbbf24" }
+          }
+        ]
+      },
+      {
+        "id": "full-rotation",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "full-rotation-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 340],
+            "width": 650,
+            "height": 50,
+            "style": { "fill": "#1e293b", "stroke": "#94a3b8", "strokeWidth": 2 }
+          },
+          {
+            "id": "full-rotation-text",
+            "type": "annotation",
+            "position": [400, 340],
+            "latex": "\\text{Full rotation} = 360° \\quad \\text{Half turn} = 180° \\quad \\text{Quarter turn} = 90°",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#e2e8f0" }
+          }
+        ]
+      }
+    ],
+    "animations": [
+      {
+        "id": "symbol-reveal",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "notation-box",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.2 },
+          {
+            "action": "fadeIn",
+            "target": "comp-rule",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "supp-rule",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "triangle-rule",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "highlight",
+            "target": "triangle-rule",
+            "duration": 1.0,
+            "color": "#f59e0b",
+            "pulse": true
+          },
+          {
+            "action": "fadeIn",
+            "target": "full-rotation",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "hover-notation",
+        "type": "hover",
+        "target": "notation-box",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "notation-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-comp",
+        "type": "hover",
+        "target": "comp-rule",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "comp-rule-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-supp",
+        "type": "hover",
+        "target": "supp-rule",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "supp-rule-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      },
+      {
+        "id": "hover-triangle",
+        "type": "hover",
+        "target": "triangle-rule",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "triangle-rule-bg",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/* NeuroMathica Dark Theme — Navy/Charcoal base + Neon accents */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base colors */
+  --nm-bg-primary: #0f172a;
+  --nm-bg-secondary: #1e293b;
+  --nm-bg-surface: #334155;
+  --nm-bg-elevated: #475569;
+
+  /* Text */
+  --nm-text-primary: #f1f5f9;
+  --nm-text-secondary: #94a3b8;
+  --nm-text-muted: #64748b;
+
+  /* Neon accents */
+  --nm-accent-indigo: #818cf8;
+  --nm-accent-cyan: #22d3ee;
+  --nm-accent-emerald: #34d399;
+  --nm-accent-amber: #fbbf24;
+  --nm-accent-rose: #fb7185;
+  --nm-accent-violet: #a78bfa;
+
+  /* Domain colors (Knowledge Nebula) */
+  --nm-domain-numbers: #60a5fa;
+  --nm-domain-number-theory: #a78bfa;
+  --nm-domain-algebra: #34d399;
+  --nm-domain-geometry: #fbbf24;
+  --nm-domain-statistics: #fb7185;
+
+  /* Functional */
+  --nm-success: #34d399;
+  --nm-warning: #fbbf24;
+  --nm-error: #fb7185;
+  --nm-info: #60a5fa;
+
+  /* XP & Gamification */
+  --nm-xp-glow: #818cf8;
+  --nm-streak-glow: #fbbf24;
+  --nm-level-up-glow: #34d399;
+
+  /* Spacing */
+  --nm-touch-target: 44px;
+
+  /* Background / Foreground for Tailwind */
+  --background: var(--nm-bg-primary);
+  --foreground: var(--nm-text-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-nm-bg-primary: var(--nm-bg-primary);
+  --color-nm-bg-secondary: var(--nm-bg-secondary);
+  --color-nm-bg-surface: var(--nm-bg-surface);
+  --color-nm-bg-elevated: var(--nm-bg-elevated);
+  --color-nm-text-primary: var(--nm-text-primary);
+  --color-nm-text-secondary: var(--nm-text-secondary);
+  --color-nm-text-muted: var(--nm-text-muted);
+  --color-nm-accent-indigo: var(--nm-accent-indigo);
+  --color-nm-accent-cyan: var(--nm-accent-cyan);
+  --color-nm-accent-emerald: var(--nm-accent-emerald);
+  --color-nm-accent-amber: var(--nm-accent-amber);
+  --color-nm-accent-rose: var(--nm-accent-rose);
+  --color-nm-accent-violet: var(--nm-accent-violet);
+  --color-nm-success: var(--nm-success);
+  --color-nm-warning: var(--nm-warning);
+  --color-nm-error: var(--nm-error);
+  --color-nm-info: var(--nm-info);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile UX fixes */
+html {
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure touch targets meet 44px minimum (DR-5) */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  min-height: var(--nm-touch-target);
+  min-width: var(--nm-touch-target);
+}
+
+/* KaTeX font loading */
+@font-face {
+  font-family: "KaTeX_Main";
+  src: url("/fonts/katex/KaTeX_Main-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nm-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nm-bg-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nm-text-muted);
+}
+
+/* AI Tutor — gentle pulse for the floating button */
+@keyframes tutor-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(34, 211, 238, 0);
+  }
 }

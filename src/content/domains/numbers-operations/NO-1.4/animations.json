@@ -1,0 +1,784 @@
+{
+  "hook": {
+    "id": "NO-1.4-hook",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "title-text",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{What lives between the whole numbers?}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "whole-number-line",
+        "type": "numberLine",
+        "range": [0, 5],
+        "step": 1,
+        "markers": [
+          { "value": 0, "label": "0", "color": "#7c3aed", "style": "dot" },
+          { "value": 1, "label": "1", "color": "#7c3aed", "style": "dot" },
+          { "value": 2, "label": "2", "color": "#7c3aed", "style": "dot" },
+          { "value": 3, "label": "3", "color": "#7c3aed", "style": "dot" },
+          { "value": 4, "label": "4", "color": "#7c3aed", "style": "dot" },
+          { "value": 5, "label": "5", "color": "#7c3aed", "style": "dot" }
+        ]
+      },
+      {
+        "id": "zoom-box",
+        "type": "geometricShape",
+        "shape": "rectangle",
+        "center": [220, 100],
+        "width": 120,
+        "height": 40,
+        "style": { "fill": "transparent", "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "zoom-label",
+        "type": "annotation",
+        "position": [220, 70],
+        "latex": "\\text{Zoom in!}",
+        "anchor": "center",
+        "style": { "fontSize": 16, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "zoomed-line",
+        "type": "numberLine",
+        "range": [0, 1],
+        "step": 0.25,
+        "markers": [
+          { "value": 0, "label": "0", "color": "#7c3aed", "style": "dot" },
+          { "value": 0.25, "label": "\\frac{1}{4}", "color": "#3b82f6", "style": "dot" },
+          { "value": 0.5, "label": "\\frac{1}{2}", "color": "#10b981", "style": "dot" },
+          { "value": 0.75, "label": "\\frac{3}{4}", "color": "#f59e0b", "style": "dot" },
+          { "value": 1, "label": "1", "color": "#7c3aed", "style": "dot" }
+        ]
+      },
+      {
+        "id": "infinite-label",
+        "type": "annotation",
+        "position": [400, 350],
+        "latex": "\\text{An infinite world between every pair of numbers!}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "hook-intro",
+        "trigger": "auto",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "title-text",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "top"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "zoom-box",
+                "duration": 0.5,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "zoom-label",
+                "duration": 0.5,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "cameraMove",
+            "duration": 1.5,
+            "ease": "easeInOut",
+            "viewBox": [0, 150, 800, 200]
+          },
+          {
+            "action": "fadeIn",
+            "target": "zoomed-line",
+            "duration": 1.0,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "infinite-label",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": []
+  },
+  "spatial": {
+    "id": "NO-1.4-spatial",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "bar-whole",
+        "type": "fractionBar",
+        "numerator": 4,
+        "denominator": 4,
+        "width": 600,
+        "height": 50,
+        "shadedColor": "#475569",
+        "unshadedColor": "#1e293b",
+        "showLabel": true
+      },
+      {
+        "id": "bar-half",
+        "type": "fractionBar",
+        "numerator": 1,
+        "denominator": 2,
+        "width": 600,
+        "height": 50,
+        "shadedColor": "#7c3aed",
+        "unshadedColor": "#1e293b",
+        "showLabel": true
+      },
+      {
+        "id": "bar-quarters",
+        "type": "fractionBar",
+        "numerator": 2,
+        "denominator": 4,
+        "width": 600,
+        "height": 50,
+        "shadedColor": "#3b82f6",
+        "unshadedColor": "#1e293b",
+        "showLabel": true
+      },
+      {
+        "id": "bar-eighths",
+        "type": "fractionBar",
+        "numerator": 4,
+        "denominator": 8,
+        "width": 600,
+        "height": 50,
+        "shadedColor": "#10b981",
+        "unshadedColor": "#1e293b",
+        "showLabel": true
+      },
+      {
+        "id": "equivalence-label",
+        "type": "annotation",
+        "position": [400, 350],
+        "latex": "\\frac{1}{2} = \\frac{2}{4} = \\frac{4}{8}",
+        "anchor": "center",
+        "style": { "fontSize": 36, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "same-amount-label",
+        "type": "annotation",
+        "position": [400, 400],
+        "latex": "\\text{Same amount, different number of pieces!}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "equivalence-line-1",
+        "type": "line",
+        "from": [400, 130],
+        "to": [400, 170],
+        "dashed": true,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "equivalence-line-2",
+        "type": "line",
+        "from": [400, 210],
+        "to": [400, 250],
+        "dashed": true,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "spatial-intro",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "bar-whole",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "bar-half",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "equivalence-line-1",
+            "duration": 0.3,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "bar-quarters",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "equivalence-line-2",
+            "duration": 0.3,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "bar-eighths",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "equivalence-label",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "same-amount-label",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-bar-half",
+        "type": "click",
+        "target": "bar-half",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "bar-half",
+            "property": "shadedColor",
+            "transform": "toggleHighlight(#7c3aed, #a78bfa)"
+          }
+        ]
+      },
+      {
+        "id": "click-bar-quarters",
+        "type": "click",
+        "target": "bar-quarters",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "bar-quarters",
+            "property": "shadedColor",
+            "transform": "toggleHighlight(#3b82f6, #60a5fa)"
+          }
+        ]
+      }
+    ]
+  },
+  "discovery": {
+    "id": "NO-1.4-discovery",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "discovery-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Why does the denominator matter?}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "pizza-whole",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [200, 180],
+        "radius": 80,
+        "style": { "fill": "#f59e0b20", "stroke": "#f59e0b", "strokeWidth": 2 }
+      },
+      {
+        "id": "pizza-label-4",
+        "type": "annotation",
+        "position": [200, 280],
+        "latex": "\\text{4 slices}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#f59e0b" },
+        "opacity": 0
+      },
+      {
+        "id": "pizza-fraction-4",
+        "type": "annotation",
+        "position": [200, 310],
+        "latex": "\\frac{1}{4} \\text{ per slice}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "pizza-8",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [600, 180],
+        "radius": 80,
+        "style": { "fill": "#3b82f620", "stroke": "#3b82f6", "strokeWidth": 2 }
+      },
+      {
+        "id": "pizza-label-8",
+        "type": "annotation",
+        "position": [600, 280],
+        "latex": "\\text{8 slices}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#3b82f6" },
+        "opacity": 0
+      },
+      {
+        "id": "pizza-fraction-8",
+        "type": "annotation",
+        "position": [600, 310],
+        "latex": "\\frac{1}{8} \\text{ per slice (smaller!)}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "cross-lines-4",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "line-4-v",
+            "type": "line",
+            "from": [200, 100],
+            "to": [200, 260],
+            "style": { "stroke": "#f59e0b", "strokeWidth": 1 }
+          },
+          {
+            "id": "line-4-h",
+            "type": "line",
+            "from": [120, 180],
+            "to": [280, 180],
+            "style": { "stroke": "#f59e0b", "strokeWidth": 1 }
+          }
+        ]
+      },
+      {
+        "id": "cross-lines-8",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "line-8-v",
+            "type": "line",
+            "from": [600, 100],
+            "to": [600, 260],
+            "style": { "stroke": "#3b82f6", "strokeWidth": 1 }
+          },
+          {
+            "id": "line-8-h",
+            "type": "line",
+            "from": [520, 180],
+            "to": [680, 180],
+            "style": { "stroke": "#3b82f6", "strokeWidth": 1 }
+          },
+          {
+            "id": "line-8-d1",
+            "type": "line",
+            "from": [543, 123],
+            "to": [657, 237],
+            "style": { "stroke": "#3b82f6", "strokeWidth": 1 }
+          },
+          {
+            "id": "line-8-d2",
+            "type": "line",
+            "from": [657, 123],
+            "to": [543, 237],
+            "style": { "stroke": "#3b82f6", "strokeWidth": 1 }
+          }
+        ]
+      },
+      {
+        "id": "insight-box",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "insight-bg",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [400, 400],
+            "width": 600,
+            "height": 60,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "insight-text",
+            "type": "annotation",
+            "position": [400, 400],
+            "latex": "\\text{More pieces} \\Rightarrow \\text{smaller each piece: } \\frac{1}{4} > \\frac{1}{8}",
+            "anchor": "center",
+            "style": { "fontSize": 22, "fill": "#fbbf24" }
+          }
+        ]
+      },
+      {
+        "id": "compare-arrows",
+        "type": "annotation",
+        "position": [400, 180],
+        "latex": "\\text{vs}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#94a3b8" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "discovery-build",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "discovery-title",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "pizza-whole",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "pizza-8",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "compare-arrows",
+                "duration": 0.3,
+                "ease": "easeInOut",
+                "delay": 0.3
+              }
+            ]
+          },
+          {
+            "action": "fadeIn",
+            "target": "cross-lines-4",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pizza-label-4",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pizza-fraction-4",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "cross-lines-8",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pizza-label-8",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "pizza-fraction-8",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "insight-box",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "bottom"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-pizza-4",
+        "type": "click",
+        "target": "pizza-whole",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "pizza-whole",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#f59e0b20, #f59e0b40)"
+          }
+        ]
+      },
+      {
+        "id": "click-pizza-8",
+        "type": "click",
+        "target": "pizza-8",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "pizza-8",
+            "property": "style.fill",
+            "transform": "toggleHighlight(#3b82f620, #3b82f640)"
+          }
+        ]
+      }
+    ]
+  },
+  "symbol": {
+    "id": "NO-1.4-symbol",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "symbol-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Fraction Notation}",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "fraction-anatomy",
+        "type": "annotation",
+        "position": [400, 80],
+        "latex": "\\frac{a}{b}",
+        "anchor": "center",
+        "style": { "fontSize": 64, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "numerator-arrow",
+        "type": "line",
+        "from": [300, 60],
+        "to": [370, 60],
+        "arrowHead": "end",
+        "style": { "stroke": "#10b981", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "numerator-label",
+        "type": "annotation",
+        "position": [230, 60],
+        "latex": "\\text{Numerator (parts taken)}",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#10b981" },
+        "opacity": 0
+      },
+      {
+        "id": "denominator-arrow",
+        "type": "line",
+        "from": [300, 100],
+        "to": [370, 100],
+        "arrowHead": "end",
+        "style": { "stroke": "#f59e0b", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "denominator-label",
+        "type": "annotation",
+        "position": [230, 100],
+        "latex": "\\text{Denominator (total parts)}",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#f59e0b" },
+        "opacity": 0
+      },
+      {
+        "id": "equiv-title",
+        "type": "annotation",
+        "position": [400, 160],
+        "latex": "\\text{Equivalent Fractions Rule}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "equiv-rule",
+        "type": "annotation",
+        "position": [400, 200],
+        "latex": "\\frac{a}{b} = \\frac{a \\times n}{b \\times n}",
+        "anchor": "center",
+        "style": { "fontSize": 36, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "equiv-example",
+        "type": "annotation",
+        "position": [400, 250],
+        "latex": "\\frac{1}{2} = \\frac{1 \\times 3}{2 \\times 3} = \\frac{3}{6}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "simplify-title",
+        "type": "annotation",
+        "position": [400, 300],
+        "latex": "\\text{Simplify by dividing both by GCF}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "simplify-example",
+        "type": "annotation",
+        "position": [400, 345],
+        "latex": "\\frac{6}{8} = \\frac{6 \\div 2}{8 \\div 2} = \\frac{3}{4}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#fbbf24" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "symbol-reveal",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "fraction-anatomy",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "scale"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "numerator-arrow",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "numerator-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "left"
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "denominator-arrow",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "denominator-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "left"
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "equiv-title",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "equiv-rule",
+            "duration": 0.6,
+            "ease": "easeOutBack",
+            "from": "scale"
+          },
+          {
+            "action": "fadeIn",
+            "target": "equiv-example",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "simplify-title",
+            "duration": 0.4,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "simplify-example",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "hover-fraction",
+        "type": "hover",
+        "target": "fraction-anatomy",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "fraction-anatomy",
+            "property": "style.fontSize",
+            "transform": "hoverScale(64, 72)"
+          }
+        ]
+      }
+    ]
+  }
+}

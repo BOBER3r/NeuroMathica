@@ -1,0 +1,15 @@
+{
+  "conceptId": "NT-2.1",
+  "name": "Factors & Multiples",
+  "gradeLevel": 6,
+  "domain": "number-theory",
+  "prerequisites": ["NO-1.1"],
+  "successors": ["NT-2.2", "NT-2.3"],
+  "estimatedMinutes": 25,
+  "hooks": {
+    "visual": "Every number has a secret family tree \u2014 who are the factors of 24?",
+    "question": "Why can you arrange 12 chairs into a perfect rectangle in many ways, but 13 chairs only in one way?"
+  },
+  "realWorldContext": "Factors and multiples help us organize things into equal groups: arranging desks in a classroom, splitting teams evenly, scheduling events that repeat, or figuring out how to share items fairly. They are also the foundation of prime numbers and cryptography.",
+  "reflectionPrompt": "Why do some numbers have many factors while others have very few?"
+}

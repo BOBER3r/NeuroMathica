@@ -1,0 +1,828 @@
+{
+  "hook": {
+    "id": "NO-1.2-hook",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "thermometer-bg",
+        "type": "geometricShape",
+        "shape": "rectangle",
+        "center": [400, 200],
+        "width": 40,
+        "height": 300,
+        "style": { "fill": "#1e293b", "stroke": "#475569", "strokeWidth": 2 }
+      },
+      {
+        "id": "thermometer-bulb",
+        "type": "geometricShape",
+        "shape": "circle",
+        "center": [400, 360],
+        "radius": 30,
+        "style": { "fill": "#ef4444", "stroke": "#475569", "strokeWidth": 2 }
+      },
+      {
+        "id": "thermometer-mercury",
+        "type": "geometricShape",
+        "shape": "rectangle",
+        "center": [400, 280],
+        "width": 20,
+        "height": 150,
+        "style": { "fill": "#ef4444", "stroke": "none" }
+      },
+      {
+        "id": "temp-label-pos",
+        "type": "annotation",
+        "position": [460, 100],
+        "latex": "20°",
+        "anchor": "left",
+        "style": { "fontSize": 16, "fill": "#94a3b8" },
+        "opacity": 0
+      },
+      {
+        "id": "temp-label-zero",
+        "type": "annotation",
+        "position": [460, 200],
+        "latex": "0°",
+        "anchor": "left",
+        "style": { "fontSize": 18, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "temp-label-neg",
+        "type": "annotation",
+        "position": [460, 300],
+        "latex": "-20°",
+        "anchor": "left",
+        "style": { "fontSize": 16, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "zero-line",
+        "type": "line",
+        "from": [370, 200],
+        "to": [440, 200],
+        "dashed": true,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "title-text",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{What happens below zero?}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "mirror-label",
+        "type": "annotation",
+        "position": [200, 200],
+        "latex": "\\text{The mirror world of negatives}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#38bdf8" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "hook-intro",
+        "trigger": "auto",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "title-text",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "top"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "temp-label-pos",
+                "duration": 0.4,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "temp-label-zero",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "zero-line",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "temp-label-neg",
+                "duration": 0.4,
+                "ease": "easeInOut",
+                "delay": 0.4
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "transform",
+            "target": "thermometer-mercury",
+            "duration": 2.0,
+            "ease": "easeInOut",
+            "properties": { "height": 30 }
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "mirror-label",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": []
+  },
+  "spatial": {
+    "id": "NO-1.2-spatial",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "number-line",
+        "type": "numberLine",
+        "range": [-10, 10],
+        "step": 1,
+        "markers": [
+          { "value": -10, "label": "-10", "style": "dot" },
+          { "value": -9, "label": "-9", "style": "dot" },
+          { "value": -8, "label": "-8", "style": "dot" },
+          { "value": -7, "label": "-7", "style": "dot" },
+          { "value": -6, "label": "-6", "style": "dot" },
+          { "value": -5, "label": "-5", "color": "#38bdf8", "style": "dot" },
+          { "value": -4, "label": "-4", "style": "dot" },
+          { "value": -3, "label": "-3", "color": "#38bdf8", "style": "dot" },
+          { "value": -2, "label": "-2", "color": "#38bdf8", "style": "dot" },
+          { "value": -1, "label": "-1", "style": "dot" },
+          { "value": 0, "label": "0", "color": "#fbbf24", "style": "dot" },
+          { "value": 1, "label": "1", "style": "dot" },
+          { "value": 2, "label": "2", "color": "#7c3aed", "style": "dot" },
+          { "value": 3, "label": "3", "color": "#7c3aed", "style": "dot" },
+          { "value": 4, "label": "4", "style": "dot" },
+          { "value": 5, "label": "5", "color": "#7c3aed", "style": "dot" },
+          { "value": 6, "label": "6", "style": "dot" },
+          { "value": 7, "label": "7", "style": "dot" },
+          { "value": 8, "label": "8", "style": "dot" },
+          { "value": 9, "label": "9", "style": "dot" },
+          { "value": 10, "label": "10", "style": "dot" }
+        ]
+      },
+      {
+        "id": "mirror-line",
+        "type": "line",
+        "from": [400, 50],
+        "to": [400, 150],
+        "dashed": true,
+        "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+        "opacity": 0
+      },
+      {
+        "id": "mirror-label",
+        "type": "annotation",
+        "position": [400, 40],
+        "latex": "\\text{Mirror at Zero}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "positive-label",
+        "type": "annotation",
+        "position": [600, 140],
+        "latex": "\\text{Positive (+)}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "negative-label",
+        "type": "annotation",
+        "position": [200, 140],
+        "latex": "\\text{Negative (-)}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "chip-group-pos",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [500, 250] },
+        "children": [
+          {
+            "id": "chip-pos-1",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [0, 0],
+            "radius": 25,
+            "style": { "fill": "#7c3aed", "stroke": "#a78bfa", "strokeWidth": 2 }
+          },
+          {
+            "id": "chip-pos-label",
+            "type": "annotation",
+            "position": [0, 0],
+            "latex": "+1",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#ffffff" }
+          }
+        ]
+      },
+      {
+        "id": "chip-group-neg",
+        "type": "group",
+        "opacity": 0,
+        "transform": { "translate": [300, 250] },
+        "children": [
+          {
+            "id": "chip-neg-1",
+            "type": "geometricShape",
+            "shape": "circle",
+            "center": [0, 0],
+            "radius": 25,
+            "style": { "fill": "#ef4444", "stroke": "#f87171", "strokeWidth": 2 }
+          },
+          {
+            "id": "chip-neg-label",
+            "type": "annotation",
+            "position": [0, 0],
+            "latex": "-1",
+            "anchor": "center",
+            "style": { "fontSize": 18, "fill": "#ffffff" }
+          }
+        ]
+      },
+      {
+        "id": "zero-pair-label",
+        "type": "annotation",
+        "position": [400, 320],
+        "latex": "(+1) + (-1) = 0",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "draggable-point",
+        "type": "point",
+        "position": [400, 100],
+        "radius": 15,
+        "label": "?",
+        "draggable": true,
+        "dragConstraint": "x",
+        "snapToGrid": 1,
+        "style": { "fill": "#f59e0b", "stroke": "#fbbf24", "strokeWidth": 2 }
+      }
+    ],
+    "animations": [
+      {
+        "id": "spatial-intro",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "number-line",
+            "duration": 1.0,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "mirror-line",
+                "duration": 0.5,
+                "ease": "easeInOut"
+              },
+              {
+                "action": "fadeIn",
+                "target": "mirror-label",
+                "duration": 0.5,
+                "ease": "easeInOut",
+                "delay": 0.2
+              }
+            ]
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "positive-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "right"
+              },
+              {
+                "action": "fadeIn",
+                "target": "negative-label",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "left"
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "chip-group-pos",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "chip-group-neg",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "zero-pair-label",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "draggable-point",
+            "duration": 0.4,
+            "ease": "spring",
+            "from": "scale"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "drag-point-on-line",
+        "type": "drag",
+        "target": "draggable-point",
+        "onUpdate": [
+          {
+            "source": "x",
+            "target": "number-line",
+            "property": "highlightRange.to",
+            "transform": "mapToRange(-10, 10)"
+          }
+        ],
+        "onComplete": "checkPlacement"
+      }
+    ]
+  },
+  "discovery": {
+    "id": "NO-1.2-discovery",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 500],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "elevator-shaft",
+        "type": "geometricShape",
+        "shape": "rectangle",
+        "center": [150, 250],
+        "width": 100,
+        "height": 400,
+        "style": { "fill": "#1e293b", "stroke": "#475569", "strokeWidth": 2 }
+      },
+      {
+        "id": "ground-line",
+        "type": "line",
+        "from": [90, 200],
+        "to": [210, 200],
+        "style": { "stroke": "#fbbf24", "strokeWidth": 3 }
+      },
+      {
+        "id": "ground-label",
+        "type": "annotation",
+        "position": [60, 200],
+        "latex": "0",
+        "anchor": "right",
+        "style": { "fontSize": 18, "fill": "#fbbf24" }
+      },
+      {
+        "id": "floor-3",
+        "type": "annotation",
+        "position": [60, 80],
+        "latex": "+3",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "floor-2",
+        "type": "annotation",
+        "position": [60, 120],
+        "latex": "+2",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "floor-1",
+        "type": "annotation",
+        "position": [60, 160],
+        "latex": "+1",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "floor-neg1",
+        "type": "annotation",
+        "position": [60, 240],
+        "latex": "-1",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "floor-neg2",
+        "type": "annotation",
+        "position": [60, 280],
+        "latex": "-2",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "floor-neg3",
+        "type": "annotation",
+        "position": [60, 320],
+        "latex": "-3",
+        "anchor": "right",
+        "style": { "fontSize": 16, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "elevator-car",
+        "type": "geometricShape",
+        "shape": "rectangle",
+        "center": [150, 200],
+        "width": 60,
+        "height": 35,
+        "style": { "fill": "#f59e0b", "stroke": "#fbbf24", "strokeWidth": 2 }
+      },
+      {
+        "id": "comparison-title",
+        "type": "annotation",
+        "position": [500, 50],
+        "latex": "\\text{Comparing Integers}",
+        "anchor": "center",
+        "style": { "fontSize": 24, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "compare-line",
+        "type": "numberLine",
+        "range": [-5, 5],
+        "step": 1,
+        "markers": [
+          { "value": -5, "label": "-5", "color": "#38bdf8", "style": "dot" },
+          { "value": -3, "label": "-3", "color": "#ef4444", "style": "dot" },
+          { "value": -2, "label": "-2", "color": "#10b981", "style": "dot" },
+          { "value": 0, "label": "0", "color": "#fbbf24", "style": "dot" },
+          { "value": 2, "label": "2", "color": "#7c3aed", "style": "dot" },
+          { "value": 5, "label": "5", "style": "dot" }
+        ]
+      },
+      {
+        "id": "compare-insight",
+        "type": "annotation",
+        "position": [500, 200],
+        "latex": "-3 < -2 \\text{ because } -3 \\text{ is farther left}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "distance-insight",
+        "type": "annotation",
+        "position": [500, 260],
+        "latex": "\\text{Farther from zero (left)} = \\text{smaller value}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#94a3b8" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "discovery-build",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "parallel",
+            "steps": [
+              { "action": "fadeIn", "target": "floor-3", "duration": 0.3, "ease": "easeInOut" },
+              { "action": "fadeIn", "target": "floor-2", "duration": 0.3, "ease": "easeInOut", "delay": 0.1 },
+              { "action": "fadeIn", "target": "floor-1", "duration": 0.3, "ease": "easeInOut", "delay": 0.2 },
+              { "action": "fadeIn", "target": "floor-neg1", "duration": 0.3, "ease": "easeInOut", "delay": 0.3 },
+              { "action": "fadeIn", "target": "floor-neg2", "duration": 0.3, "ease": "easeInOut", "delay": 0.4 },
+              { "action": "fadeIn", "target": "floor-neg3", "duration": 0.3, "ease": "easeInOut", "delay": 0.5 }
+            ]
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "moveTo",
+            "target": "elevator-car",
+            "position": [150, 80],
+            "duration": 1.5,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "moveTo",
+            "target": "elevator-car",
+            "position": [150, 320],
+            "duration": 2.0,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "comparison-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "compare-line",
+            "duration": 0.8,
+            "ease": "easeInOut"
+          },
+          { "action": "wait", "duration": 0.4 },
+          {
+            "action": "highlight",
+            "target": "compare-line",
+            "duration": 1.0,
+            "color": "#ef4444",
+            "pulse": true
+          },
+          {
+            "action": "fadeIn",
+            "target": "compare-insight",
+            "duration": 0.6,
+            "ease": "spring",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.3 },
+          {
+            "action": "fadeIn",
+            "target": "distance-insight",
+            "duration": 0.6,
+            "ease": "easeInOut"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "click-elevator",
+        "type": "click",
+        "target": "elevator-car",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "elevator-car",
+            "property": "center",
+            "transform": "cycleFloors([80, 120, 160, 200, 240, 280, 320])"
+          }
+        ]
+      }
+    ]
+  },
+  "symbol": {
+    "id": "NO-1.2-symbol",
+    "renderer": "svg",
+    "viewBox": [0, 0, 800, 400],
+    "background": "#0f172a",
+    "objects": [
+      {
+        "id": "symbol-title",
+        "type": "annotation",
+        "position": [400, 30],
+        "latex": "\\text{Integer Notation}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#e2e8f0" }
+      },
+      {
+        "id": "set-notation",
+        "type": "annotation",
+        "position": [400, 80],
+        "latex": "\\mathbb{Z} = \\{\\ldots, -3, -2, -1, 0, 1, 2, 3, \\ldots\\}",
+        "anchor": "center",
+        "style": { "fontSize": 28, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "opposite-title",
+        "type": "annotation",
+        "position": [400, 140],
+        "latex": "\\text{Opposites}",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "opposite-example-1",
+        "type": "group",
+        "opacity": 0,
+        "children": [
+          {
+            "id": "opp-bg-1",
+            "type": "geometricShape",
+            "shape": "rectangle",
+            "center": [250, 190],
+            "width": 180,
+            "height": 50,
+            "style": { "fill": "#1e1b4b", "stroke": "#7c3aed", "strokeWidth": 2 }
+          },
+          {
+            "id": "opp-label-1",
+            "type": "annotation",
+            "position": [250, 190],
+            "latex": "3 \\text{ and } -3",
+            "anchor": "center",
+            "style": { "fontSize": 22, "fill": "#c4b5fd" }
+          }
+        ]
+      },
+      {
+        "id": "opposite-sum-1",
+        "type": "annotation",
+        "position": [480, 190],
+        "latex": "3 + (-3) = 0",
+        "anchor": "center",
+        "style": { "fontSize": 22, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "absolute-title",
+        "type": "annotation",
+        "position": [400, 250],
+        "latex": "\\text{Absolute Value} = \\text{Distance from Zero}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#e2e8f0" },
+        "opacity": 0
+      },
+      {
+        "id": "abs-example-1",
+        "type": "annotation",
+        "position": [200, 300],
+        "latex": "|{-5}| = 5",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#38bdf8" },
+        "opacity": 0
+      },
+      {
+        "id": "abs-example-2",
+        "type": "annotation",
+        "position": [400, 300],
+        "latex": "|5| = 5",
+        "anchor": "center",
+        "style": { "fontSize": 26, "fill": "#7c3aed" },
+        "opacity": 0
+      },
+      {
+        "id": "abs-insight",
+        "type": "annotation",
+        "position": [600, 300],
+        "latex": "\\text{Same distance!}",
+        "anchor": "center",
+        "style": { "fontSize": 20, "fill": "#fbbf24" },
+        "opacity": 0
+      },
+      {
+        "id": "ordering-rule",
+        "type": "annotation",
+        "position": [400, 365],
+        "latex": "\\text{For negatives: larger absolute value} \\Rightarrow \\text{smaller number}",
+        "anchor": "center",
+        "style": { "fontSize": 18, "fill": "#f87171" },
+        "opacity": 0
+      }
+    ],
+    "animations": [
+      {
+        "id": "symbol-reveal",
+        "trigger": "stage-enter",
+        "steps": [
+          {
+            "action": "fadeIn",
+            "target": "set-notation",
+            "duration": 0.8,
+            "ease": "easeInOut",
+            "from": "scale"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "opposite-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "fadeIn",
+            "target": "opposite-example-1",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "left"
+          },
+          {
+            "action": "fadeIn",
+            "target": "opposite-sum-1",
+            "duration": 0.5,
+            "ease": "easeOutBack",
+            "from": "right"
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "absolute-title",
+            "duration": 0.5,
+            "ease": "easeInOut"
+          },
+          {
+            "action": "parallel",
+            "steps": [
+              {
+                "action": "fadeIn",
+                "target": "abs-example-1",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale"
+              },
+              {
+                "action": "fadeIn",
+                "target": "abs-example-2",
+                "duration": 0.5,
+                "ease": "easeOutBack",
+                "from": "scale",
+                "delay": 0.2
+              },
+              {
+                "action": "fadeIn",
+                "target": "abs-insight",
+                "duration": 0.5,
+                "ease": "spring",
+                "from": "scale",
+                "delay": 0.4
+              }
+            ]
+          },
+          { "action": "wait", "duration": 0.5 },
+          {
+            "action": "fadeIn",
+            "target": "ordering-rule",
+            "duration": 0.8,
+            "ease": "spring",
+            "from": "bottom"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "id": "hover-opposite",
+        "type": "hover",
+        "target": "opposite-example-1",
+        "onUpdate": [
+          {
+            "source": "value",
+            "target": "opp-bg-1",
+            "property": "style.strokeWidth",
+            "transform": "hoverScale(2, 4)"
+          }
+        ]
+      }
+    ]
+  }
+}

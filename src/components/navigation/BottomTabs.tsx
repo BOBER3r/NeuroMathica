@@ -41,9 +41,6 @@ const UserIcon = () => (
 
 const tabs: Tab[] = [
   { href: "/learn", label: "Learn", icon: <BookIcon /> },
-  { href: "/practice", label: "Practice", icon: <BrainIcon /> },
-  { href: "/progress", label: "Progress", icon: <ChartIcon /> },
-  { href: "/profile", label: "Profile", icon: <UserIcon /> },
 ];
 
 export function BottomTabs() {

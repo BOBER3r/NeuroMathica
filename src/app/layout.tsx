@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { TRPCProvider } from "@/lib/trpc/provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-dvh bg-nm-bg-primary text-nm-text-primary antialiased">
-        <TRPCProvider>{children}</TRPCProvider>
+        {children}
       </body>
     </html>
   );

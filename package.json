@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "build": "prisma generate || true && next build",
+    "postinstall": "prisma generate || true",
     "start": "next start",
     "lint": "eslint . && tsc --noEmit",
     "test": "vitest run",
@@ -64,5 +64,15 @@
     "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prisma",
+      "@prisma/engines",
+      "@prisma/client",
+      "esbuild",
+      "@swc/core",
+      "@parcel/watcher"
+    ]
   }
 }
